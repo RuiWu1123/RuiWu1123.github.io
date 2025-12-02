@@ -53,7 +53,7 @@ export const NEWS_ITEMS: NewsItem[] = [
 export const BLOG_POSTS: BlogPost[] = [
   {
     id: "alignment-science-safety",
-    title: "Alignment Science in AI and Its Relationship with Safety Alignment",
+    title: "Alignment Science and the Relationship with Safety Alignment in AI",
     date: "2025/12/01",
     generator: "ChatGPT5.1",
     content: `

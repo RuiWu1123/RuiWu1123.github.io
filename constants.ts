@@ -85,14 +85,15 @@ export const VISITED_PLACES: VisitedPlace[] = [
     description: 'A 4-day fancy trip exploring the land of fire and ice. Witnessed the northern lights, walked on black sand beaches, and visited the Blue Lagoon.',
     visitCount: 1,
     images: [
-      // Matches your Blue Waterfall (Bruarfoss)
-      'https://images.unsplash.com/photo-1533423791783-c454794e223b?q=80&w=1000&auto=format&fit=crop', 
-      // Matches your Church photo
-      'https://images.unsplash.com/photo-1517411032315-54ef2cb00966?q=80&w=1000&auto=format&fit=crop', 
-      // Matches your Sauna/Blue Lagoon mist vibe
-      'https://images.unsplash.com/photo-1544645284-a169dc3a8767?q=80&w=1000&auto=format&fit=crop', 
-      // Matches your Mountain Reflection (Vestrahorn)
-      'https://images.unsplash.com/photo-1504893524553-bfa543881ca1?q=80&w=1000&auto=format&fit=crop'  
+      '/travel_pictures/iceland/1b59c304f6cbfe18538f82088182ec89.jpg',
+      '/travel_pictures/iceland/311fcb634aaa63150e69c5a2a695ba76.jpg',
+      '/travel_pictures/iceland/3cabcbf41a1b08f2f7fb4f31972a8475.jpg',
+      '/travel_pictures/iceland/4c0fb2d709e2ade2ef61d846e8a0f32d.jpg',
+      '/travel_pictures/iceland/4cc8ce3d20062c0b17e23c76484c8cd9.jpg',
+      '/travel_pictures/iceland/e28b49b22857f989dd9833e0d7ed2e6c.jpg',
+      '/travel_pictures/iceland/e355376cc0f8c47518a5f4ebee5ef95f.jpg',
+      '/travel_pictures/iceland/ecac61d106da06b3c6e843c11e124341.jpg',
+      '/travel_pictures/iceland/f8ab3bf7b0a4d53df4f0e63cc6c5107d.jpg'
     ]
   }
 ];

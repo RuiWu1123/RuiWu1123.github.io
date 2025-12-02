@@ -23,7 +23,11 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm ci
+        # Use `npm install` because `npm ci` requires a package-lock.json
+        # (this repo currently doesn't include package-lock.json). Using
+        # `npm install` on the runner will install dependencies and allow
+        # the subsequent build step to run.
+        run: npm install
 
       - name: Build
         run: npm run build

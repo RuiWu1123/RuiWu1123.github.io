@@ -27,7 +27,7 @@ jobs:
         # (this repo currently doesn't include package-lock.json). Using
         # `npm install` on the runner will install dependencies and allow
         # the subsequent build step to run.
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build
         run: npm run build

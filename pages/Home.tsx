@@ -62,8 +62,8 @@ const Home: React.FC = () => {
             aligned systems.
           </h1>
           <p className="text-xl md:text-2xl font-sans font-light text-anthropic-gray leading-relaxed mb-8">
-            I’m <span className="text-anthropic-text font-medium">Rui Wu</span>, a junior undergraduate at Rutgers University (CS). 
-            My research revolves around <Link to="/blog?id=alignment-science-safety" className="text-anthropic-accent underline decoration-anthropic-accent/30 hover:decoration-anthropic-accent transition-colors">AI Alignment</Link>, developing methodologies to ensure AI systems become what humans intend. While my long-term vision spans general alignment, I currently focus on <span className="text-anthropic-text font-medium">Safety Alignment</span> tasks.
+            I’m Rui Wu, a junior undergraduate at Rutgers University (CS). 
+            My research revolves around <Link to="/blog?id=alignment-science-safety" className="text-anthropic-accent underline decoration-anthropic-accent/30 hover:decoration-anthropic-accent transition-colors">AI Alignment</Link>, developing methodologies to ensure AI systems become what humans intend. While my long-term vision spans general alignment, I currently focus on Safety Alignment tasks.
           </p>
 
           {/* Social Icons */}

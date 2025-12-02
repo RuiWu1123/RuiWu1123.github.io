@@ -26,7 +26,7 @@ export const RESEARCH_INTERESTS: ResearchInterest[] = [
 export const PUBLICATIONS: Publication[] = [
   {
     id: 'outcome-aware-safety',
-    title: "Read the Scene, Not the Script: Outcome-Aware Safety for LLMs Reasoning",
+    title: "Read the Scene, Not the Script: Outcome-Aware Safety for LLMs",
     authors: ["Rui Wu", "Yihao Quan", "Zeru Shi", "Zhenting Wang", "Yanshu Li", "Ruixiang Tang"],
     venue: "NeurIPS 2025 ResponsibleFM Workshop",
     year: 2025,
@@ -45,7 +45,7 @@ export const NEWS_ITEMS: NewsItem[] = [
   },
   {
     date: "2025/11/8",
-    content: "My paper \"Read the Scene, Not the Script: Outcome-Aware Safety for LLMs Reasoning\" to Align is accepted by NeurIPS 2025 ResponsibleFM Workshop!",
+    content: "My paper \"Read the Scene, Not the Script: Outcome-Aware Safety for LLMs \" is accepted by NeurIPS 2025 ResponsibleFM Workshop!",
     link: "https://arxiv.org/abs/2510.04320"
   }
 ];

@@ -10,16 +10,25 @@ export const NAV_ITEMS: NavItem[] = [
 
 export const RESEARCH_INTERESTS: ResearchInterest[] = [
   {
-    title: "Scalable Oversight",
-    description: "Investigating techniques to align superhuman AI systems where human supervision becomes scarce or unreliable. Focusing on weak-to-strong generalization and scalable oversight.",
+    title: "Reasoning to Align",
+    description:
+      "Exploring how reasoning skills that work well on verifiable tasks can support alignment tasks that do not have golden labels or verifier. Strong reasoning often generalizes better than surface-level pattern matching, so this direction looks at how that generalization can transfer to safer behavior in harder settings. The aim is to understand how reasoning can help models make more stable, interpretable and safe decisions as they become more capable.",
+    period: "2025.6 - until now",
+    colorTheme: "bg-anthropic-leaf/20 border-anthropic-leaf/30"
+  },
+  {
+    title: "Internal-Signal Alignment",
+    description:
+      "Studying cases where a model shows clear internal signals about risk but still produces unsafe behavior because the reward during RLHF was imperfect. This direction focuses on how gaps form between internal representations and final decoding, and how these signals can help improve safety as post-alignment after the RLHF. The goal is to build post-alignment methods that remain reliable even when the reward design cannot fully capture the desired behavior.",
     period: "2025.6 - until now",
     colorTheme: "bg-anthropic-stone/50 border-anthropic-stone"
   },
   {
-    title: "Reasoning to Align",
-    description: "Exploring how chain-of-thought and internal reasoning processes can be steered towards safe and aligned outcomes, ensuring transparency in model decision-making.",
-    period: "2025.6 - until now",
-    colorTheme: "bg-anthropic-leaf/20 border-anthropic-leaf/30"
+    title: "Alignment in Real World",
+    description:
+      "Looking at how alignment changes when models move from text-only settings to real environments where their actions have direct consequences. Current alignment mostly relies on language feedback, and the cost of unsafe behavior is low because nothing real is at stake. But when models are connected to tools or embodied systems, downstream outcomes can provide genuine rewards and penalties that reflect human values more accurately. This direction studies how real-world feedback can shape safer behavior and how models can learn values through interaction rather than instruction alone.",
+    period: "not the time",
+    colorTheme: "bg-anthropic-sky/20 border-anthropic-sky/30"
   }
 ];
 

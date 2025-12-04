@@ -29,6 +29,13 @@ export const RESEARCH_INTERESTS: ResearchInterest[] = [
       "Looking at how alignment changes when models move from text-only settings to real environments where their actions have direct consequences. Current alignment mostly relies on language feedback, and the cost of unsafe behavior is low because nothing real is at stake. But when models are connected to tools or embodied systems, downstream outcomes can provide genuine rewards and penalties that reflect human values more accurately. This direction studies how real-world feedback can shape safer behavior and how models can learn values through interaction rather than instruction alone.",
     period: "not the time",
     colorTheme: "bg-anthropic-sky/20 border-anthropic-sky/30"
+  },
+  {
+  title: "World-Interact Agent",
+  description:
+    "Studying agents that can interact with virtual or physically grounded environments, serving as the missing link between language-only models and real-world capable systems. Current models are limited to text and lack the ability to act, observe, and learn from consequences in a persistent world. This direction explores how to build interaction frameworks that allow an agent to perceive environments, take actions that carry meaningful outcomes. The goal is to create safe and scalable settings where alignment principles can be examined under decision making that actually changes the environment. This research enables a gradual transition from language-based alignment to real-world alignment by providing an intermediate experimental space where reasoning and value learning can be tested under grounded interaction.",
+  period: "2025.12 until now",
+  colorTheme: "bg-anthropic-blue/20 border-anthropic-blue/30"
   }
 ];
 

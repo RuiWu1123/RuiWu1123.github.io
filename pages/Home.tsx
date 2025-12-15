@@ -58,12 +58,12 @@ const Home: React.FC = () => {
         {/* Left: Content */}
         <div className="max-w-2xl">
           <h1 className="text-5xl md:text-7xl font-serif font-light mb-8 text-anthropic-text leading-tight">
-            Building safe,<br />
-            aligned systems.
+            Make AI systems,<br />
+            supervised and aligned.
           </h1>
           <p className="text-xl md:text-2xl font-sans font-light text-anthropic-gray leading-relaxed mb-8">
             I’m Rui Wu, a junior undergraduate at Rutgers University (CS). 
-            My research revolves around <Link to="/blog?id=alignment-science-safety" className="text-anthropic-accent underline decoration-anthropic-accent/30 hover:decoration-anthropic-accent transition-colors">AI Alignment</Link>, developing methodologies to ensure AI systems become what humans intend. While my long-term vision spans general alignment, I currently focus on Safety Alignment tasks.
+            My research revolves around Alignment Science, developing methodologies to ensure AI systems become supervised and aligned with human intentions. While my long-term vision spans scalable oversight without human feedbacks.
           </p>
 
           {/* Social Icons */}

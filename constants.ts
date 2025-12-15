@@ -92,7 +92,7 @@ Seen in sequence, these directions form a coherent progression. Generalized and 
   },
   {
     id: "alignment-science-safety",
-    title: "Alignment Science and the Relationship with Safety Alignment in AI",
+    title: "Alignment Science and Safety Alignment: A Perspective",
     date: "2025/12/01",
     generator: "ChatGPT5.1",
     content: `

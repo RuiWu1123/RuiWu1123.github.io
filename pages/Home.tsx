@@ -58,7 +58,7 @@ const Home: React.FC = () => {
         {/* Left: Content */}
         <div className="max-w-2xl">
           <h1 className="text-5xl md:text-7xl font-serif font-light mb-8 text-anthropic-text leading-tight">
-            Make AI systems,<br />
+            Make AI systems<br />
             supervised and aligned.
           </h1>
           <p className="text-xl md:text-2xl font-sans font-light text-anthropic-gray leading-relaxed mb-8">

@@ -98,6 +98,12 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: "safety-align-as-world-reasiber",
+    title: "Toward Generalized Alignment：Your LLMs should align as World Reasoners",
+    date: "2025/12/28",
+    generator: "ChatGPT5.1"
+  },
+  {
     id: "my-research-river",
     title: "Why these Research Topics? Sharing my long-term vision",
     date: "2025/12/15",

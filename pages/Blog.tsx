@@ -4,6 +4,45 @@ import { useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Bot } from 'lucide-react';
 import { BLOG_POSTS, loadBlogContent } from '../constants';
 
+// Function to parse content and create text blocks with embedded images
+const parseContentWithImages = (content: string) => {
+  const lines = content.split('\n');
+  const result: (string | { type: 'image'; src: string; alt?: string; caption?: string })[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Check for standard Markdown image syntax: ![alt](path)
+    const imageMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (imageMatch) {
+      const alt = imageMatch[1].trim();
+      const imagePath = imageMatch[2].trim();
+
+      // Check if next line is a caption (starts with ^ or is italic text)
+      let caption: string | undefined;
+      if (i + 1 < lines.length) {
+        const nextLine = lines[i + 1].trim();
+        // If next line starts with ^ or is wrapped in * (italic), treat as caption
+        if (nextLine.startsWith('^') || (nextLine.startsWith('*') && nextLine.endsWith('*'))) {
+          caption = nextLine.replace(/^\^/, '').replace(/^\*/, '').replace(/\*$/, '');
+          i++; // Skip the caption line
+        }
+      }
+
+      result.push({
+        type: 'image',
+        src: imagePath.startsWith('/') ? imagePath : `/${imagePath}`,
+        alt: alt || 'Blog illustration',
+        caption
+      });
+    } else {
+      result.push(line);
+    }
+  }
+
+  return result;
+};
+
 const Blog: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [blogContent, setBlogContent] = useState<string>('');
@@ -72,18 +111,37 @@ const Blog: React.FC = () => {
                     <p className="text-anthropic-gray/60">Loading...</p>
                   </div>
                 ) : (
-                  blogContent.split('\n').map((paragraph, idx) => {
-                    // Check if paragraph is the disclaimer (starts with *This blog)
-                    if (paragraph.trim().startsWith('*This blog')) {
+                  parseContentWithImages(blogContent).map((item, idx) => {
+                    if (typeof item === 'string') {
+                      // Check if paragraph is the disclaimer (starts with *This blog)
+                      if (item.trim().startsWith('*This blog')) {
+                        return (
+                          <div key={idx} className="bg-anthropic-stone/30 p-6 rounded-lg border border-anthropic-text/5 mb-8">
+                            <p className="text-sm text-anthropic-text/80 italic m-0">
+                              {item.replace(/\*/g, '')}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return item.trim() && <p key={idx} className="mb-6">{item}</p>;
+                    } else if (item.type === 'image') {
                       return (
-                        <div key={idx} className="bg-anthropic-stone/30 p-6 rounded-lg border border-anthropic-text/5 mb-8">
-                          <p className="text-sm text-anthropic-text/80 italic m-0">
-                            {paragraph.replace(/\*/g, '')}
-                          </p>
-                        </div>
+                        <figure key={idx} className="my-6 flex flex-col items-center">
+                          <img
+                            src={item.src}
+                            alt={item.alt}
+                            className="w-full max-w-sm md:max-w-md h-auto rounded-lg shadow-sm border border-anthropic-text/5 object-cover"
+                            loading="lazy"
+                          />
+                          {item.caption && (
+                            <figcaption className="mt-3 text-sm text-anthropic-gray/70 text-center max-w-sm md:max-w-md italic">
+                              {item.caption}
+                            </figcaption>
+                          )}
+                        </figure>
                       );
                     }
-                    return paragraph.trim() && <p key={idx} className="mb-6">{paragraph}</p>;
+                    return null;
                   })
                 )}
               </div>

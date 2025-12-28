@@ -130,11 +130,11 @@ const Blog: React.FC = () => {
                           <img
                             src={item.src}
                             alt={item.alt}
-                            className="w-full max-w-md md:max-w-2xl lg:max-w-3xl h-auto rounded-lg shadow-sm border border-anthropic-text/5 object-cover"
+                            className="w-full max-w-sm md:max-w-lg lg:max-w-xl h-auto rounded-lg shadow-sm border border-anthropic-text/5 object-cover"
                             loading="lazy"
                           />
                           {item.caption && (
-                            <figcaption className="mt-3 text-sm text-anthropic-gray/70 text-center max-w-md md:max-w-2xl lg:max-w-3xl italic">
+                            <figcaption className="mt-3 text-sm text-anthropic-gray/70 text-center max-w-sm md:max-w-lg lg:max-w-xl italic">
                               {item.caption}
                             </figcaption>
                           )}

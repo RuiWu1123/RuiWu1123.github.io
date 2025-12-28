@@ -1,13 +1,29 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Bot } from 'lucide-react';
-import { BLOG_POSTS } from '../constants';
+import { BLOG_POSTS, loadBlogContent } from '../constants';
 
 const Blog: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [blogContent, setBlogContent] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+
   const postId = searchParams.get('id');
   const activePost = BLOG_POSTS.find(p => p.id === postId);
+
+  // Load blog content when activePost changes
+  useEffect(() => {
+    if (activePost) {
+      setLoading(true);
+      loadBlogContent(activePost.id).then(content => {
+        setBlogContent(content);
+        setLoading(false);
+      });
+    } else {
+      setBlogContent('');
+    }
+  }, [activePost]);
 
   // Function to handle navigation
   const handlePostClick = (id: string) => {
@@ -51,19 +67,25 @@ const Blog: React.FC = () => {
               </h1>
               
               <div className="prose prose-lg max-w-none text-anthropic-gray font-light leading-relaxed whitespace-pre-line border-t border-anthropic-text/10 pt-10">
-                {activePost.content.split('\n').map((paragraph, idx) => {
-                  // Check if paragraph is the disclaimer (starts with *This blog)
-                  if (paragraph.trim().startsWith('*This blog')) {
-                    return (
-                      <div key={idx} className="bg-anthropic-stone/30 p-6 rounded-lg border border-anthropic-text/5 mb-8">
-                        <p className="text-sm text-anthropic-text/80 italic m-0">
-                          {paragraph.replace(/\*/g, '')}
-                        </p>
-                      </div>
-                    );
-                  }
-                  return paragraph.trim() && <p key={idx} className="mb-6">{paragraph}</p>;
-                })}
+                {loading ? (
+                  <div className="text-center py-8">
+                    <p className="text-anthropic-gray/60">Loading...</p>
+                  </div>
+                ) : (
+                  blogContent.split('\n').map((paragraph, idx) => {
+                    // Check if paragraph is the disclaimer (starts with *This blog)
+                    if (paragraph.trim().startsWith('*This blog')) {
+                      return (
+                        <div key={idx} className="bg-anthropic-stone/30 p-6 rounded-lg border border-anthropic-text/5 mb-8">
+                          <p className="text-sm text-anthropic-text/80 italic m-0">
+                            {paragraph.replace(/\*/g, '')}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return paragraph.trim() && <p key={idx} className="mb-6">{paragraph}</p>;
+                  })
+                )}
               </div>
             </article>
           </div>

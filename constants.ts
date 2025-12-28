@@ -78,7 +78,7 @@ export const PUBLICATIONS: Publication[] = [
     year: 2025,
     link: "https://arxiv.org/abs/2510.04320",
     github: "https://github.com/RuiWu1123/Outcome-Aware-Safety-for-LLMs",
-    tags: ["Generalized Safety Alignment"],
+    tags: ["Robust Alignment"],
     preprint: true
   }
 ];

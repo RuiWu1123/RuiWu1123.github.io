@@ -85,6 +85,11 @@ export const PUBLICATIONS: Publication[] = [
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
+    date: "2026/1/1",
+    content: "Happy New Year! How is AI going to be in 2026?",
+    link: "#/blog/a-supervision-gaming"
+  },
+  {
     date: "2025/11/28",
     content: "Completed a 4-day fancy trip to Iceland! See my \"travel gallery\"!",
     link: "#/travel"
@@ -97,6 +102,12 @@ export const NEWS_ITEMS: NewsItem[] = [
 ];
 
 export const BLOG_POSTS: BlogPost[] = [
+  {
+    id: "a-supervision-gaming",
+    title: "A Supervision Gaming We May Fail: From LLMs Evaluation",
+    date: "2025/12/31",
+    generator: "ChatGPT5.1"
+  },
   {
     id: "safety-align-as-world-reasoner",
     title: "Toward Generalized Safety Alignment: Your LLMs should align as World Reasoners",

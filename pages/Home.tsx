@@ -11,6 +11,11 @@ const Home: React.FC = () => {
     alert('WeChat ID "R1lastshot" copied to clipboard.');
   };
 
+  const copyEmail = () => {
+    navigator.clipboard.writeText('rw761@scarletmail.rutgers.edu');
+    alert('Email "rw761@scarletmail.rutgers.edu" copied to clipboard.');
+  };
+
   // Helper to render content with links specifically on quoted text or full text
   const renderNewsContent = (content: string, link?: string) => {
     // Check for quoted text to link specifically
@@ -68,14 +73,14 @@ const Home: React.FC = () => {
 
           {/* Social Icons */}
           <div className="flex items-center gap-4 flex-wrap">
-            <a 
-              href="mailto:rw761@scarletmail.rutgers.edu" 
+            <button 
+              onClick={copyEmail}
               className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 -ml-2 rounded-full hover:bg-anthropic-stone/30"
               aria-label="Email"
-              title="rw761@scarletmail.rutgers.edu"
+              title="rw761@scarletmail.rutgers.edu (Click to Copy)"
             >
               <Mail size={24} strokeWidth={1.5} />
-            </a>
+            </button>
             <a 
               href={SOCIAL_LINKS.scholar}
               target="_blank" 

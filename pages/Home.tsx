@@ -132,7 +132,6 @@ const Home: React.FC = () => {
       <section className="mb-12">
         <div className="bg-gradient-to-r from-anthropic-accent/10 to-anthropic-leaf/10 border-l-4 border-anthropic-accent rounded-lg p-6 shadow-sm">
           <div className="flex items-start gap-3">
-            <span className="text-2xl">📢</span>
             <div>
               <h3 className="text-lg font-semibold text-anthropic-text mb-2">Notice</h3>
               <p className="text-anthropic-text font-normal leading-relaxed">

@@ -103,6 +103,12 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: "static-supervisor-scaling-risk",
+    title: "When Supervisors Stop Learning: The Scaling Risk of Static Oversight",
+    date: "2026/1/7",
+    generator: "Claude Sonnet 4.5"
+  },
+  {
     id: "a-supervision-gaming",
     title: "A Supervision Gaming We May Fail: From LLMs Evaluation",
     date: "2025/12/31",

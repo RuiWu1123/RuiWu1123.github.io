@@ -4,6 +4,69 @@ import { useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Bot } from 'lucide-react';
 import { BLOG_POSTS, loadBlogContent } from '../constants';
 
+// Function to parse inline markdown (bold, italic, links)
+const parseInlineMarkdown = (text: string): React.ReactNode[] => {
+  const parts: React.ReactNode[] = [];
+  let remainingText = text;
+  let key = 0;
+
+  while (remainingText.length > 0) {
+    // Match links: [text](url)
+    const linkMatch = remainingText.match(/\[([^\]]+)\]\(([^)]+)\)/);
+    if (linkMatch && linkMatch.index !== undefined) {
+      // Add text before link
+      if (linkMatch.index > 0) {
+        const before = remainingText.substring(0, linkMatch.index);
+        parts.push(<span key={key++}>{before}</span>);
+      }
+      // Add link
+      parts.push(
+        <a
+          key={key++}
+          href={linkMatch[2]}
+          target="_blank"
+          rel="noreferrer"
+          className="text-anthropic-accent underline hover:text-anthropic-text transition-colors"
+        >
+          {linkMatch[1]}
+        </a>
+      );
+      remainingText = remainingText.substring(linkMatch.index + linkMatch[0].length);
+      continue;
+    }
+
+    // Match bold: **text** or __text__
+    const boldMatch = remainingText.match(/\*\*([^*]+)\*\*|__([^_]+)__/);
+    if (boldMatch && boldMatch.index !== undefined) {
+      if (boldMatch.index > 0) {
+        const before = remainingText.substring(0, boldMatch.index);
+        parts.push(<span key={key++}>{before}</span>);
+      }
+      parts.push(<strong key={key++} className="font-semibold">{boldMatch[1] || boldMatch[2]}</strong>);
+      remainingText = remainingText.substring(boldMatch.index + boldMatch[0].length);
+      continue;
+    }
+
+    // Match italic: *text* (single asterisk)
+    const italicMatch = remainingText.match(/\*([^*]+)\*/);
+    if (italicMatch && italicMatch.index !== undefined) {
+      if (italicMatch.index > 0) {
+        const before = remainingText.substring(0, italicMatch.index);
+        parts.push(<span key={key++}>{before}</span>);
+      }
+      parts.push(<em key={key++} className="italic">{italicMatch[1]}</em>);
+      remainingText = remainingText.substring(italicMatch.index + italicMatch[0].length);
+      continue;
+    }
+
+    // No more markdown found, add remaining text
+    parts.push(<span key={key++}>{remainingText}</span>);
+    break;
+  }
+
+  return parts;
+};
+
 // Function to parse content and create text blocks with embedded images
 const parseContentWithImages = (content: string) => {
   const lines = content.split('\n');
@@ -125,13 +188,13 @@ const Blog: React.FC = () => {
                       }
                       // Check for h2 heading (##)
                       if (item.trim().startsWith('## ')) {
-                        return <h2 key={idx} className="text-3xl font-serif text-anthropic-text mb-6 mt-12">{item.replace(/^## /, '')}</h2>;
+                        return <h2 key={idx} className="text-3xl font-serif text-anthropic-text mb-6 mt-12">{parseInlineMarkdown(item.replace(/^## /, ''))}</h2>;
                       }
                       // Check for h3 heading (###)
                       if (item.trim().startsWith('### ')) {
-                        return <h3 key={idx} className="text-2xl font-serif text-anthropic-text mb-4 mt-10">{item.replace(/^### /, '')}</h3>;
+                        return <h3 key={idx} className="text-2xl font-serif text-anthropic-text mb-4 mt-10">{parseInlineMarkdown(item.replace(/^### /, ''))}</h3>;
                       }
-                      return item.trim() && <p key={idx} className="mb-6">{item}</p>;
+                      return item.trim() && <p key={idx} className="mb-6">{parseInlineMarkdown(item)}</p>;
                     } else if (item.type === 'image') {
                       return (
                         <figure key={idx} className="my-6 flex flex-col items-center">

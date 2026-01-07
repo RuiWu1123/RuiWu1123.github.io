@@ -128,6 +128,21 @@ const Home: React.FC = () => {
         </div>
       </section>
 
+      {/* Notice Box */}
+      <section className="mb-12">
+        <div className="bg-gradient-to-r from-anthropic-accent/10 to-anthropic-leaf/10 border-l-4 border-anthropic-accent rounded-lg p-6 shadow-sm">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">📢</span>
+            <div>
+              <h3 className="text-lg font-semibold text-anthropic-text mb-2">Notice</h3>
+              <p className="text-anthropic-text font-normal leading-relaxed">
+                I am looking for <strong>26 summer intern</strong> and <strong>27 fall PhD positions</strong>. If you are interested in collaborating or have opportunities, please feel free to reach out!
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
        {/* News Section */}
       <section className="mb-20">
         <div className="flex items-baseline justify-between mb-8 border-b border-anthropic-text/10 pb-4">

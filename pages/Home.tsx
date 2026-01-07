@@ -170,9 +170,15 @@ const Home: React.FC = () => {
         <div className="flex items-baseline justify-between mb-8 border-b border-anthropic-text/10 pb-4">
           <h2 className="text-3xl font-serif text-anthropic-text">Research Topics</h2>
           <Link to="/publications" className="group flex items-center text-sm font-sans text-anthropic-accent hover:text-anthropic-text transition-colors">
-            View Publications 
+            View Publications
             <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
           </Link>
+        </div>
+
+        <div className="mb-10 max-w-4xl">
+          <p className="text-lg font-sans font-light text-anthropic-gray leading-relaxed">
+            My research centers on AI Alignment, studying how to ensure increasingly capable models remain aligned with human intentions beyond narrow training conditions. For a deeper understanding of my research vision and how these topics connect, see my blog post <Link to="/blog?id=my-research-river" className="text-anthropic-accent underline hover:text-anthropic-text transition-colors">"Why these Research Topics?"</Link>. Recently, I am particularly focused on understanding the fundamental nature of reward hacking and its implications for scalable oversight.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

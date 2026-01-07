@@ -105,7 +105,7 @@ const Blog: React.FC = () => {
                 {activePost.title}
               </h1>
               
-              <div className="prose prose-lg max-w-none text-anthropic-text/90 font-light leading-relaxed whitespace-pre-line border-t border-anthropic-text/10 pt-10">
+              <div className="prose prose-lg max-w-none text-anthropic-text text-lg font-normal leading-relaxed whitespace-pre-line border-t border-anthropic-text/10 pt-10">
                 {loading ? (
                   <div className="text-center py-8">
                     <p className="text-anthropic-gray/60">Loading...</p>

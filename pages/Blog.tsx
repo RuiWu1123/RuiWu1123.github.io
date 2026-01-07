@@ -123,6 +123,14 @@ const Blog: React.FC = () => {
                           </div>
                         );
                       }
+                      // Check for h2 heading (##)
+                      if (item.trim().startsWith('## ')) {
+                        return <h2 key={idx} className="text-3xl font-serif text-anthropic-text mb-6 mt-12">{item.replace(/^## /, '')}</h2>;
+                      }
+                      // Check for h3 heading (###)
+                      if (item.trim().startsWith('### ')) {
+                        return <h3 key={idx} className="text-2xl font-serif text-anthropic-text mb-4 mt-10">{item.replace(/^### /, '')}</h3>;
+                      }
                       return item.trim() && <p key={idx} className="mb-6">{item}</p>;
                     } else if (item.type === 'image') {
                       return (

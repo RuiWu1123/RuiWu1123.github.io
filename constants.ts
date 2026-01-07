@@ -71,6 +71,15 @@ export const RESEARCH_INTERESTS: ResearchInterest[] = [
 
 export const PUBLICATIONS: Publication[] = [
   {
+    id: 'reasoning-over-precedents',
+    title: "Reasoning over Precedents Alongside Statutes: Case-Augmented Deliberative Alignment for LLM Safety",
+    authors: ["Can Jin*", "Rui Wu*", "Tong Che*", "Qixin Zhang", "Hongwu Peng", "Jiahui Zhao", "Zhenting Wang", "Wenqi Wei", "Ligong Han", "Zhao Zhang", "Yuan Cao", "Ruixiang Tang", "Dimitris N. Metaxas"],
+    venue: "Preprint",
+    year: 2025,
+    tags: ["Robust Alignment"],
+    preprint: true
+  },
+  {
     id: 'outcome-aware-safety',
     title: "Read the Scene, Not the Script: Outcome-Aware Safety for LLMs",
     authors: ["Rui Wu", "Yihao Quan", "Zeru Shi", "Zhenting Wang", "Yanshu Li", "Ruixiang Tang"],

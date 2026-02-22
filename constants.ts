@@ -75,6 +75,7 @@ export const PUBLICATIONS: Publication[] = [
     title: "Reasoning over Precedents Alongside Statutes: Case-Augmented Deliberative Alignment for LLM Safety",
     authors: ["Can Jin*", "Rui Wu*", "Tong Che*", "Qixin Zhang", "Hongwu Peng", "Jiahui Zhao", "Zhenting Wang", "Wenqi Wei", "Ligong Han", "Zhao Zhang", "Yuan Cao", "Ruixiang Tang", "Dimitris N. Metaxas"],
     venue: "Preprint",
+    link: "https://arxiv.org/abs/2601.08000",
     year: 2025,
     tags: ["Robust Alignment"],
     preprint: true

@@ -77,7 +77,7 @@ export const PUBLICATIONS: Publication[] = [
     venue: "Preprint",
     link: "https://arxiv.org/abs/2604.01476",
     year: 2026,
-    tags: ["PREPRINT", "Evaluation and Monitoring"],
+    tags: ["Evaluation and Monitoring"],
     preprint: true
   },
   {

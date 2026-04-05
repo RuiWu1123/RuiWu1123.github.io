@@ -68,7 +68,7 @@ const Home: React.FC = () => {
           </h1>
           <p className="text-xl md:text-2xl font-sans font-light text-anthropic-gray leading-relaxed mb-8">
             I’m Rui Wu, a junior undergraduate at Rutgers University (CS). 
-            My research revolves around Alignment Science, developing methodologies to ensure AI systems become supervised and aligned with human intentions. While my long-term vision spans scalable oversight without human feedbacks.
+            My research revolves around Alignment Science, developing methodologies to ensure AI systems become supervised and aligned with human intentions. While my long-term vision spans AI system under constant supervision.
           </p>
 
           {/* Social Icons */}
@@ -177,7 +177,7 @@ const Home: React.FC = () => {
 
         <div className="mb-10">
           <p className="text-lg font-sans font-light text-anthropic-gray leading-relaxed">
-            My research centers on AI Alignment, studying how to ensure increasingly capable models remain aligned with human intentions beyond narrow training conditions. For a deeper understanding of my research vision and how these topics connect, see my blog post <Link to="/blog?id=my-research-river" className="text-anthropic-accent underline hover:text-anthropic-text transition-colors">"Why these Research Topics?"</Link>. Recently, I am particularly focused on understanding the fundamental nature of reward hacking and its implications for scalable oversight.
+            My research centers on AI Alignment, studying how to ensure increasingly capable models remain aligned with human intentions beyond narrow training conditions. For a deeper understanding of my research vision and how these topics connect, see my blog post <Link to="/blog?id=my-research-river" className="text-anthropic-accent underline hover:text-anthropic-text transition-colors">"Why these Research Topics?"</Link>. Recently, I am particularly focused on understanding the fundamental nature of reward hacking and weak-to-strong generalization.
           </p>
         </div>
 

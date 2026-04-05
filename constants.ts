@@ -71,6 +71,16 @@ export const RESEARCH_INTERESTS: ResearchInterest[] = [
 
 export const PUBLICATIONS: Publication[] = [
   {
+    id: 'reward-hacking-rebounds',
+    title: "When Reward Hacking Rebounds: Understanding and Mitigating It with Representation-Level Signals",
+    authors: ["Rui Wu", "Ruixiang Tang"],
+    venue: "Preprint",
+    link: "https://arxiv.org/abs/2604.01476",
+    year: 2026,
+    tags: ["PREPRINT", "Evaluation and Monitoring"],
+    preprint: true
+  },
+  {
     id: 'reasoning-over-precedents',
     title: "Reasoning over Precedents Alongside Statutes: Case-Augmented Deliberative Alignment for LLM Safety",
     authors: ["Can Jin*", "Rui Wu*", "Tong Che*", "Qixin Zhang", "Hongwu Peng", "Jiahui Zhao", "Zhenting Wang", "Wenqi Wei", "Ligong Han", "Zhao Zhang", "Yuan Cao", "Ruixiang Tang", "Dimitris N. Metaxas"],

@@ -88,7 +88,7 @@ export const PUBLICATIONS: Publication[] = [
     link: "https://arxiv.org/abs/2601.08000",
     year: 2026,
     tags: ["Robust Alignment"],
-    preprint: true
+    preprint: false
   },
   {
     id: 'outcome-aware-safety',

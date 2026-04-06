@@ -84,9 +84,9 @@ export const PUBLICATIONS: Publication[] = [
     id: 'reasoning-over-precedents',
     title: "Reasoning over Precedents Alongside Statutes: Case-Augmented Deliberative Alignment for LLM Safety",
     authors: ["Can Jin*", "Rui Wu*", "Tong Che*", "Qixin Zhang", "Hongwu Peng", "Jiahui Zhao", "Zhenting Wang", "Wenqi Wei", "Ligong Han", "Zhao Zhang", "Yuan Cao", "Ruixiang Tang", "Dimitris N. Metaxas"],
-    venue: "Preprint",
+    venue: "ACL 2026 Main Conference",
     link: "https://arxiv.org/abs/2601.08000",
-    year: 2025,
+    year: 2026,
     tags: ["Robust Alignment"],
     preprint: true
   },
@@ -105,9 +105,13 @@ export const PUBLICATIONS: Publication[] = [
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
+    date: "2026/4/6",
+    content: "My paper \"Reasoning over Precedents Alongside Statutes: Case-Augmented Deliberative Alignment for LLM Safety \" is accepted by ACL 2026 Main Conference!",
+    link: "https://arxiv.org/abs/2601.08000"
+  },
+  {
     date: "2026/1/1",
     content: "Happy New Year! How is AI going to be in 2026?",
-    link: "#/blog/a-supervision-gaming"
   },
   {
     date: "2025/11/28",

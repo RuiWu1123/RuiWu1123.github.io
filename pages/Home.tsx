@@ -177,7 +177,7 @@ const Home: React.FC = () => {
 
         <div className="mb-10">
           <p className="text-lg font-sans font-light text-anthropic-gray leading-relaxed">
-            My research centers on AI Alignment, studying how to ensure increasingly capable models remain aligned with human intentions beyond narrow training conditions. For a deeper understanding of my research vision and how these topics connect, see my blog post <Link to="/blog?id=my-research-river" className="text-anthropic-accent underline hover:text-anthropic-text transition-colors">"Why these Research Topics?"</Link>. Recently, I am particularly focused on understanding the fundamental nature of reward hacking and weak-to-strong generalization.
+            My research centers on AI Alignment, studying how to ensure increasingly capable models remain aligned with human intentions beyond narrow training conditions. Recently, I am particularly focused on understanding the fundamental nature of reward hacking and weak-to-strong generalization.
           </p>
         </div>
 

@@ -139,21 +139,9 @@ export const BLOG_POSTS: BlogPost[] = [
     generator: "Claude Sonnet 4.5"
   },
   {
-    id: "a-supervision-gaming",
-    title: "A Supervision Gaming We May Fail: From LLMs Evaluation",
-    date: "2025/12/31",
-    generator: "ChatGPT5.1"
-  },
-  {
     id: "safety-align-as-world-reasoner",
     title: "Toward Generalized Safety Alignment: Your LLMs should align as World Reasoners",
     date: "2025/12/28",
-    generator: "ChatGPT5.1"
-  },
-  {
-    id: "alignment-science-safety",
-    title: "Alignment Science and Safety Alignment: A Perspective",
-    date: "2025/12/01",
     generator: "ChatGPT5.1"
   }
 ];

@@ -4,8 +4,6 @@ date: "2026/4/7"
 generator: "Claude Sonnet 4.6"
 ---
 
-*This blog was polished by Claude Sonnet 4.6 with my outline and core arguments.*
-
 In a [previous post](#/blog?id=safety-align-as-world-reasoner), I argued that robust safety alignment requires models to become world reasoners: capable of predicting how their actions change states of the world, rather than pattern-matching over prohibited linguistic forms. That post ended by pointing toward minimal world-interacting agents as a practical intermediate path, somewhere between the pure text world and fully embodied interaction. This post is about one concrete instance of that path.
 
 The fundamental problem with supervising safety in a pure text environment is that the supervision signal and the thing being supervised are the same medium. Consequences are described, not produced. LLM-as-judge systems evaluate linguistic plausibility. Human labelers are inconsistent on borderline cases. Refusal templates get paraphrased around. None of these signals measure whether a model has correctly reasoned about what would happen next; they measure whether its output resembles safety-trained text. A model that understands what safety-trained text looks like can optimize toward that form without changing anything about its underlying reasoning — which is part of why adversarial prompting works so reliably. It does not challenge the model's values; it reroutes around its pattern matcher.

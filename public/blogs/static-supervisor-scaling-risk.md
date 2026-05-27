@@ -4,8 +4,6 @@ date: "2026/1/7"
 generator: "Claude Sonnet 4.5"
 ---
 
-*This blog was polished by Claude Sonnet 4.5 with author's outline.*
-
 In exam systems with rankings, audits, and long-term records, someone could obtain perfect scores through exploiting leaks, shortcuts, or procedural loopholes. As explored in my previous post on supervision gaming, this dynamic can lead to reward hacking and sandbagging. But there is a deeper structural issue at play: the adversarial relationship between students and supervisors is fundamentally a coevolutionary arms race.
 
 Under normal circumstances, this system maintains a fragile equilibrium. Students continuously evolve their strategies, finding new ways to navigate or exploit the evaluation structure. Supervisors, in turn, adapt their oversight mechanisms, refining detection methods and closing loopholes. Both sides are learning. This equilibrium requires continuous mutual adaptation. The supervisor learns to detect new exploits; the student learns to evade new detection methods. Neither side can rest, because standing still means falling behind. The balance persists as long as both parties evolve at comparable rates.

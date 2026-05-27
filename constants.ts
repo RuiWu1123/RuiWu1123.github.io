@@ -129,20 +129,17 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     id: "code-as-minimal-world",
     title: "Code as a Bridge: A Minimal World for Consequence-Grounded Safety",
-    date: "2026/4/7",
-    generator: "Claude Sonnet 4.6"
+    date: "2026/4/7"
   },
   {
     id: "static-supervisor-scaling-risk",
     title: "When Supervisors Stop Learning: The Scaling Risk of Static Oversight",
-    date: "2026/1/7",
-    generator: "Claude Sonnet 4.5"
+    date: "2026/1/7"
   },
   {
     id: "safety-align-as-world-reasoner",
     title: "Toward Generalized Safety Alignment: Your LLMs should align as World Reasoners",
-    date: "2025/12/28",
-    generator: "ChatGPT5.1"
+    date: "2025/12/28"
   }
 ];
 

@@ -1,7 +1,6 @@
 ---
 title: "Code as a Bridge: A Minimal World for Consequence-Grounded Safety"
 date: "2026/4/7"
-generator: "Claude Sonnet 4.6"
 ---
 
 In a [previous post](#/blog?id=safety-align-as-world-reasoner), I argued that robust safety alignment requires models to become world reasoners: capable of predicting how their actions change states of the world, rather than pattern-matching over prohibited linguistic forms. That post ended by pointing toward minimal world-interacting agents as a practical intermediate path, somewhere between the pure text world and fully embodied interaction. This post is about one concrete instance of that path.

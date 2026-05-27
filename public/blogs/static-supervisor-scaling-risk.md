@@ -1,7 +1,6 @@
 ---
 title: "When Supervisors Stop Learning: The Scaling Risk of Static Oversight"
 date: "2026/1/7"
-generator: "Claude Sonnet 4.5"
 ---
 
 In exam systems with rankings, audits, and long-term records, someone could obtain perfect scores through exploiting leaks, shortcuts, or procedural loopholes. As explored in my previous post on supervision gaming, this dynamic can lead to reward hacking and sandbagging. But there is a deeper structural issue at play: the adversarial relationship between students and supervisors is fundamentally a coevolutionary arms race.

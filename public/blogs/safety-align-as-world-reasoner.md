@@ -1,7 +1,6 @@
 ---
 title: "Toward Generalized Safety Alignment: Your LLMs should align as World Reasoners"
 date: "2025/12/28"
-generator: "ChatGPT5.1"
 ---
 
 In ethics, there exists a recurring dichotomy: whether morality derives from adherence to rules, or from understanding consequences. Kant believed that reason could establish action boundaries through duty itself, while consequentialists insist that moral judgment only truly holds when an agent can evaluate the cascading effects of its behavior in the world. This dichotomy appears abstract, yet it re-emerges in today's large language model safety alignment challenges with striking concreteness and sharpness.

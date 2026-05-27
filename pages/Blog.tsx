@@ -1,110 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { ArrowLeft, Bot } from 'lucide-react';
 import { BLOG_POSTS, loadBlogContent } from '../constants';
-
-// Function to parse inline markdown (bold, italic, links)
-const parseInlineMarkdown = (text: string): React.ReactNode[] => {
-  const parts: React.ReactNode[] = [];
-  let remainingText = text;
-  let key = 0;
-
-  while (remainingText.length > 0) {
-    // Match links: [text](url)
-    const linkMatch = remainingText.match(/\[([^\]]+)\]\(([^)]+)\)/);
-    if (linkMatch && linkMatch.index !== undefined) {
-      // Add text before link
-      if (linkMatch.index > 0) {
-        const before = remainingText.substring(0, linkMatch.index);
-        parts.push(<span key={key++}>{before}</span>);
-      }
-      // Add link
-      parts.push(
-        <a
-          key={key++}
-          href={linkMatch[2]}
-          target="_blank"
-          rel="noreferrer"
-          className="text-anthropic-accent underline hover:text-anthropic-text transition-colors"
-        >
-          {linkMatch[1]}
-        </a>
-      );
-      remainingText = remainingText.substring(linkMatch.index + linkMatch[0].length);
-      continue;
-    }
-
-    // Match bold: **text** or __text__
-    const boldMatch = remainingText.match(/\*\*([^*]+)\*\*|__([^_]+)__/);
-    if (boldMatch && boldMatch.index !== undefined) {
-      if (boldMatch.index > 0) {
-        const before = remainingText.substring(0, boldMatch.index);
-        parts.push(<span key={key++}>{before}</span>);
-      }
-      parts.push(<strong key={key++} className="font-semibold">{boldMatch[1] || boldMatch[2]}</strong>);
-      remainingText = remainingText.substring(boldMatch.index + boldMatch[0].length);
-      continue;
-    }
-
-    // Match italic: *text* (single asterisk)
-    const italicMatch = remainingText.match(/\*([^*]+)\*/);
-    if (italicMatch && italicMatch.index !== undefined) {
-      if (italicMatch.index > 0) {
-        const before = remainingText.substring(0, italicMatch.index);
-        parts.push(<span key={key++}>{before}</span>);
-      }
-      parts.push(<em key={key++} className="italic">{italicMatch[1]}</em>);
-      remainingText = remainingText.substring(italicMatch.index + italicMatch[0].length);
-      continue;
-    }
-
-    // No more markdown found, add remaining text
-    parts.push(<span key={key++}>{remainingText}</span>);
-    break;
-  }
-
-  return parts;
-};
-
-// Function to parse content and create text blocks with embedded images
-const parseContentWithImages = (content: string) => {
-  const lines = content.split('\n');
-  const result: (string | { type: 'image'; src: string; alt?: string; caption?: string })[] = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    // Check for standard Markdown image syntax: ![alt](path)
-    const imageMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
-    if (imageMatch) {
-      const alt = imageMatch[1].trim();
-      const imagePath = imageMatch[2].trim();
-
-      // Check if next line is a caption (starts with ^ or is italic text)
-      let caption: string | undefined;
-      if (i + 1 < lines.length) {
-        const nextLine = lines[i + 1].trim();
-        // If next line starts with ^ or is wrapped in * (italic), treat as caption
-        if (nextLine.startsWith('^') || (nextLine.startsWith('*') && nextLine.endsWith('*'))) {
-          caption = nextLine.replace(/^\^/, '').replace(/^\*/, '').replace(/\*$/, '');
-          i++; // Skip the caption line
-        }
-      }
-
-      result.push({
-        type: 'image',
-        src: imagePath.startsWith('/') ? imagePath : `/${imagePath}`,
-        alt: alt || 'Blog illustration',
-        caption
-      });
-    } else {
-      result.push(line);
-    }
-  }
-
-  return result;
-};
 
 const Blog: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -168,52 +68,123 @@ const Blog: React.FC = () => {
                 {activePost.title}
               </h1>
               
-              <div className="prose prose-lg max-w-none text-anthropic-text text-lg font-normal leading-relaxed whitespace-pre-line border-t border-anthropic-text/10 pt-10">
+              <div className="max-w-none text-anthropic-text text-lg font-normal leading-relaxed border-t border-anthropic-text/10 pt-10">
                 {loading ? (
                   <div className="text-center py-8">
                     <p className="text-anthropic-gray/60">Loading...</p>
                   </div>
                 ) : (
-                  parseContentWithImages(blogContent).map((item, idx) => {
-                    if (typeof item === 'string') {
-                      // Check if paragraph is the disclaimer (starts with *This blog)
-                      if (item.trim().startsWith('*This blog')) {
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      h1: ({ children }) => (
+                        <h1 className="text-4xl font-serif text-anthropic-text mb-8 mt-12 leading-tight">
+                          {children}
+                        </h1>
+                      ),
+                      h2: ({ children }) => (
+                        <h2 className="text-3xl font-serif text-anthropic-text mb-6 mt-12 leading-tight">
+                          {children}
+                        </h2>
+                      ),
+                      h3: ({ children }) => (
+                        <h3 className="text-2xl font-serif text-anthropic-text mb-4 mt-10 leading-tight">
+                          {children}
+                        </h3>
+                      ),
+                      h4: ({ children }) => (
+                        <h4 className="text-xl font-serif text-anthropic-text mb-3 mt-8 leading-tight">
+                          {children}
+                        </h4>
+                      ),
+                      p: ({ children }) => (
+                        <p className="mb-6 text-anthropic-text">
+                          {children}
+                        </p>
+                      ),
+                      a: ({ href, children }) => (
+                        <a
+                          href={href}
+                          target={href?.startsWith('#') ? '_self' : '_blank'}
+                          rel={href?.startsWith('#') ? undefined : 'noreferrer'}
+                          className="text-anthropic-accent underline decoration-anthropic-accent/50 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors"
+                        >
+                          {children}
+                        </a>
+                      ),
+                      ul: ({ children }) => (
+                        <ul className="list-disc pl-6 mb-6 space-y-2">
+                          {children}
+                        </ul>
+                      ),
+                      ol: ({ children }) => (
+                        <ol className="list-decimal pl-6 mb-6 space-y-2">
+                          {children}
+                        </ol>
+                      ),
+                      li: ({ children }) => (
+                        <li className="pl-1">
+                          {children}
+                        </li>
+                      ),
+                      blockquote: ({ children }) => (
+                        <blockquote className="border-l-4 border-anthropic-accent/50 bg-anthropic-stone/30 pl-5 pr-4 py-3 my-8 italic text-anthropic-text/80">
+                          {children}
+                        </blockquote>
+                      ),
+                      code: ({ className, children }) => {
+                        const isBlock = Boolean(className);
+                        if (!isBlock) {
+                          return (
+                            <code className="px-1.5 py-0.5 rounded bg-anthropic-stone/60 text-[0.9em] font-mono text-anthropic-text">
+                              {children}
+                            </code>
+                          );
+                        }
+
                         return (
-                          <div key={idx} className="bg-anthropic-stone/30 p-6 rounded-lg border border-anthropic-text/5 mb-8">
-                            <p className="text-sm text-anthropic-text/80 italic m-0">
-                              {item.replace(/\*/g, '')}
-                            </p>
-                          </div>
+                          <code className={`${className} block overflow-x-auto whitespace-pre`}>
+                            {children}
+                          </code>
                         );
-                      }
-                      // Check for h2 heading (##)
-                      if (item.trim().startsWith('## ')) {
-                        return <h2 key={idx} className="text-3xl font-serif text-anthropic-text mb-6 mt-12">{parseInlineMarkdown(item.replace(/^## /, ''))}</h2>;
-                      }
-                      // Check for h3 heading (###)
-                      if (item.trim().startsWith('### ')) {
-                        return <h3 key={idx} className="text-2xl font-serif text-anthropic-text mb-4 mt-10">{parseInlineMarkdown(item.replace(/^### /, ''))}</h3>;
-                      }
-                      return item.trim() && <p key={idx} className="mb-6">{parseInlineMarkdown(item)}</p>;
-                    } else if (item.type === 'image') {
-                      return (
-                        <figure key={idx} className="my-6 flex flex-col items-center">
-                          <img
-                            src={item.src}
-                            alt={item.alt}
-                            className="w-full max-w-sm md:max-w-lg lg:max-w-xl h-auto rounded-lg shadow-sm border border-anthropic-text/5 object-cover"
-                            loading="lazy"
-                          />
-                          {item.caption && (
-                            <figcaption className="mt-3 text-sm text-anthropic-gray/70 text-center max-w-sm md:max-w-lg lg:max-w-xl italic">
-                              {item.caption}
-                            </figcaption>
-                          )}
-                        </figure>
-                      );
-                    }
-                    return null;
-                  })
+                      },
+                      pre: ({ children }) => (
+                        <pre className="mb-6 overflow-x-auto rounded-lg border border-anthropic-text/10 bg-[#191919] p-4 text-sm leading-relaxed text-[#F4F3EF]">
+                          {children}
+                        </pre>
+                      ),
+                      img: ({ src, alt }) => (
+                        <img
+                          src={src || ''}
+                          alt={alt || 'Blog illustration'}
+                          className="mx-auto my-6 w-full max-w-sm md:max-w-lg lg:max-w-xl h-auto rounded-lg shadow-sm border border-anthropic-text/5 object-cover"
+                          loading="lazy"
+                        />
+                      ),
+                      table: ({ children }) => (
+                        <div className="mb-6 overflow-x-auto">
+                          <table className="w-full border-collapse text-left text-base">
+                            {children}
+                          </table>
+                        </div>
+                      ),
+                      th: ({ children }) => (
+                        <th className="border border-anthropic-text/10 bg-anthropic-stone/40 px-3 py-2 font-semibold">
+                          {children}
+                        </th>
+                      ),
+                      td: ({ children }) => (
+                        <td className="border border-anthropic-text/10 px-3 py-2 align-top">
+                          {children}
+                        </td>
+                      ),
+                      hr: () => (
+                        <hr className="my-10 border-anthropic-text/10" />
+                      ),
+                    }}
+                  >
+                    {blogContent}
+                  </ReactMarkdown>
                 )}
               </div>
             </article>

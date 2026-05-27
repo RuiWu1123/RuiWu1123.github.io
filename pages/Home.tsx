@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { ArrowRight, Mail, Github, Twitter, MessageCircle, GraduationCap } from 'lucide-react';
-import { RESEARCH_INTERESTS, NEWS_ITEMS, SOCIAL_LINKS } from '../constants';
+import { Mail, Github, Twitter, MessageCircle, GraduationCap, FileText } from 'lucide-react';
+import { NEWS_ITEMS, SOCIAL_LINKS, PUBLICATIONS } from '../constants';
 import HeroVisual from '../components/HeroVisual';
-import { Link } from 'react-router-dom';
 
 const Home: React.FC = () => {
   const copyWeChat = () => {
@@ -165,43 +164,76 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Research Topics */}
+      {/* Publications */}
       <section>
         <div className="flex items-baseline justify-between mb-8 border-b border-anthropic-text/10 pb-4">
-          <h2 className="text-3xl font-serif text-anthropic-text">Research Topics</h2>
-          <Link to="/publications" className="group flex items-center text-sm font-sans text-anthropic-accent hover:text-anthropic-text transition-colors">
-            View Publications
-            <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
-          </Link>
+          <h2 className="text-3xl font-serif text-anthropic-text">Publications</h2>
+          <span className="text-sm font-sans text-anthropic-gray/60 uppercase tracking-widest">Selected Papers</span>
         </div>
 
-        <div className="mb-10">
-          <p className="text-lg font-sans font-light text-anthropic-gray leading-relaxed">
-            My research centers on AI Alignment, studying how to ensure increasingly capable models remain aligned with human intentions beyond narrow training conditions. Recently, I am particularly focused on understanding the fundamental nature of reward hacking and weak-to-strong generalization.
-          </p>
-        </div>
+        <div className="space-y-8">
+          {PUBLICATIONS.map((pub) => (
+            <div key={pub.id} className="group border-l-4 pl-6 md:pl-8 py-4 pr-4 rounded-r-lg transition-colors duration-300 border-anthropic-stone hover:border-anthropic-accent">
+              <div className="flex flex-wrap gap-2 mb-3">
+                {pub.preprint && (
+                  <span className="px-2 py-0.5 bg-anthropic-stone/50 rounded text-xs font-medium text-anthropic-text uppercase tracking-wide">
+                    Preprint
+                  </span>
+                )}
+                {pub.tags?.map(tag => (
+                  <span
+                    key={tag}
+                    className="px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wide bg-anthropic-leaf/20 text-anthropic-text"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {RESEARCH_INTERESTS.map((interest, index) => (
-            <div 
-              key={index} 
-              className={`p-8 rounded-xl border transition-all duration-300 hover:shadow-sm ${interest.colorTheme || 'bg-white border-anthropic-text/5'}`}
-            >
-              <div className="flex flex-col h-full">
-                <div className="flex justify-between items-start mb-4">
-                   <h3 className="text-2xl font-serif text-anthropic-text">{interest.title}</h3>
-                </div>
-                
-                <p className="text-anthropic-gray font-sans font-light leading-relaxed flex-grow">
-                  {interest.description}
-                </p>
+              <h3 className="text-xl md:text-2xl font-serif text-anthropic-text mb-3 leading-tight">
+                {pub.link ? (
+                  <a href={pub.link} target="_blank" rel="noreferrer" className="hover:text-anthropic-accent transition-colors">
+                    {pub.title}
+                  </a>
+                ) : (
+                  pub.title
+                )}
+              </h3>
 
-                {interest.period && (
-                    <div className="mt-6 pt-4 border-t border-black/5">
-                        <span className="text-xs font-mono text-anthropic-gray/60 uppercase tracking-wider">
-                            {interest.period}
-                        </span>
-                    </div>
+              <p className="text-anthropic-gray text-base mb-3 font-light">
+                {pub.authors.map((author, idx) => (
+                  <span key={idx} className={author.includes("Rui Wu") ? "font-bold text-anthropic-text" : ""}>
+                    {author}{idx < pub.authors.length - 1 ? ", " : ""}
+                  </span>
+                ))}
+              </p>
+
+              <div className="text-sm text-anthropic-gray/80 italic mb-4">
+                {pub.venue} ({pub.year})
+              </div>
+
+              <div className="flex gap-4">
+                {pub.link && (
+                  <a
+                    href={pub.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center text-sm font-medium text-anthropic-accent hover:text-anthropic-text transition-colors"
+                  >
+                    <FileText size={16} className="mr-1.5" />
+                    ArXiv
+                  </a>
+                )}
+                {pub.github && (
+                  <a
+                    href={pub.github}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center text-sm font-medium text-anthropic-accent hover:text-anthropic-text transition-colors"
+                  >
+                    <Github size={16} className="mr-1.5" />
+                    Code
+                  </a>
                 )}
               </div>
             </div>

@@ -1,0 +1,117 @@
+<svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="960" height="560" fill="#F4F3EF"/>
+
+  <!-- Titles -->
+  <text x="230" y="46" text-anchor="middle" font-size="24" fill="#191919" font-weight="600">CPU</text>
+  <text x="230" y="70" text-anchor="middle" font-size="14" fill="#6B6B6B">latency-optimized: a few complex cores</text>
+
+  <text x="730" y="46" text-anchor="middle" font-size="24" fill="#191919" font-weight="600">GPU</text>
+  <text x="730" y="70" text-anchor="middle" font-size="14" fill="#6B6B6B">throughput-optimized: thousands of simple cores</text>
+
+  <!-- CPU chip outline -->
+  <rect x="60" y="95" width="340" height="410" rx="10" fill="#E6E4DD" stroke="#191919" stroke-width="1.5"/>
+
+  <!-- CPU cores: 4 large cores, each mostly control + cache, small ALU -->
+  <g>
+    <!-- core template function repeated manually -->
+    <!-- Core 1 -->
+    <rect x="80" y="115" width="145" height="180" rx="6" fill="#F3ECE2" stroke="#191919" stroke-width="1"/>
+    <rect x="92" y="127" width="121" height="46" rx="4" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
+    <text x="152" y="154" text-anchor="middle" font-size="12" fill="#191919">Control</text>
+    <rect x="92" y="181" width="121" height="70" rx="4" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
+    <text x="152" y="219" text-anchor="middle" font-size="12" fill="#191919">L1/L2 Cache</text>
+    <rect x="92" y="259" width="50" height="26" rx="3" fill="#D97757" stroke="#191919" stroke-width="1"/>
+    <text x="117" y="276" text-anchor="middle" font-size="10" fill="#F4F3EF">ALU</text>
+
+    <!-- Core 2 -->
+    <rect x="235" y="115" width="145" height="180" rx="6" fill="#F3ECE2" stroke="#191919" stroke-width="1"/>
+    <rect x="247" y="127" width="121" height="46" rx="4" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
+    <text x="307" y="154" text-anchor="middle" font-size="12" fill="#191919">Control</text>
+    <rect x="247" y="181" width="121" height="70" rx="4" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
+    <text x="307" y="219" text-anchor="middle" font-size="12" fill="#191919">L1/L2 Cache</text>
+    <rect x="247" y="259" width="50" height="26" rx="3" fill="#D97757" stroke="#191919" stroke-width="1"/>
+    <text x="272" y="276" text-anchor="middle" font-size="10" fill="#F4F3EF">ALU</text>
+
+    <!-- Core 3 -->
+    <rect x="80" y="305" width="145" height="180" rx="6" fill="#F3ECE2" stroke="#191919" stroke-width="1"/>
+    <rect x="92" y="317" width="121" height="46" rx="4" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
+    <text x="152" y="344" text-anchor="middle" font-size="12" fill="#191919">Control</text>
+    <rect x="92" y="371" width="121" height="70" rx="4" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
+    <text x="152" y="409" text-anchor="middle" font-size="12" fill="#191919">L1/L2 Cache</text>
+    <rect x="92" y="449" width="50" height="26" rx="3" fill="#D97757" stroke="#191919" stroke-width="1"/>
+    <text x="117" y="466" text-anchor="middle" font-size="10" fill="#F4F3EF">ALU</text>
+
+    <!-- Core 4 -->
+    <rect x="235" y="305" width="145" height="180" rx="6" fill="#F3ECE2" stroke="#191919" stroke-width="1"/>
+    <rect x="247" y="317" width="121" height="46" rx="4" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
+    <text x="307" y="344" text-anchor="middle" font-size="12" fill="#191919">Control</text>
+    <rect x="247" y="371" width="121" height="70" rx="4" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
+    <text x="307" y="409" text-anchor="middle" font-size="12" fill="#191919">L1/L2 Cache</text>
+    <rect x="247" y="449" width="50" height="26" rx="3" fill="#D97757" stroke="#191919" stroke-width="1"/>
+    <text x="272" y="466" text-anchor="middle" font-size="10" fill="#F4F3EF">ALU</text>
+  </g>
+
+  <!-- GPU chip outline -->
+  <rect x="560" y="95" width="340" height="410" rx="10" fill="#E6E4DD" stroke="#191919" stroke-width="1.5"/>
+  <rect x="580" y="112" width="300" height="30" rx="4" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
+  <text x="730" y="132" text-anchor="middle" font-size="12" fill="#191919">Shared Control / Cache (small, relative to ALUs)</text>
+
+  <!-- Grid of small ALUs: 12 columns x 12 rows -->
+  <g fill="#D97757" stroke="#191919" stroke-width="0.6">
+    <!-- generated grid -->
+    <!-- row spacing ~ 27px, col spacing ~24px, starting x=584 y=155 -->
+  </g>
+  <g id="alu-grid" fill="#D97757" stroke="#191919" stroke-width="0.5">
+    <!-- 12 x 12 grid manually approximated with rects -->
+  </g>
+
+  <!-- Programmatic-looking grid via repeated rows (written out) -->
+  <g fill="#D97757" stroke="#191919" stroke-width="0.5">
+    <!-- Row generation: 12 rows, 12 cols, box 20x18, gap 4 -->
+    <!-- We inline all rects -->
+    <!-- Using a compact approach: 144 small rects -->
+    <g transform="translate(584,155)">
+      <!-- 12 rows -->
+      <g>
+        <!-- Row helper via nested transforms -->
+      </g>
+    </g>
+  </g>
+
+  <!-- Explicit grid: 10 cols x 10 rows of small squares -->
+  <g fill="#D97757" stroke="#191919" stroke-width="0.5">
+    <g transform="translate(584,158)">
+      <!-- We'll just draw 10x10 = 100 ALU boxes -->
+      <!-- row 1 -->
+      <rect x="0" y="0" width="24" height="20"/><rect x="28" y="0" width="24" height="20"/><rect x="56" y="0" width="24" height="20"/><rect x="84" y="0" width="24" height="20"/><rect x="112" y="0" width="24" height="20"/><rect x="140" y="0" width="24" height="20"/><rect x="168" y="0" width="24" height="20"/><rect x="196" y="0" width="24" height="20"/><rect x="224" y="0" width="24" height="20"/><rect x="252" y="0" width="24" height="20"/>
+      <!-- row 2 -->
+      <rect x="0" y="26" width="24" height="20"/><rect x="28" y="26" width="24" height="20"/><rect x="56" y="26" width="24" height="20"/><rect x="84" y="26" width="24" height="20"/><rect x="112" y="26" width="24" height="20"/><rect x="140" y="26" width="24" height="20"/><rect x="168" y="26" width="24" height="20"/><rect x="196" y="26" width="24" height="20"/><rect x="224" y="26" width="24" height="20"/><rect x="252" y="26" width="24" height="20"/>
+      <!-- row 3 -->
+      <rect x="0" y="52" width="24" height="20"/><rect x="28" y="52" width="24" height="20"/><rect x="56" y="52" width="24" height="20"/><rect x="84" y="52" width="24" height="20"/><rect x="112" y="52" width="24" height="20"/><rect x="140" y="52" width="24" height="20"/><rect x="168" y="52" width="24" height="20"/><rect x="196" y="52" width="24" height="20"/><rect x="224" y="52" width="24" height="20"/><rect x="252" y="52" width="24" height="20"/>
+      <!-- row 4 -->
+      <rect x="0" y="78" width="24" height="20"/><rect x="28" y="78" width="24" height="20"/><rect x="56" y="78" width="24" height="20"/><rect x="84" y="78" width="24" height="20"/><rect x="112" y="78" width="24" height="20"/><rect x="140" y="78" width="24" height="20"/><rect x="168" y="78" width="24" height="20"/><rect x="196" y="78" width="24" height="20"/><rect x="224" y="78" width="24" height="20"/><rect x="252" y="78" width="24" height="20"/>
+      <!-- row 5 -->
+      <rect x="0" y="104" width="24" height="20"/><rect x="28" y="104" width="24" height="20"/><rect x="56" y="104" width="24" height="20"/><rect x="84" y="104" width="24" height="20"/><rect x="112" y="104" width="24" height="20"/><rect x="140" y="104" width="24" height="20"/><rect x="168" y="104" width="24" height="20"/><rect x="196" y="104" width="24" height="20"/><rect x="224" y="104" width="24" height="20"/><rect x="252" y="104" width="24" height="20"/>
+      <!-- row 6 -->
+      <rect x="0" y="130" width="24" height="20"/><rect x="28" y="130" width="24" height="20"/><rect x="56" y="130" width="24" height="20"/><rect x="84" y="130" width="24" height="20"/><rect x="112" y="130" width="24" height="20"/><rect x="140" y="130" width="24" height="20"/><rect x="168" y="130" width="24" height="20"/><rect x="196" y="130" width="24" height="20"/><rect x="224" y="130" width="24" height="20"/><rect x="252" y="130" width="24" height="20"/>
+      <!-- row 7 -->
+      <rect x="0" y="156" width="24" height="20"/><rect x="28" y="156" width="24" height="20"/><rect x="56" y="156" width="24" height="20"/><rect x="84" y="156" width="24" height="20"/><rect x="112" y="156" width="24" height="20"/><rect x="140" y="156" width="24" height="20"/><rect x="168" y="156" width="24" height="20"/><rect x="196" y="156" width="24" height="20"/><rect x="224" y="156" width="24" height="20"/><rect x="252" y="156" width="24" height="20"/>
+      <!-- row 8 -->
+      <rect x="0" y="182" width="24" height="20"/><rect x="28" y="182" width="24" height="20"/><rect x="56" y="182" width="24" height="20"/><rect x="84" y="182" width="24" height="20"/><rect x="112" y="182" width="24" height="20"/><rect x="140" y="182" width="24" height="20"/><rect x="168" y="182" width="24" height="20"/><rect x="196" y="182" width="24" height="20"/><rect x="224" y="182" width="24" height="20"/><rect x="252" y="182" width="24" height="20"/>
+      <!-- row 9 -->
+      <rect x="0" y="208" width="24" height="20"/><rect x="28" y="208" width="24" height="20"/><rect x="56" y="208" width="24" height="20"/><rect x="84" y="208" width="24" height="20"/><rect x="112" y="208" width="24" height="20"/><rect x="140" y="208" width="24" height="20"/><rect x="168" y="208" width="24" height="20"/><rect x="196" y="208" width="24" height="20"/><rect x="224" y="208" width="24" height="20"/><rect x="252" y="208" width="24" height="20"/>
+      <!-- row 10 -->
+      <rect x="0" y="234" width="24" height="20"/><rect x="28" y="234" width="24" height="20"/><rect x="56" y="234" width="24" height="20"/><rect x="84" y="234" width="24" height="20"/><rect x="112" y="234" width="24" height="20"/><rect x="140" y="234" width="24" height="20"/><rect x="168" y="234" width="24" height="20"/><rect x="196" y="234" width="24" height="20"/><rect x="224" y="234" width="24" height="20"/><rect x="252" y="234" width="24" height="20"/>
+    </g>
+  </g>
+
+  <text x="730" y="440" text-anchor="middle" font-size="12" fill="#191919">Each small square = one simple ALU (CUDA core)</text>
+  <text x="730" y="460" text-anchor="middle" font-size="12" fill="#6B6B6B">100s–1000s of ALUs per chip, grouped into SMs</text>
+
+  <!-- Bottom captions -->
+  <text x="230" y="530" text-anchor="middle" font-size="13" fill="#191919">Most silicon → control logic &amp; cache</text>
+  <text x="230" y="548" text-anchor="middle" font-size="12" fill="#6B6B6B">Great at branching, sequential logic, low latency</text>
+
+  <text x="730" y="530" text-anchor="middle" font-size="13" fill="#191919">Most silicon → arithmetic units</text>
+  <text x="730" y="548" text-anchor="middle" font-size="12" fill="#6B6B6B">Great at doing the same op on massive data in parallel</text>
+</svg>

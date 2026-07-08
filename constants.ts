@@ -131,6 +131,11 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: "gpu-field-guide-for-dl",
+    title: "GPUs from First Principles: A Field Guide for Deep Learning Researchers",
+    date: "2026/7/8"
+  },
+  {
     id: "code-as-minimal-world",
     title: "Code as a Bridge: A Minimal World for Consequence-Grounded Safety",
     date: "2026/4/7"

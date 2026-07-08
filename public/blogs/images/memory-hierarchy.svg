@@ -1,0 +1,51 @@
+<svg viewBox="0 0 960 640" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="960" height="640" fill="#F4F3EF"/>
+  <text x="480" y="42" text-anchor="middle" font-size="24" font-weight="600" fill="#191919">The GPU Memory Hierarchy</text>
+  <text x="480" y="66" text-anchor="middle" font-size="14" fill="#6B6B6B">smaller &amp; faster at the top, bigger &amp; slower at the bottom — numbers are order-of-magnitude, H100-class</text>
+
+  <!-- Pyramid levels: registers, shared/L1, L2, HBM, Host DRAM, Network -->
+  <!-- Level 1: Registers (narrowest, top) -->
+  <polygon points="430,95 530,95 560,150 400,150" fill="#D97757" stroke="#191919" stroke-width="1"/>
+  <text x="480" y="118" text-anchor="middle" font-size="13" font-weight="600" fill="#F4F3EF">Registers</text>
+  <text x="480" y="136" text-anchor="middle" font-size="10.5" fill="#F4F3EF">~KB per thread · ~1 cycle</text>
+
+  <!-- Level 2: Shared memory / L1 -->
+  <polygon points="400,150 560,150 610,215 350,215" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+  <text x="480" y="178" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">Shared Memory / L1</text>
+  <text x="480" y="196" text-anchor="middle" font-size="10.5" fill="#191919">~100–256 KB per SM · ~20–30 cycles</text>
+
+  <!-- Level 3: L2 cache -->
+  <polygon points="350,215 610,215 660,285 300,285" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
+  <text x="480" y="245" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">L2 Cache</text>
+  <text x="480" y="263" text-anchor="middle" font-size="10.5" fill="#191919">~50 MB, chip-wide · ~200 cycles</text>
+
+  <!-- Level 4: HBM -->
+  <polygon points="300,285 660,285 715,360 245,360" fill="#F3ECE2" stroke="#191919" stroke-width="1"/>
+  <text x="480" y="315" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">HBM (Device Memory)</text>
+  <text x="480" y="333" text-anchor="middle" font-size="10.5" fill="#191919">40–192 GB · ~3–8 TB/s · ~500 cycles</text>
+  <text x="480" y="349" text-anchor="middle" font-size="10" fill="#6B6B6B">this is what nvidia-smi calls "GPU memory"</text>
+
+  <!-- Level 5: Host DRAM over PCIe -->
+  <polygon points="245,360 715,360 775,440 185,440" fill="#E6E4DD" stroke="#191919" stroke-width="1"/>
+  <text x="480" y="393" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">Host (CPU) DRAM — over PCIe</text>
+  <text x="480" y="411" text-anchor="middle" font-size="10.5" fill="#191919">100s of GB · ~32–64 GB/s per direction · ~1,000s of cycles</text>
+  <text x="480" y="427" text-anchor="middle" font-size="10" fill="#6B6B6B">dataloaders live here — a common silent bottleneck</text>
+
+  <!-- Level 6: Network -->
+  <polygon points="185,440 775,440 840,525 120,525" fill="#DCD9CE" stroke="#191919" stroke-width="1"/>
+  <text x="480" y="478" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">Remote GPU Memory — over NVLink / InfiniBand</text>
+  <text x="480" y="496" text-anchor="middle" font-size="10.5" fill="#191919">NVLink ~0.9–1.8 TB/s (in-node) · InfiniBand ~50 GB/s per GPU (across nodes)</text>
+  <text x="480" y="512" text-anchor="middle" font-size="10" fill="#6B6B6B">this is the cost of "another GPU's activations/gradients"</text>
+
+  <!-- Right-side annotation arrows -->
+  <line x1="860" y1="110" x2="860" y2="510" stroke="#191919" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#191919"/>
+    </marker>
+  </defs>
+  <text x="885" y="120" font-size="12" fill="#191919" transform="rotate(90 885,120)">capacity ↑ · bandwidth ↓ · latency ↑</text>
+
+  <text x="480" y="560" text-anchor="middle" font-size="12.5" fill="#191919" font-weight="600">Rule of thumb: every level down is roughly 5–20× more capacity and 5–20× less bandwidth.</text>
+  <text x="480" y="580" text-anchor="middle" font-size="12" fill="#6B6B6B">Fast kernels are ones that reuse data high up this pyramid instead of re-fetching it from below.</text>
+</svg>

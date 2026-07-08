@@ -1,0 +1,74 @@
+<svg viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="960" height="620" fill="#F4F3EF"/>
+  <text x="480" y="42" text-anchor="middle" font-size="24" font-weight="600" fill="#191919">Multi-GPU Topology: Inside a Node, Across a Cluster</text>
+  <text x="480" y="66" text-anchor="middle" font-size="14" fill="#6B6B6B">bandwidth drops by roughly an order of magnitude at every hop outward</text>
+
+  <!-- Node 1 box -->
+  <rect x="60" y="100" width="400" height="300" rx="12" fill="#E6E4DD" stroke="#191919" stroke-width="1.5"/>
+  <text x="260" y="128" text-anchor="middle" font-size="14" font-weight="600" fill="#191919">Node A (8 GPUs)</text>
+
+  <!-- NVSwitch hub -->
+  <rect x="220" y="220" width="80" height="40" rx="6" fill="#D97757" stroke="#191919" stroke-width="1"/>
+  <text x="260" y="245" text-anchor="middle" font-size="11" fill="#F4F3EF">NVSwitch</text>
+
+  <!-- 8 GPUs around switch (draw 4 for clarity, label x8) -->
+  <rect x="90" y="150" width="70" height="45" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+  <text x="125" y="176" text-anchor="middle" font-size="11" fill="#191919">GPU 0</text>
+  <rect x="360" y="150" width="70" height="45" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+  <text x="395" y="176" text-anchor="middle" font-size="11" fill="#191919">GPU 1</text>
+  <rect x="90" y="310" width="70" height="45" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+  <text x="125" y="336" text-anchor="middle" font-size="11" fill="#191919">GPU 2</text>
+  <rect x="360" y="310" width="70" height="45" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+  <text x="395" y="336" text-anchor="middle" font-size="11" fill="#191919">GPU 3</text>
+  <text x="260" y="380" text-anchor="middle" font-size="11" fill="#6B6B6B">(+ 4 more, all-to-all via NVSwitch)</text>
+
+  <!-- lines from switch to GPUs -->
+  <line x1="240" y1="220" x2="140" y2="195" stroke="#191919" stroke-width="1.3"/>
+  <line x1="285" y1="220" x2="390" y2="195" stroke="#191919" stroke-width="1.3"/>
+  <line x1="240" y1="260" x2="140" y2="310" stroke="#191919" stroke-width="1.3"/>
+  <line x1="285" y1="260" x2="390" y2="310" stroke="#191919" stroke-width="1.3"/>
+
+  <text x="260" y="290" text-anchor="middle" font-size="10.5" fill="#191919" font-weight="600">NVLink: ~0.9–1.8 TB/s per GPU</text>
+
+  <!-- Node 2 box -->
+  <rect x="500" y="100" width="400" height="300" rx="12" fill="#E6E4DD" stroke="#191919" stroke-width="1.5"/>
+  <text x="700" y="128" text-anchor="middle" font-size="14" font-weight="600" fill="#191919">Node B (8 GPUs)</text>
+
+  <rect x="660" y="220" width="80" height="40" rx="6" fill="#D97757" stroke="#191919" stroke-width="1"/>
+  <text x="700" y="245" text-anchor="middle" font-size="11" fill="#F4F3EF">NVSwitch</text>
+
+  <rect x="530" y="150" width="70" height="45" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+  <text x="565" y="176" text-anchor="middle" font-size="11" fill="#191919">GPU 0</text>
+  <rect x="800" y="150" width="70" height="45" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+  <text x="835" y="176" text-anchor="middle" font-size="11" fill="#191919">GPU 1</text>
+  <rect x="530" y="310" width="70" height="45" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+  <text x="565" y="336" text-anchor="middle" font-size="11" fill="#191919">GPU 2</text>
+  <rect x="800" y="310" width="70" height="45" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+  <text x="835" y="336" text-anchor="middle" font-size="11" fill="#191919">GPU 3</text>
+  <text x="700" y="380" text-anchor="middle" font-size="11" fill="#6B6B6B">(+ 4 more, all-to-all via NVSwitch)</text>
+
+  <line x1="680" y1="220" x2="580" y2="195" stroke="#191919" stroke-width="1.3"/>
+  <line x1="725" y1="220" x2="830" y2="195" stroke="#191919" stroke-width="1.3"/>
+  <line x1="680" y1="260" x2="580" y2="310" stroke="#191919" stroke-width="1.3"/>
+  <line x1="725" y1="260" x2="830" y2="310" stroke="#191919" stroke-width="1.3"/>
+
+  <!-- Inter-node link -->
+  <line x1="460" y1="240" x2="500" y2="240" stroke="#191919" stroke-width="2.5" marker-end="url(#arrow2)" marker-start="url(#arrow2)"/>
+  <defs>
+    <marker id="arrow2" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#191919"/>
+    </marker>
+  </defs>
+  <text x="480" y="200" text-anchor="middle" font-size="11" fill="#191919" font-weight="600">InfiniBand /</text>
+  <text x="480" y="215" text-anchor="middle" font-size="11" fill="#191919" font-weight="600">RoCE fabric</text>
+  <text x="480" y="290" text-anchor="middle" font-size="10.5" fill="#191919">~50 GB/s per GPU</text>
+  <text x="480" y="305" text-anchor="middle" font-size="10.5" fill="#191919">(400 Gb/s NIC each)</text>
+
+  <!-- Legend / takeaways -->
+  <rect x="60" y="435" width="840" height="150" rx="10" fill="#F3ECE2" stroke="#191919" stroke-width="1"/>
+  <text x="80" y="460" font-size="13" fill="#191919" font-weight="600">What this means for parallelism strategy:</text>
+  <text x="80" y="484" font-size="12" fill="#191919">• Data parallelism (each GPU holds a full model copy, gradients all-reduced) tolerates the slower inter-node link fine.</text>
+  <text x="80" y="505" font-size="12" fill="#191919">• Tensor / pipeline parallelism (splitting a single layer or model across GPUs) needs every-step communication —</text>
+  <text x="98" y="524" font-size="12" fill="#191919">keep it inside the fast NVLink domain (one node) whenever possible.</text>
+  <text x="80" y="548" font-size="12" fill="#6B6B6B">• Crossing an inter-node hop for tensor-parallel traffic is a classic reason multi-node training scales worse than expected.</text>
+</svg>

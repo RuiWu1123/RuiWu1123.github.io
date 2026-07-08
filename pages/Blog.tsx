@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ArrowLeft } from 'lucide-react';
 import { BLOG_POSTS, loadBlogContent } from '../constants';
+import { RooflineExplorer, GridBlockSimulator } from '../components/blog/Interactives';
 
 const Blog: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -170,14 +171,22 @@ const Blog: React.FC = () => {
                           {children}
                         </pre>
                       ),
-                      img: ({ src, alt }) => (
-                        <img
-                          src={src || ''}
-                          alt={alt || 'Blog illustration'}
-                          className="mx-auto my-6 w-full max-w-sm md:max-w-lg lg:max-w-xl h-auto rounded-lg shadow-sm border border-anthropic-text/5 object-cover"
-                          loading="lazy"
-                        />
-                      ),
+                      img: ({ src, alt }) => {
+                        if (src === 'interactive:roofline') {
+                          return <RooflineExplorer lang={lang} />;
+                        }
+                        if (src === 'interactive:grid-block') {
+                          return <GridBlockSimulator lang={lang} />;
+                        }
+                        return (
+                          <img
+                            src={src || ''}
+                            alt={alt || 'Blog illustration'}
+                            className="mx-auto my-6 w-full max-w-2xl h-auto rounded-lg shadow-sm border border-anthropic-text/5 object-cover"
+                            loading="lazy"
+                          />
+                        );
+                      },
                       table: ({ children }) => (
                         <div className="mb-6 overflow-x-auto">
                           <table className="w-full border-collapse text-left text-base">

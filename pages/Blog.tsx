@@ -115,11 +115,24 @@ const Blog: React.FC = () => {
                           {children}
                         </h4>
                       ),
-                      p: ({ children }) => (
-                        <p className="mb-6 text-anthropic-text">
-                          {children}
-                        </p>
-                      ),
+                      p: ({ children }) => {
+                        const items = React.Children.toArray(children);
+                        const first = items[0];
+                        if (typeof first === 'string' && first.startsWith('^')) {
+                          const rest = items.slice(1);
+                          return (
+                            <p className="-mt-4 mb-8 text-sm text-anthropic-gray/70 italic text-center leading-relaxed">
+                              {first.slice(1)}
+                              {rest}
+                            </p>
+                          );
+                        }
+                        return (
+                          <p className="mb-6 text-anthropic-text">
+                            {children}
+                          </p>
+                        );
+                      },
                       a: ({ href, children }) => (
                         <a
                           href={href}

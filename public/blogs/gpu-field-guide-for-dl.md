@@ -39,7 +39,7 @@ How many blocks can be simultaneously resident on one SM depends on how much of 
 
 The interactive panel below lets you pick a block size and a total number of blocks, and see how that maps onto 132 SMs — including how many sequential "waves" of blocks it takes to get through the whole grid, since only so many blocks fit on the chip at once.
 
-![Grid to block to SM simulator](interactive:grid-block)
+![interactive:grid-block](#)
 
 The takeaway that matters in practice: **launching too few blocks under-uses the chip** (some SMs sit idle), and **very small blocks with heavy per-thread resource usage under-use each SM** (occupancy is low even though every SM has work). Both failure modes show up as "my GPU utilization is low" in `nvidia-smi`, for entirely different underlying reasons — which is exactly why that single utilization number is a bad diagnostic tool on its own.
 
@@ -99,7 +99,7 @@ Most of the individual operations inside a transformer sit in very different pla
 
 Play with the panel below: pick a Tensor Core precision (which sets the ridge point) and either an operation profile or a manual arithmetic-intensity slider, and watch which regime you land in.
 
-![Roofline model explorer](interactive:roofline)
+![interactive:roofline](#)
 
 This single idea explains a lot of otherwise-confusing empirical facts: why fusing several small elementwise ops into one kernel (what `torch.compile` and hand-written fused kernels both try to do) can produce a large speedup with *zero* change in FLOPs — you're not doing less arithmetic, you're doing fewer round-trips to HBM, which is what was actually limiting you; why attention at long sequence lengths and small batch sizes can be disappointingly slow relative to its FLOP count — it's memory-bound, dominated by moving the attention matrix and KV-cache around, not by the matmuls themselves (this is a large part of what motivated FlashAttention: it restructures the computation specifically to avoid materializing memory-bound intermediate tensors); and why a bigger batch size so often "comes for free" in terms of wall-clock time per sample — it increases arithmetic intensity by amortizing each weight load over more examples, sliding you further into compute-bound territory where you were leaving throughput on the table before.
 

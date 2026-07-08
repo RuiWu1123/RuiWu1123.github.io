@@ -172,10 +172,10 @@ const Blog: React.FC = () => {
                         </pre>
                       ),
                       img: ({ src, alt }) => {
-                        if (src === 'interactive:roofline') {
+                        if (alt === 'interactive:roofline') {
                           return <RooflineExplorer lang={lang} />;
                         }
-                        if (src === 'interactive:grid-block') {
+                        if (alt === 'interactive:grid-block') {
                           return <GridBlockSimulator lang={lang} />;
                         }
                         return (

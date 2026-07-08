@@ -32,6 +32,11 @@
   <text x="490" y="516" text-anchor="middle" font-size="15" font-weight="600" fill="#191919">Remote GPU Memory — NVLink / InfiniBand</text>
   <text x="490" y="537" text-anchor="middle" font-size="12.5" fill="#191919">NVLink ~0.9–1.8 TB/s (node) · InfiniBand ~50 GB/s/GPU (cluster)</text>
 
-  <!-- Right-side annotation: plain bar, no arrowhead -->
-  <rect x="943" y="100" width="4" height="440" rx="2" fill="#191919"/>
+  <!-- Right-side annotation -->
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="4.5" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#191919"/>
+    </marker>
+  </defs>
+  <line x1="945" y1="100" x2="945" y2="540" stroke="#191919" stroke-width="1.2" marker-end="url(#arrow)"/>
 </svg>

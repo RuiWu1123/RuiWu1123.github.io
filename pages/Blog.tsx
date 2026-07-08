@@ -117,16 +117,42 @@ const Blog: React.FC = () => {
                       ),
                       p: ({ children }) => {
                         const items = React.Children.toArray(children);
+
+                        // Case 1: the whole paragraph is just "^caption text"
+                        // (caption written as its own paragraph, blank line above).
                         const first = items[0];
-                        if (typeof first === 'string' && first.startsWith('^')) {
+                        if (typeof first === 'string' && first.trim().startsWith('^')) {
                           const rest = items.slice(1);
                           return (
-                            <p className="-mt-4 mb-8 text-sm text-anthropic-gray/70 italic text-center leading-relaxed">
-                              {first.slice(1)}
+                            <p className="-mt-2 mb-8 text-sm text-anthropic-gray/70 italic text-center leading-relaxed">
+                              {first.trim().slice(1)}
                               {rest}
                             </p>
                           );
                         }
+
+                        // Case 2: an image/component immediately followed by a
+                        // "^caption" line with no blank line in between — markdown
+                        // merges these into one paragraph, so the caption shows up
+                        // as a later text child rather than item[0].
+                        const captionIndex = items.findIndex(
+                          (it) => typeof it === 'string' && it.trim().startsWith('^')
+                        );
+                        if (captionIndex > 0) {
+                          const media = items.slice(0, captionIndex);
+                          const capFirst = (items[captionIndex] as string).trim().slice(1);
+                          const capRest = items.slice(captionIndex + 1);
+                          return (
+                            <div className="my-6">
+                              {media}
+                              <p className="mt-2 mb-2 text-sm text-anthropic-gray/70 italic text-center leading-relaxed">
+                                {capFirst}
+                                {capRest}
+                              </p>
+                            </div>
+                          );
+                        }
+
                         return (
                           <p className="mb-6 text-anthropic-text">
                             {children}
@@ -195,7 +221,7 @@ const Blog: React.FC = () => {
                           <img
                             src={src || ''}
                             alt={alt || 'Blog illustration'}
-                            className="mx-auto my-6 w-full max-w-2xl h-auto rounded-lg shadow-sm border border-anthropic-text/5 object-cover"
+                            className="mx-auto w-full max-w-2xl h-auto rounded-lg shadow-sm border border-anthropic-text/5 object-cover"
                             loading="lazy"
                           />
                         );

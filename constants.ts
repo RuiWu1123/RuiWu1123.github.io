@@ -2,9 +2,14 @@
 import { NavItem, ResearchInterest, VisitedPlace, Publication, NewsItem, BlogPost } from './types';
 
 // Function to load blog content from file
-export const loadBlogContent = async (blogId: string): Promise<string> => {
+export const loadBlogContent = async (blogId: string, lang: 'en' | 'zh' = 'en'): Promise<string> => {
   try {
-    const response = await fetch(`/blogs/${blogId}.md`);
+    const suffix = lang === 'zh' ? '.zh.md' : '.md';
+    let response = await fetch(`/blogs/${blogId}${suffix}`);
+    if (!response.ok && lang === 'zh') {
+      // Fallback to English if a Chinese translation isn't available yet
+      response = await fetch(`/blogs/${blogId}.md`);
+    }
     if (!response.ok) {
       throw new Error(`Failed to load blog: ${blogId}`);
     }

@@ -10,22 +10,23 @@ const Blog: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [blogContent, setBlogContent] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [lang, setLang] = useState<'en' | 'zh'>('en');
 
   const postId = searchParams.get('id');
   const activePost = BLOG_POSTS.find(p => p.id === postId);
 
-  // Load blog content when activePost changes
+  // Load blog content when activePost or lang changes
   useEffect(() => {
     if (activePost) {
       setLoading(true);
-      loadBlogContent(activePost.id).then(content => {
+      loadBlogContent(activePost.id, lang).then(content => {
         setBlogContent(content);
         setLoading(false);
       });
     } else {
       setBlogContent('');
     }
-  }, [activePost]);
+  }, [activePost, lang]);
 
   // Function to handle navigation
   const handlePostClick = (id: string) => {
@@ -45,19 +46,41 @@ const Blog: React.FC = () => {
         {/* Detail View */}
         {activePost ? (
           <div>
-            <button 
-              onClick={handleBack}
-              className="group flex items-center text-sm text-anthropic-gray hover:text-anthropic-accent transition-colors mb-8"
-            >
-              <ArrowLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform" />
-              Back to Blogs
-            </button>
+            <div className="flex items-center justify-between mb-8">
+              <button
+                onClick={handleBack}
+                className="group flex items-center text-sm text-anthropic-gray hover:text-anthropic-accent transition-colors"
+              >
+                <ArrowLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform" />
+                Back to Blogs
+              </button>
+
+              {/* Language Toggle */}
+              <div className="flex items-center rounded-full border border-anthropic-text/10 bg-anthropic-stone/30 p-1 text-sm font-sans">
+                <button
+                  onClick={() => setLang('en')}
+                  className={`px-3 py-1 rounded-full transition-colors ${
+                    lang === 'en' ? 'bg-anthropic-text text-anthropic-bg' : 'text-anthropic-gray hover:text-anthropic-text'
+                  }`}
+                >
+                  EN
+                </button>
+                <button
+                  onClick={() => setLang('zh')}
+                  className={`px-3 py-1 rounded-full transition-colors ${
+                    lang === 'zh' ? 'bg-anthropic-text text-anthropic-bg' : 'text-anthropic-gray hover:text-anthropic-text'
+                  }`}
+                >
+                  中文
+                </button>
+              </div>
+            </div>
 
             <article className="animate-fade-in">
               <div className="flex flex-wrap items-center gap-4 mb-6">
                 <span className="text-anthropic-accent font-mono text-sm tracking-wide">{activePost.date}</span>
               </div>
-              
+
               <h1 className="text-3xl md:text-5xl font-serif text-anthropic-text mb-10 leading-tight">
                 {activePost.title}
               </h1>
@@ -188,7 +211,7 @@ const Blog: React.FC = () => {
           <div>
             <h1 className="text-4xl md:text-5xl font-serif font-light mb-8 text-anthropic-text">Thoughts & Updates</h1>
             <p className="text-xl font-sans font-light text-anthropic-gray mb-16 max-w-2xl">
-             Thoughts on research, alignment, and small pieces of life I want to share.
+             Thoughts on research, LLMs, and small pieces of life I want to share.
             </p>
 
             <div className="border-t border-anthropic-text/10">

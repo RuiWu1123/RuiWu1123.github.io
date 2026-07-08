@@ -62,11 +62,10 @@ const Home: React.FC = () => {
         {/* Left: Content */}
         <div className="max-w-2xl">
           <h1 className="text-5xl md:text-7xl font-serif font-light mb-8 text-anthropic-text leading-tight">
-            I'm working on<br />
-            LLMs.
+            Hi, I'm Rui.
           </h1>
           <p className="text-xl md:text-2xl font-sans font-light text-anthropic-gray leading-relaxed mb-8">
-            I’m Rui Wu, a junior undergraduate at Rutgers University (CS), working on Large Language Models.
+            A junior undergraduate at Rutgers University (CS), working on Large Language Models.
           </p>
 
           {/* Social Icons */}

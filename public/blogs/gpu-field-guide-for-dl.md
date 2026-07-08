@@ -15,7 +15,7 @@ A CPU is optimized for **latency**: get one instruction stream through as fast a
 
 A GPU is optimized for **throughput**: it assumes you have thousands of independent, near-identical pieces of work to do (the pixels of a frame, or the elements of a tensor), and it doesn't care how long any *one* of them takes, as long as it can push huge numbers of them through per second. So a GPU spends comparatively little silicon on control logic and branch prediction, and devotes almost all of it to raw arithmetic units. Instead of a few complex cores, you get thousands of simple ones.
 
-![CPU vs GPU chip layout](blogs/images/cpu-vs-gpu.svg?v=2)
+![CPU vs GPU chip layout](blogs/images/cpu-vs-gpu.svg?v=3)
 ^A CPU devotes most of its area to control logic and cache so a single instruction stream runs fast. A GPU devotes most of its area to arithmetic units (ALUs), running the same instruction across thousands of threads at once.
 
 This is why "a GPU has 16,896 cores and a CPU has 16" is true but misleading if you take it at face value — a GPU core (usually called a CUDA core) is a tiny, simple ALU that can only do a scalar multiply-add. It is not comparable to a CPU core, which is a whole independent processor. The right comparison isn't core-for-core; it's "how much useful arithmetic can this chip do per second, given a workload with enough parallelism," and by that measure GPUs win by 1–2 orders of magnitude on exactly the kind of workload deep learning is: the same handful of operations (matmul, add, multiply, a nonlinearity) applied identically across millions of independent elements.
@@ -32,7 +32,7 @@ The hardware-level detail that actually matters is this: threads don't run one a
 
 A GPU's chip is, physically, an array of **Streaming Multiprocessors (SMs)** — an H100 has 132 of them. Each SM has its own warp schedulers, its own CUDA cores, its own Tensor Cores, its own register file, and a pool of on-chip shared memory. Crucially: **a whole thread block is scheduled onto exactly one SM**, and stays there for its entire lifetime — it never migrates mid-execution. Multiple blocks can be resident on the same SM at once (this is what "occupancy" refers to), but a single block never spans two SMs.
 
-![Inside one Streaming Multiprocessor](blogs/images/gpu-sm-anatomy.svg?v=2)
+![Inside one Streaming Multiprocessor](blogs/images/gpu-sm-anatomy.svg?v=3)
 ^Each SM contains several warp schedulers, banks of CUDA cores (scalar/vector arithmetic) and Tensor Cores (matrix arithmetic), a register file, and shared memory / L1 cache. A block lives entirely on one SM for its whole lifetime.
 
 How many blocks can be simultaneously resident on one SM depends on how much of that SM's limited resources — registers, shared memory, and the maximum number of resident warps (typically 64 warps = 2048 threads on recent architectures) — each block needs. A kernel that uses fewer registers per thread, or less shared memory per block, can pack more blocks onto an SM at once, which usually means better latency hiding (while one warp waits on a slow memory load, the scheduler can switch to another warp that's ready to compute) and, up to a point, better throughput. This is the essence of "occupancy," a term you'll see in every GPU profiler.
@@ -49,7 +49,7 @@ Here is the fact that reframes almost everything else in this post: **on nearly 
 
 GPUs (like CPUs) have a memory hierarchy: several tiers of storage that trade off capacity against speed.
 
-![GPU memory hierarchy](blogs/images/memory-hierarchy.svg?v=2)
+![GPU memory hierarchy](blogs/images/memory-hierarchy.svg?v=3)
 ^Every step down this pyramid is roughly 5–20× more capacity and 5–20× less bandwidth. Fast kernels reuse data as high up this pyramid as possible instead of re-fetching it from below.
 
 A few of these levels are worth calling out specifically, because they correspond directly to concepts you'll run into constantly:
@@ -111,7 +111,7 @@ A naive matmul implementation would have each output element read an entire row 
 
 The actual implementation instead **tiles** the problem. The output matrix C is divided into tiles, and each tile is assigned to one thread block. That block cooperatively loads the small strips of A and B it needs — once — into on-chip shared memory. From there, every thread in the block computes its piece of the output tile by reading repeatedly from *shared memory* rather than HBM, reusing each loaded value many times before it's evicted.
 
-![Matmul tiling diagram](blogs/images/matmul-tiling.svg?v=2)
+![Matmul tiling diagram](blogs/images/matmul-tiling.svg?v=3)
 ^Loading a tile of A and a tile of B into shared memory once, then reusing them for every element of the output tile, is what turns matmul from a memory-bound operation into a compute-bound one.
 
 This is the concrete mechanism behind the abstract idea of "arithmetic intensity" from the previous section: tiling turns one HBM load into many arithmetic operations, and the bigger the tile (which usually means the bigger your batch size or hidden dimension), the more reuse you get per byte loaded, and the closer you get to the chip's peak FLOPs. It is also, very directly, why very small matrices — a hidden dimension of 32, or a batch size of 1 — chronically under-use a GPU: there simply isn't enough reuse available per tile to amortize the cost of loading it, no matter how well-tuned the kernel is.
@@ -122,7 +122,7 @@ Everything above described a single GPU. Training anything at contemporary scale
 
 Within a single node, modern systems connect GPUs via **NVLink** (roughly 900 GB/s–1.8 TB/s per GPU, depending on generation), often through an **NVSwitch** that gives every GPU in the node a full-bandwidth path to every other GPU. Between nodes, GPUs typically talk over a network fabric like **InfiniBand** or RoCE, at roughly 400 Gb/s (about 50 GB/s) per GPU — again, an order of magnitude drop, this time from intra-node NVLink to inter-node networking.
 
-![Multi-GPU topology](blogs/images/multi-gpu-topology.svg?v=2)
+![Multi-GPU topology](blogs/images/multi-gpu-topology.svg?v=3)
 ^Bandwidth drops by roughly an order of magnitude at every hop outward: on-chip → HBM → NVLink (within a node) → network fabric (across nodes).
 
 This asymmetry is the whole reason different parallelism strategies exist and get combined the way they do:

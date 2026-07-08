@@ -15,7 +15,7 @@ CPU 为 **延迟（latency）** 而优化：让一条指令流尽可能快地跑
 
 GPU 为 **吞吐量（throughput）** 而优化：它假设你手头有成千上万份几乎完全相同、彼此独立的工作要做（一帧画面里的每个像素，或者一个 tensor 里的每个元素），它并不在乎其中任何"一份"工作跑多久，只要能保证每秒钟把海量的这类工作推送出去。所以 GPU 相对而言在控制逻辑和分支预测上花的晶体管很少，几乎把所有面积都投入到了纯粹的算术单元上。你得到的不是少量复杂的核心，而是成千上万个简单的核心。
 
-![CPU vs GPU chip layout](blogs/images/cpu-vs-gpu.svg?v=2)
+![CPU vs GPU chip layout](blogs/images/cpu-vs-gpu.svg?v=3)
 ^CPU 把大部分芯片面积用于控制逻辑与缓存，从而让单条指令流跑得更快；GPU 则把大部分面积用于算术单元（ALU），让同一条指令同时在成千上万个线程上执行。
 
 这也是为什么"GPU 有 16,896 个 core，CPU 只有 16 个"这种说法虽然没错，但如果只看字面意思会很误导人——GPU 上的一个 core（通常叫 CUDA core）是一个极其微小、简单的 ALU，只能做一次标量乘加。它跟 CPU 的一个 core 完全不是一回事，后者本身就是一个完整、独立的处理器。真正合理的对比方式，不是"core 对 core"，而是"在一个具备足够并行度的负载下，这块芯片每秒能完成多少有效的算术运算"——而按这个标准衡量，在深度学习这种典型负载下（同样的少数几种运算——matmul、加法、乘法、一个非线性函数——被无差别地施加在数百万个独立元素上），GPU 能领先 1 到 2 个数量级。
@@ -32,7 +32,7 @@ GPU 为 **吞吐量（throughput）** 而优化：它假设你手头有成千上
 
 从物理结构上看，GPU 芯片就是一个由 **Streaming Multiprocessor（SM）** 组成的阵列——一块 H100 上有 132 个 SM。每个 SM 都有自己的 warp scheduler、自己的 CUDA core、自己的 Tensor Core、自己的寄存器堆（register file），以及一块片上 shared memory。关键在于：**一整个 thread block 会被调度到恰好一个 SM 上**，并且在它的整个生命周期内都待在那个 SM 上——它绝不会在执行过程中迁移。同一个 SM 上可以同时驻留多个 block（这正是 "occupancy" 这个词所指的东西），但单个 block 永远不会跨越两个 SM。
 
-![Inside one Streaming Multiprocessor](blogs/images/gpu-sm-anatomy.svg?v=2)
+![Inside one Streaming Multiprocessor](blogs/images/gpu-sm-anatomy.svg?v=3)
 ^每个 SM 内部包含若干 warp scheduler、成组的 CUDA core（标量/向量算术）与 Tensor Core（矩阵算术）、一个寄存器堆，以及 shared memory / L1 cache。一个 block 在它的整个生命周期里，完完全全生活在同一个 SM 上。
 
 一个 SM 上同时能驻留多少个 block，取决于每个 block 对这个 SM 有限资源——寄存器、shared memory，以及最大可驻留 warp 数（在近几代架构上通常是 64 个 warp，也就是 2048 个 thread）——的占用程度。一个每个 thread 用更少寄存器、或者每个 block 用更少 shared memory 的 kernel，就能在同一个 SM 上塞进更多 block，这通常意味着更好的延迟隐藏能力（当某个 warp 在等待一次很慢的内存读取时，scheduler 可以切换到另一个已经就绪、可以计算的 warp），并且在一定范围内，也意味着更高的吞吐量。这就是"occupancy"这个在几乎每一个 GPU profiler 里都会出现的术语的本质。
@@ -49,7 +49,7 @@ GPU 为 **吞吐量（throughput）** 而优化：它假设你手头有成千上
 
 GPU（和 CPU 一样）也有一套内存层级：多个层次的存储，在容量和速度之间做取舍。
 
-![GPU memory hierarchy](blogs/images/memory-hierarchy.svg?v=2)
+![GPU memory hierarchy](blogs/images/memory-hierarchy.svg?v=3)
 ^这个金字塔每往下走一层，容量大致会增加 5–20 倍，而带宽大致会下降 5–20 倍。快的 kernel，会尽量在这个金字塔里靠上的位置复用数据，而不是一次次跑到下面去重新读取。
 
 其中几层特别值得单独说一下，因为它们直接对应着你会不断遇到的一些概念：
@@ -111,7 +111,7 @@ CUDA core 做的是标量或小向量的 fused-multiply-add：每条指令、每
 
 真实的实现方式则会对这个问题做 **tiling（分块）**。输出矩阵 C 被切分成若干 tile，每个 tile 被分配给一个 thread block。这个 block 会协作式地把它需要的那一小条 A 和那一小条 B——只加载一次——搬进片上的 shared memory。从那之后，block 内的每个 thread 都通过反复读取 *shared memory*、而不是 HBM，来计算它负责的那部分输出，在被换出之前把每个加载进来的值反复复用很多次。
 
-![Matmul tiling diagram](blogs/images/matmul-tiling.svg?v=2)
+![Matmul tiling diagram](blogs/images/matmul-tiling.svg?v=3)
 ^把一块 A 和一块 B 加载进 shared memory 一次，之后为输出 tile 里的每一个元素反复复用它们，正是把矩阵乘法从一个 memory-bound 操作变成 compute-bound 操作的关键所在。
 
 这正是上一节"arithmetic intensity"这个抽象概念背后具体的实现机制：tiling 把一次 HBM 加载，变成了很多次算术运算；而 tile 越大（这通常意味着你的 batch size 或者 hidden dimension 越大），每加载一个字节所能换来的复用次数就越多，你也就越接近芯片的峰值 FLOPs。这也直接解释了，为什么非常小的矩阵——比如 32 的 hidden dimension，或者 1 的 batch size——会长期性地跑不满一块 GPU：无论 kernel 调得多好，每个 tile 能获得的复用次数根本不够，不足以摊薄加载它的成本。
@@ -122,7 +122,7 @@ CUDA core 做的是标量或小向量的 fused-multiply-add：每条指令、每
 
 在单个节点内部，现代系统通常通过 **NVLink**（每块 GPU 大约 900 GB/s 到 1.8 TB/s，取决于具体代数）连接 GPU，往往还会通过一个 **NVSwitch**，让节点内的每一块 GPU 都拥有通往其他任意一块 GPU 的全带宽路径。而在节点之间，GPU 通常通过 **InfiniBand** 或 RoCE 之类的网络结构通信，每块 GPU 大约 400 Gb/s（约合 50 GB/s）——这又是一个数量级的下降，这次是从节点内的 NVLink，降到了节点间的网络。
 
-![Multi-GPU topology](blogs/images/multi-gpu-topology.svg?v=2)
+![Multi-GPU topology](blogs/images/multi-gpu-topology.svg?v=3)
 ^每往外走一跳，带宽大致都会下降一个数量级：片上 → HBM → NVLink（节点内） → 网络结构（跨节点）。
 
 这种不对称性，正是不同并行策略之所以存在、并且以现在这种方式被组合使用的全部原因：

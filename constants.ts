@@ -34,7 +34,6 @@ export const loadBlogContent = async (blogId: string): Promise<string> => {
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Home', path: '/' },
   { label: 'Blogs', path: '/blog' },
-  { label: 'Publications', path: '/publications' },
   { label: 'Travel Gallery', path: '/travel' },
 ];
 

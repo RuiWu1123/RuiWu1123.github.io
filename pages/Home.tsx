@@ -62,12 +62,11 @@ const Home: React.FC = () => {
         {/* Left: Content */}
         <div className="max-w-2xl">
           <h1 className="text-5xl md:text-7xl font-serif font-light mb-8 text-anthropic-text leading-tight">
-            Make AI systems<br />
-            supervised and aligned.
+            I'm working on<br />
+            LLMs.
           </h1>
           <p className="text-xl md:text-2xl font-sans font-light text-anthropic-gray leading-relaxed mb-8">
-            I’m Rui Wu, a junior undergraduate at Rutgers University (CS). 
-            My research revolves around Alignment Science, developing methodologies to ensure AI systems become supervised and aligned with human intentions. While my long-term vision spans AI system under constant supervision.
+            I’m Rui Wu, a junior undergraduate at Rutgers University (CS), working on Large Language Models.
           </p>
 
           {/* Social Icons */}
@@ -127,20 +126,6 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Notice Box */}
-      <section className="mb-12">
-        <div className="bg-gradient-to-r from-anthropic-accent/10 to-anthropic-leaf/10 border-l-4 border-anthropic-accent rounded-lg p-6 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div>
-              <h3 className="text-lg font-semibold text-anthropic-text mb-2">Notice</h3>
-              <p className="text-anthropic-text font-normal leading-relaxed">
-                I am looking for <strong>26 summer intern</strong> and <strong>27 fall PhD positions</strong>. If you are interested in collaborating or have opportunities, please feel free to reach out!
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
        {/* News Section */}
       <section className="mb-20">
         <div className="flex items-baseline justify-between mb-8 border-b border-anthropic-text/10 pb-4">
@@ -174,22 +159,6 @@ const Home: React.FC = () => {
         <div className="space-y-8">
           {PUBLICATIONS.map((pub) => (
             <div key={pub.id} className="group border-l-4 pl-6 md:pl-8 py-4 pr-4 rounded-r-lg transition-colors duration-300 border-anthropic-stone hover:border-anthropic-accent">
-              <div className="flex flex-wrap gap-2 mb-3">
-                {pub.preprint && (
-                  <span className="px-2 py-0.5 bg-anthropic-stone/50 rounded text-xs font-medium text-anthropic-text uppercase tracking-wide">
-                    Preprint
-                  </span>
-                )}
-                {pub.tags?.map(tag => (
-                  <span
-                    key={tag}
-                    className="px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wide bg-anthropic-leaf/20 text-anthropic-text"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-
               <h3 className="text-xl md:text-2xl font-serif text-anthropic-text mb-3 leading-tight">
                 {pub.link ? (
                   <a href={pub.link} target="_blank" rel="noreferrer" className="hover:text-anthropic-accent transition-colors">

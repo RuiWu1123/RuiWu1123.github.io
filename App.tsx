@@ -4,7 +4,6 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Blog from './pages/Blog';
-import Publication from './pages/Publication';
 import Travel from './pages/Travel';
 
 // Scroll to top on route change
@@ -77,7 +76,6 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/blog" element={<Blog />} />
-            <Route path="/publications" element={<Publication />} />
             <Route path="/travel" element={<Travel />} />
           </Routes>
         </Layout>

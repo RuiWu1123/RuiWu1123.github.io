@@ -138,7 +138,7 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     id: "gpu-field-guide-for-dl",
     title: "GPUs from First Principles: A Field Guide for Deep Learning Researchers",
-    date: "2026/7/8"
+    date: "2026/7/2"
   },
   {
     id: "code-as-minimal-world",

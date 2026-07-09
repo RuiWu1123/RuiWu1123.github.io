@@ -1,6 +1,6 @@
 ---
 title: "GPUs from First Principles: A Field Guide for Deep Learning Researchers"
-date: "2026/7/8"
+date: "2026/7/2"
 ---
 
 Most of us who train models never really have to think about the GPU. You write `model.to("cuda")`, you write `loss.backward()`, and a few weeks later a number goes down. The hardware underneath is a black box that occasionally throws `CUDA out of memory` at you and otherwise stays quietly out of the way.

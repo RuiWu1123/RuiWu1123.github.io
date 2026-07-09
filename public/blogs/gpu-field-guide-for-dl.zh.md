@@ -1,6 +1,6 @@
 ---
 title: "GPUs from First Principles: A Field Guide for Deep Learning Researchers"
-date: "2026/7/8"
+date: "2026/7/2"
 ---
 
 我们大多数训练模型的人，其实从来不需要真正去思考 GPU 这个东西。你写下 `model.to("cuda")`，写下 `loss.backward()`，几周之后一个数字降下来了。底层的硬件是一个黑箱，偶尔会甩给你一句 `CUDA out of memory`，除此之外它安安静静地待在你看不见的地方。

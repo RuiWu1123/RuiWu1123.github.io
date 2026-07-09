@@ -90,6 +90,7 @@ export const PUBLICATIONS: Publication[] = [
     authors: ["Can Jin*", "Rui Wu*", "Tong Che*", "Qixin Zhang", "Hongwu Peng", "Jiahui Zhao", "Zhenting Wang", "Wenqi Wei", "Ligong Han", "Zhao Zhang", "Yuan Cao", "Ruixiang Tang", "Dimitris N. Metaxas"],
     venue: "ACL 2026 Main Conference",
     link: "https://arxiv.org/abs/2601.08000",
+    github: "https://github.com/jincan333/safe_reason",
     year: 2026,
     tags: ["Robust Alignment"],
     preprint: false

@@ -1,0 +1,48 @@
+<svg viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="900" height="620" fill="#F4F3EF"/>
+  <text x="450" y="38" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">Anatomy of a Triton Kernel</text>
+  <text x="450" y="60" text-anchor="middle" font-size="13" fill="#6B6B6B">every kernel is this same five-step shape, whatever it computes</text>
+
+  <defs>
+    <marker id="tarrow" markerWidth="9" markerHeight="9" refX="4.5" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#191919"/>
+    </marker>
+  </defs>
+
+  <!-- Step 1 -->
+  <rect x="250" y="86" width="400" height="60" rx="8" fill="#D97757" stroke="#191919" stroke-width="1.3"/>
+  <text x="450" y="112" text-anchor="middle" font-size="13.5" font-weight="600" fill="#F4F3EF">1. locate this program</text>
+  <text x="450" y="132" text-anchor="middle" font-size="12" font-family="monospace" fill="#F4F3EF">pid = tl.program_id(axis=0)</text>
+
+  <line x1="450" y1="146" x2="450" y2="180" stroke="#191919" stroke-width="1.4" marker-end="url(#tarrow)"/>
+
+  <!-- Step 2 -->
+  <rect x="220" y="184" width="460" height="66" rx="8" fill="#8DA399" stroke="#191919" stroke-width="1.3"/>
+  <text x="450" y="208" text-anchor="middle" font-size="13.5" font-weight="600" fill="#F4F3EF">2. compute this tile's offsets</text>
+  <text x="450" y="228" text-anchor="middle" font-size="11.5" font-family="monospace" fill="#F4F3EF">offs = pid*BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)</text>
+  <text x="450" y="244" text-anchor="middle" font-size="11" fill="#F4F3EF">(a whole vector of indices, not one)</text>
+
+  <line x1="450" y1="250" x2="450" y2="284" stroke="#191919" stroke-width="1.4" marker-end="url(#tarrow)"/>
+
+  <!-- Step 3 -->
+  <rect x="250" y="288" width="400" height="60" rx="8" fill="#E3EBF2" stroke="#191919" stroke-width="1.3"/>
+  <text x="450" y="314" text-anchor="middle" font-size="13.5" font-weight="600" fill="#191919">3. mask the out-of-bounds tail</text>
+  <text x="450" y="334" text-anchor="middle" font-size="12" font-family="monospace" fill="#191919">mask = offs &lt; n_elements</text>
+
+  <line x1="450" y1="348" x2="450" y2="382" stroke="#191919" stroke-width="1.4" marker-end="url(#tarrow)"/>
+
+  <!-- Step 4 -->
+  <rect x="180" y="386" width="540" height="66" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.3"/>
+  <text x="450" y="410" text-anchor="middle" font-size="13.5" font-weight="600" fill="#191919">4. load a tile from HBM, compute on it</text>
+  <text x="450" y="430" text-anchor="middle" font-size="11.5" font-family="monospace" fill="#191919">x = tl.load(x_ptr + offs, mask=mask)</text>
+  <text x="450" y="446" text-anchor="middle" font-size="11.5" fill="#191919">z = f(x)  —  ordinary-looking vector math</text>
+
+  <line x1="450" y1="452" x2="450" y2="486" stroke="#191919" stroke-width="1.4" marker-end="url(#tarrow)"/>
+
+  <!-- Step 5 -->
+  <rect x="250" y="490" width="400" height="60" rx="8" fill="#191919" stroke="#191919" stroke-width="1.3"/>
+  <text x="450" y="516" text-anchor="middle" font-size="13.5" font-weight="600" fill="#F4F3EF">5. write the tile back</text>
+  <text x="450" y="536" text-anchor="middle" font-size="12" font-family="monospace" fill="#F4F3EF">tl.store(out_ptr + offs, z, mask=mask)</text>
+
+  <text x="450" y="588" text-anchor="middle" font-size="12.5" fill="#6B6B6B">no thread index, no explicit loop — the compiler lowers this tile of work to warps for you</text>
+</svg>

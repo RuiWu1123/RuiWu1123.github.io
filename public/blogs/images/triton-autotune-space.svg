@@ -1,0 +1,74 @@
+<svg viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="960" height="620" fill="#F4F3EF"/>
+  <text x="480" y="38" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">The Autotuning Search Space</text>
+  <text x="480" y="60" text-anchor="middle" font-size="13" fill="#6B6B6B">schematic only — the real optimum shifts with every kernel, GPU, and input shape</text>
+
+  <!-- grid: 6 cols (BLOCK_SIZE) x 5 rows (num_warps) -->
+  <g transform="translate(255,120)">
+    <!-- row 0: num_warps=1 -->
+    <rect x="0"   y="0"   width="80" height="56" fill="#D97757" fill-opacity="0.12" stroke="#191919" stroke-width="0.8"/>
+    <rect x="88"  y="0"   width="80" height="56" fill="#D97757" fill-opacity="0.12" stroke="#191919" stroke-width="0.8"/>
+    <rect x="176" y="0"   width="80" height="56" fill="#D97757" fill-opacity="0.21" stroke="#191919" stroke-width="0.8"/>
+    <rect x="264" y="0"   width="80" height="56" fill="#D97757" fill-opacity="0.37" stroke="#191919" stroke-width="0.8"/>
+    <rect x="352" y="0"   width="80" height="56" fill="#D97757" fill-opacity="0.44" stroke="#191919" stroke-width="0.8"/>
+    <rect x="440" y="0"   width="80" height="56" fill="#D97757" fill-opacity="0.37" stroke="#191919" stroke-width="0.8"/>
+
+    <!-- row 1: num_warps=2 -->
+    <rect x="0"   y="64"  width="80" height="56" fill="#D97757" fill-opacity="0.12" stroke="#191919" stroke-width="0.8"/>
+    <rect x="88"  y="64"  width="80" height="56" fill="#D97757" fill-opacity="0.12" stroke="#191919" stroke-width="0.8"/>
+    <rect x="176" y="64"  width="80" height="56" fill="#D97757" fill-opacity="0.37" stroke="#191919" stroke-width="0.8"/>
+    <rect x="264" y="64"  width="80" height="56" fill="#D97757" fill-opacity="0.60" stroke="#191919" stroke-width="0.8"/>
+    <rect x="352" y="64"  width="80" height="56" fill="#D97757" fill-opacity="0.72" stroke="#191919" stroke-width="0.8"/>
+    <rect x="440" y="64"  width="80" height="56" fill="#D97757" fill-opacity="0.60" stroke="#191919" stroke-width="0.8"/>
+
+    <!-- row 2: num_warps=4 -->
+    <rect x="0"   y="128" width="80" height="56" fill="#D97757" fill-opacity="0.12" stroke="#191919" stroke-width="0.8"/>
+    <rect x="88"  y="128" width="80" height="56" fill="#D97757" fill-opacity="0.16" stroke="#191919" stroke-width="0.8"/>
+    <rect x="176" y="128" width="80" height="56" fill="#D97757" fill-opacity="0.44" stroke="#191919" stroke-width="0.8"/>
+    <rect x="264" y="128" width="80" height="56" fill="#D97757" fill-opacity="0.72" stroke="#191919" stroke-width="0.8"/>
+    <rect x="352" y="128" width="80" height="56" fill="#D97757" fill-opacity="1.0"  stroke="#191919" stroke-width="1.6"/>
+    <rect x="440" y="128" width="80" height="56" fill="#D97757" fill-opacity="0.72" stroke="#191919" stroke-width="0.8"/>
+
+    <!-- row 3: num_warps=8 -->
+    <rect x="0"   y="192" width="80" height="56" fill="#D97757" fill-opacity="0.12" stroke="#191919" stroke-width="0.8"/>
+    <rect x="88"  y="192" width="80" height="56" fill="#D97757" fill-opacity="0.12" stroke="#191919" stroke-width="0.8"/>
+    <rect x="176" y="192" width="80" height="56" fill="#D97757" fill-opacity="0.37" stroke="#191919" stroke-width="0.8"/>
+    <rect x="264" y="192" width="80" height="56" fill="#D97757" fill-opacity="0.60" stroke="#191919" stroke-width="0.8"/>
+    <rect x="352" y="192" width="80" height="56" fill="#D97757" fill-opacity="0.72" stroke="#191919" stroke-width="0.8"/>
+    <rect x="440" y="192" width="80" height="56" fill="#D97757" fill-opacity="0.60" stroke="#191919" stroke-width="0.8"/>
+
+    <!-- row 4: num_warps=16 -->
+    <rect x="0"   y="256" width="80" height="56" fill="#D97757" fill-opacity="0.12" stroke="#191919" stroke-width="0.8"/>
+    <rect x="88"  y="256" width="80" height="56" fill="#D97757" fill-opacity="0.12" stroke="#191919" stroke-width="0.8"/>
+    <rect x="176" y="256" width="80" height="56" fill="#D97757" fill-opacity="0.21" stroke="#191919" stroke-width="0.8"/>
+    <rect x="264" y="256" width="80" height="56" fill="#D97757" fill-opacity="0.37" stroke="#191919" stroke-width="0.8"/>
+    <rect x="352" y="256" width="80" height="56" fill="#D97757" fill-opacity="0.44" stroke="#191919" stroke-width="0.8"/>
+    <rect x="440" y="256" width="80" height="56" fill="#D97757" fill-opacity="0.37" stroke="#191919" stroke-width="0.8"/>
+
+    <!-- peak marker -->
+    <circle cx="392" cy="156" r="5" fill="#191919"/>
+    <text x="392" y="-14" text-anchor="middle" font-size="11.5" font-weight="600" fill="#191919">fastest config found by autotune</text>
+    <text x="392" y="-2" text-anchor="middle" font-size="11" fill="#6B6B6B">(illustrative — shifts per kernel/shape/GPU)</text>
+
+    <!-- column labels: BLOCK_SIZE -->
+    <text x="40"  y="336" text-anchor="middle" font-size="11.5" fill="#191919">64</text>
+    <text x="128" y="336" text-anchor="middle" font-size="11.5" fill="#191919">128</text>
+    <text x="216" y="336" text-anchor="middle" font-size="11.5" fill="#191919">256</text>
+    <text x="304" y="336" text-anchor="middle" font-size="11.5" fill="#191919">512</text>
+    <text x="392" y="336" text-anchor="middle" font-size="11.5" fill="#191919">1024</text>
+    <text x="480" y="336" text-anchor="middle" font-size="11.5" fill="#191919">2048</text>
+    <text x="260" y="364" text-anchor="middle" font-size="13" fill="#191919">BLOCK_SIZE (elements per program)</text>
+
+    <!-- row labels: num_warps -->
+    <text x="-14" y="32"  text-anchor="end" font-size="11.5" fill="#191919">1</text>
+    <text x="-14" y="96"  text-anchor="end" font-size="11.5" fill="#191919">2</text>
+    <text x="-14" y="160" text-anchor="end" font-size="11.5" fill="#191919">4</text>
+    <text x="-14" y="224" text-anchor="end" font-size="11.5" fill="#191919">8</text>
+    <text x="-14" y="288" text-anchor="end" font-size="11.5" fill="#191919">16</text>
+    <text x="-60" y="160" text-anchor="middle" font-size="13" fill="#191919" transform="rotate(-90 -60 160)">num_warps</text>
+  </g>
+
+  <text x="480" y="530" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">too small → launch &amp; loop overhead dominates real work</text>
+  <text x="480" y="554" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">too large → registers / shared memory spill, occupancy drops</text>
+  <text x="480" y="586" text-anchor="middle" font-size="12" fill="#6B6B6B">@triton.autotune tries a grid like this once, at compile time, and caches the winner</text>
+</svg>

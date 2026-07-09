@@ -393,3 +393,240 @@ export const GridBlockSimulator: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) =
     </Card>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/*  3. Triton Grid / Mask Explorer                                     */
+/* ------------------------------------------------------------------ */
+
+const STR3 = {
+  en: {
+    title: 'Interactive: pid, offsets, and the mask',
+    sub: 'Pick a total element count N and a BLOCK_SIZE, and see how tl.program_id turns into a grid of programs — and what the mask actually masks.',
+    n: 'Total elements (N)',
+    blockSize: 'BLOCK_SIZE',
+    programs: 'Programs launched',
+    wasted: 'Masked-off lanes (wasted, but harmless)',
+    wastedPct: 'of total lanes',
+    program: 'program',
+    elements: 'elements',
+    masked: 'masked',
+    more: 'more',
+    note: 'The tail program almost always has some masked lanes unless N happens to divide BLOCK_SIZE exactly. That’s expected and cheap — masked lanes never touch memory — but a BLOCK_SIZE much bigger than N wastes an entire program\'s worth of parallelism for nothing.',
+  },
+  zh: {
+    title: '交互演示：pid、offsets 与 mask',
+    sub: '选择总元素数 N 和 BLOCK_SIZE，看看 tl.program_id 是怎么变成一整个 grid 的 program 的——以及 mask 到底在遮住什么。',
+    n: '总元素数（N）',
+    blockSize: 'BLOCK_SIZE',
+    programs: '发射的 program 数',
+    wasted: '被 mask 掉的 lane 数（浪费，但无害）',
+    wastedPct: '占总 lane 数的比例',
+    program: 'program',
+    elements: '个元素',
+    masked: '个被 mask',
+    more: '更多',
+    note: '只要 N 不能被 BLOCK_SIZE 整除，最后一个 program 几乎总会有一些被 mask 掉的 lane。这是预期行为，而且代价很小——被 mask 的 lane 根本不会碰内存——但如果 BLOCK_SIZE 比 N 大太多，就等于白白浪费了一整个 program 的并行度。',
+  },
+};
+
+const N_BLOCK_OPTIONS = [4, 8, 16, 32];
+
+export const TritonGridExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
+  const t = STR3[lang];
+  const [n, setN] = useState(37);
+  const [blockSize, setBlockSize] = useState(8);
+
+  const { numPrograms, programs, wastedLanes, wastedPct } = useMemo(() => {
+    const numP = Math.max(1, Math.ceil(n / blockSize));
+    const progs = Array.from({ length: numP }).map((_, i) => {
+      const start = i * blockSize;
+      const end = Math.min(start + blockSize, n);
+      const valid = Math.max(0, end - start);
+      const masked = blockSize - valid;
+      return { i, start, end, valid, masked };
+    });
+    const wasted = numP * blockSize - n;
+    const pct = (wasted / (numP * blockSize)) * 100;
+    return { numPrograms: numP, programs: progs, wastedLanes: wasted, wastedPct: pct };
+  }, [n, blockSize]);
+
+  const displayLimit = 12;
+
+  return (
+    <Card>
+      <h4 className="text-lg font-serif text-anthropic-text mb-1">{t.title}</h4>
+      <p className="text-sm text-anthropic-gray mb-4">{t.sub}</p>
+
+      <div className="mb-5">
+        <div className="text-xs uppercase tracking-wide text-anthropic-gray/70 mb-1.5">
+          {t.n}: <span className="text-anthropic-text font-mono">{n}</span>
+        </div>
+        <input
+          type="range"
+          min={1}
+          max={100}
+          step={1}
+          value={n}
+          onChange={(e) => setN(parseInt(e.target.value, 10))}
+          className="w-full accent-anthropic-accent"
+        />
+      </div>
+
+      <div className="mb-5">
+        <div className="text-xs uppercase tracking-wide text-anthropic-gray/70 mb-1.5">{t.blockSize}</div>
+        <div className="flex flex-wrap gap-2">
+          {N_BLOCK_OPTIONS.map((b) => (
+            <Pill key={b} active={blockSize === b} onClick={() => setBlockSize(b)}>
+              {b}
+            </Pill>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-1.5 mb-5">
+        {programs.slice(0, displayLimit).map((p) => (
+          <div key={p.i} className="flex items-center gap-2 text-xs">
+            <span className="w-20 flex-shrink-0 text-anthropic-gray/70 font-mono">
+              {t.program} {p.i}
+            </span>
+            <div className="flex gap-0.5">
+              {Array.from({ length: blockSize }).map((_, lane) => (
+                <div
+                  key={lane}
+                  className={`w-4 h-4 rounded-sm border ${
+                    lane < p.valid
+                      ? 'bg-anthropic-leaf/70 border-anthropic-text/20'
+                      : 'bg-anthropic-stone/40 border-anthropic-text/10 border-dashed'
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-anthropic-gray/60 font-mono">
+              [{p.start}, {p.end}) · {p.valid} {t.elements}
+              {p.masked > 0 ? ` · ${p.masked} ${t.masked}` : ''}
+            </span>
+          </div>
+        ))}
+        {numPrograms > displayLimit && (
+          <div className="text-xs text-anthropic-gray/60 pl-[5.5rem]">
+            +{numPrograms - displayLimit} {t.more}
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm mb-4">
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.programs}</div>
+          <div className="text-anthropic-text font-mono">{numPrograms}</div>
+        </div>
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.wasted}</div>
+          <div className="text-anthropic-text font-mono">{wastedLanes}</div>
+        </div>
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.wastedPct}</div>
+          <div className="text-anthropic-text font-mono">{wastedPct.toFixed(0)}%</div>
+        </div>
+      </div>
+
+      <p className="text-xs text-anthropic-gray leading-relaxed">{t.note}</p>
+    </Card>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/*  4. Autotuning Explorer                                             */
+/* ------------------------------------------------------------------ */
+
+const STR4 = {
+  en: {
+    title: 'Interactive: why autotuning is a search, not a formula',
+    sub: 'Pick a BLOCK_SIZE and a num_warps. The bar is a schematic, illustrative "how close to the best config" — not a real measurement — but the shape of the trade-off is real.',
+    blockSize: 'BLOCK_SIZE',
+    numWarps: 'num_warps',
+    relative: 'Schematic relative throughput',
+    elemPerThread: 'Elements per thread (BLOCK_SIZE / (num_warps × 32))',
+    tooFew: 'Fewer elements than threads: some threads in the program do nothing this launch — wasted parallelism.',
+    reasonable: 'Each thread handles a modest, pipelineable chunk — usually a reasonable place to be.',
+    tooMany: 'Each thread churns through many elements serially before the next warp swap — latency hiding gets harder and register pressure climbs.',
+    disclaimer: 'Illustrative only: the real surface depends on the kernel, the input shape, and the specific GPU. This is why @triton.autotune measures instead of guessing.',
+  },
+  zh: {
+    title: '交互演示：为什么 autotuning 是"搜索"而不是"公式"',
+    sub: '选一个 BLOCK_SIZE 和 num_warps。下面的进度条是示意性的"距离最优配置有多近"——不是真实测量值——但这个权衡关系的形状是真实的。',
+    blockSize: 'BLOCK_SIZE',
+    numWarps: 'num_warps',
+    relative: '示意性的相对吞吐',
+    elemPerThread: '每个线程处理的元素数（BLOCK_SIZE / (num_warps × 32)）',
+    tooFew: '元素数比线程数还少：这次发射里有些线程什么都不做——白白浪费并行度。',
+    reasonable: '每个线程处理一小段、可流水线化的数据量——通常是比较合理的区间。',
+    tooMany: '每个线程要串行处理很多元素才能轮到下一个 warp 切换——延迟隐藏变难，寄存器压力也上升。',
+    disclaimer: '仅为示意：真实的最优面取决于具体 kernel、输入形状和 GPU 型号。这正是 @triton.autotune 选择"实测"而不是"猜"的原因。',
+  },
+};
+
+const AT_BLOCK_OPTIONS = [64, 128, 256, 512, 1024, 2048];
+const AT_WARP_OPTIONS = [1, 2, 4, 8, 16];
+
+export const AutotuneExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
+  const t = STR4[lang];
+  const [blockSize, setBlockSize] = useState(1024);
+  const [numWarps, setNumWarps] = useState(4);
+
+  const { score, elemPerThread } = useMemo(() => {
+    const logB = Math.log2(blockSize);
+    const idealLogB = Math.log2(1024);
+    const logW = Math.log2(numWarps);
+    const idealLogW = Math.log2(4);
+    const dist = Math.sqrt(Math.pow(logB - idealLogB, 2) + Math.pow(logW - idealLogW, 2));
+    const s = Math.max(5, Math.round(100 * Math.exp(-0.35 * dist * dist)));
+    const ept = blockSize / (numWarps * 32);
+    return { score: s, elemPerThread: ept };
+  }, [blockSize, numWarps]);
+
+  const note = elemPerThread < 1 ? t.tooFew : elemPerThread > 16 ? t.tooMany : t.reasonable;
+  const barColor = score >= 70 ? 'bg-anthropic-leaf' : score >= 40 ? 'bg-anthropic-accent' : 'bg-anthropic-gray/50';
+
+  return (
+    <Card>
+      <h4 className="text-lg font-serif text-anthropic-text mb-1">{t.title}</h4>
+      <p className="text-sm text-anthropic-gray mb-4">{t.sub}</p>
+
+      <div className="mb-4">
+        <div className="text-xs uppercase tracking-wide text-anthropic-gray/70 mb-1.5">{t.blockSize}</div>
+        <div className="flex flex-wrap gap-2">
+          {AT_BLOCK_OPTIONS.map((b) => (
+            <Pill key={b} active={blockSize === b} onClick={() => setBlockSize(b)}>
+              {b}
+            </Pill>
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-5">
+        <div className="text-xs uppercase tracking-wide text-anthropic-gray/70 mb-1.5">{t.numWarps}</div>
+        <div className="flex flex-wrap gap-2">
+          {AT_WARP_OPTIONS.map((w) => (
+            <Pill key={w} active={numWarps === w} onClick={() => setNumWarps(w)}>
+              {w}
+            </Pill>
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-2 text-xs uppercase tracking-wide text-anthropic-gray/70">{t.relative}</div>
+      <div className="w-full h-5 rounded-full bg-anthropic-stone/40 overflow-hidden mb-1">
+        <div className={`h-full rounded-full ${barColor}`} style={{ width: `${score}%` }} />
+      </div>
+      <div className="text-right text-xs font-mono text-anthropic-text mb-4">{score}%</div>
+
+      <div className="mb-4 text-sm">
+        <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.elemPerThread}</div>
+        <div className="text-anthropic-text font-mono">{elemPerThread.toFixed(2)}</div>
+      </div>
+
+      <p className="text-xs text-anthropic-gray leading-relaxed mb-3">{note}</p>
+      <p className="text-xs text-anthropic-gray/60 leading-relaxed">{t.disclaimer}</p>
+    </Card>
+  );
+};

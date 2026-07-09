@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ArrowLeft } from 'lucide-react';
 import { BLOG_POSTS, loadBlogContent } from '../constants';
-import { RooflineExplorer, GridBlockSimulator } from '../components/blog/Interactives';
+import { RooflineExplorer, GridBlockSimulator, TritonGridExplorer, AutotuneExplorer } from '../components/blog/Interactives';
 
 const Blog: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -216,6 +216,12 @@ const Blog: React.FC = () => {
                         }
                         if (alt === 'interactive:grid-block') {
                           return <GridBlockSimulator lang={lang} />;
+                        }
+                        if (alt === 'interactive:triton-grid') {
+                          return <TritonGridExplorer lang={lang} />;
+                        }
+                        if (alt === 'interactive:autotune') {
+                          return <AutotuneExplorer lang={lang} />;
                         }
                         return (
                           <img

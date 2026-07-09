@@ -1,0 +1,60 @@
+<svg viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="960" height="600" fill="#F4F3EF"/>
+  <text x="480" y="38" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">Two Ways to Think About the Same Chip</text>
+  <text x="480" y="60" text-anchor="middle" font-size="13" fill="#6B6B6B">CUDA: you index one thread at a time. Triton: you index one tile at a time.</text>
+
+  <!-- CUDA panel -->
+  <rect x="50" y="86" width="400" height="470" rx="12" fill="#E6E4DD" stroke="#191919" stroke-width="1.5"/>
+  <text x="250" y="118" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">CUDA</text>
+  <text x="250" y="138" text-anchor="middle" font-size="12" fill="#6B6B6B">thread-level programming</text>
+
+  <!-- grid of many small per-thread cells -->
+  <g transform="translate(80,160)">
+    <g fill="#D97757" stroke="#191919" stroke-width="0.6">
+      <!-- 8 cols x 6 rows -->
+      <rect x="0" y="0" width="38" height="28"/><rect x="42" y="0" width="38" height="28"/><rect x="84" y="0" width="38" height="28"/><rect x="126" y="0" width="38" height="28"/><rect x="168" y="0" width="38" height="28"/><rect x="210" y="0" width="38" height="28"/><rect x="252" y="0" width="38" height="28"/><rect x="294" y="0" width="38" height="28"/>
+      <rect x="0" y="32" width="38" height="28"/><rect x="42" y="32" width="38" height="28"/><rect x="84" y="32" width="38" height="28"/><rect x="126" y="32" width="38" height="28"/><rect x="168" y="32" width="38" height="28"/><rect x="210" y="32" width="38" height="28"/><rect x="252" y="32" width="38" height="28"/><rect x="294" y="32" width="38" height="28"/>
+      <rect x="0" y="64" width="38" height="28"/><rect x="42" y="64" width="38" height="28"/><rect x="84" y="64" width="38" height="28"/><rect x="126" y="64" width="38" height="28"/><rect x="168" y="64" width="38" height="28"/><rect x="210" y="64" width="38" height="28"/><rect x="252" y="64" width="38" height="28"/><rect x="294" y="64" width="38" height="28"/>
+      <rect x="0" y="96" width="38" height="28"/><rect x="42" y="96" width="38" height="28"/><rect x="84" y="96" width="38" height="28"/><rect x="126" y="96" width="38" height="28"/><rect x="168" y="96" width="38" height="28"/><rect x="210" y="96" width="38" height="28"/><rect x="252" y="96" width="38" height="28"/><rect x="294" y="96" width="38" height="28"/>
+    </g>
+    <text x="166" y="148" text-anchor="middle" font-size="11.5" fill="#191919">one square = one thread</text>
+  </g>
+
+  <rect x="72" y="330" width="356" height="100" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1"/>
+  <text x="250" y="358" text-anchor="middle" font-size="12" font-family="monospace" fill="#191919">idx = blockIdx.x * blockDim.x</text>
+  <text x="250" y="376" text-anchor="middle" font-size="12" font-family="monospace" fill="#191919">      + threadIdx.x</text>
+  <text x="250" y="400" text-anchor="middle" font-size="11.5" fill="#6B6B6B">you write this arithmetic yourself,</text>
+  <text x="250" y="416" text-anchor="middle" font-size="11.5" fill="#6B6B6B">once per thread, in C++</text>
+
+  <text x="250" y="470" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">each thread computes 1 scalar</text>
+  <text x="250" y="490" text-anchor="middle" font-size="12" fill="#6B6B6B">bounds checks, memory offsets,</text>
+  <text x="250" y="507" text-anchor="middle" font-size="12" fill="#6B6B6B">shared-memory staging: manual</text>
+
+  <!-- Triton panel -->
+  <rect x="510" y="86" width="400" height="470" rx="12" fill="#E6E4DD" stroke="#191919" stroke-width="1.5"/>
+  <text x="710" y="118" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">Triton</text>
+  <text x="710" y="138" text-anchor="middle" font-size="12" fill="#6B6B6B">block-level programming</text>
+
+  <!-- few large tiles, one per "program" -->
+  <g transform="translate(540,160)">
+    <rect x="0" y="0" width="160" height="64" rx="6" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+    <text x="80" y="37" text-anchor="middle" font-size="12.5" fill="#F4F3EF">program 0</text>
+    <rect x="172" y="0" width="160" height="64" rx="6" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+    <text x="252" y="37" text-anchor="middle" font-size="12.5" fill="#F4F3EF">program 1</text>
+    <rect x="0" y="76" width="160" height="64" rx="6" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+    <text x="80" y="113" text-anchor="middle" font-size="12.5" fill="#F4F3EF">program 2</text>
+    <rect x="172" y="76" width="160" height="64" rx="6" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+    <text x="252" y="113" text-anchor="middle" font-size="12.5" fill="#F4F3EF">program 3</text>
+    <text x="166" y="164" text-anchor="middle" font-size="11.5" fill="#191919">one tile = one program instance</text>
+    <text x="166" y="182" text-anchor="middle" font-size="11.5" fill="#191919">(BLOCK_SIZE elements, vectorized)</text>
+  </g>
+
+  <rect x="532" y="360" width="356" height="100" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1"/>
+  <text x="710" y="388" text-anchor="middle" font-size="12" font-family="monospace" fill="#191919">offs = pid * BLOCK_SIZE</text>
+  <text x="710" y="406" text-anchor="middle" font-size="12" font-family="monospace" fill="#191919">       + tl.arange(0, BLOCK_SIZE)</text>
+  <text x="710" y="430" text-anchor="middle" font-size="11.5" fill="#6B6B6B">the compiler picks threads/warps for you</text>
+
+  <text x="710" y="480" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">each program computes a whole tile</text>
+  <text x="710" y="500" text-anchor="middle" font-size="12" fill="#6B6B6B">masking, staging, and scheduling are</text>
+  <text x="710" y="517" text-anchor="middle" font-size="12" fill="#6B6B6B">compiler-managed, not hand-written</text>
+</svg>

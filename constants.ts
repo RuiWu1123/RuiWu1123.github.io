@@ -131,6 +131,11 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: "triton-for-dl",
+    title: "Triton from First Principles: Writing Fast GPU Kernels Without Writing CUDA",
+    date: "2026/7/9"
+  },
+  {
     id: "gpu-field-guide-for-dl",
     title: "GPUs from First Principles: A Field Guide for Deep Learning Researchers",
     date: "2026/7/8"

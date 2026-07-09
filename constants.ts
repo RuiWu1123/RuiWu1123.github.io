@@ -78,11 +78,11 @@ export const PUBLICATIONS: Publication[] = [
     id: 'reward-hacking-rebounds',
     title: "When Reward Hacking Rebounds: Understanding and Mitigating It with Representation-Level Signals",
     authors: ["Rui Wu", "Ruixiang Tang"],
-    venue: "Preprint",
+    venue: "COLM 2026",
     link: "https://arxiv.org/abs/2604.01476",
     year: 2026,
     tags: ["Evaluation and Monitoring"],
-    preprint: true
+    preprint: false
   },
   {
     id: 'reasoning-over-precedents',
@@ -108,6 +108,11 @@ export const PUBLICATIONS: Publication[] = [
 ];
 
 export const NEWS_ITEMS: NewsItem[] = [
+  {
+    date: "2026/7/9",
+    content: "My paper \"When Reward Hacking Rebounds: Understanding and Mitigating It with Representation-Level Signals \" is accepted by COLM 2026!",
+    link: "https://arxiv.org/abs/2604.01476"
+  },
   {
     date: "2026/4/6",
     content: "My paper \"Reasoning over Precedents Alongside Statutes: Case-Augmented Deliberative Alignment for LLM Safety \" is accepted by ACL 2026 Main Conference!",

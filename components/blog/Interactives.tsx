@@ -630,3 +630,322 @@ export const AutotuneExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => 
     </Card>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/*  5. Ring-AllReduce vs Parameter-Server Explorer                     */
+/* ------------------------------------------------------------------ */
+
+const STR5 = {
+  en: {
+    title: 'Interactive: why Ring-AllReduce scales and a parameter server doesn’t',
+    sub: 'Pick a GPU count and a gradient size, and compare per-GPU traffic under a naive parameter server vs Ring-AllReduce.',
+    numGpus: 'Number of GPUs (N)',
+    gradSize: 'Gradient size',
+    serverTraffic: 'Parameter server: busiest node’s traffic',
+    ringTraffic: 'Ring-AllReduce: traffic per GPU',
+    serverFormula: '(N−1) × size — grows with N',
+    ringFormula: '2(N−1)/N × size — approaches 2× size, flat',
+    note: 'The server’s incoming traffic grows linearly with every GPU you add — it eventually becomes the whole bottleneck. Every ring participant’s traffic converges to about 2× the gradient size, almost independent of how many GPUs are in the ring.',
+  },
+  zh: {
+    title: '交互演示：为什么 Ring-AllReduce 能扩展，而 parameter server 不能',
+    sub: '选一个 GPU 数量和梯度大小，对比朴素 parameter server 和 Ring-AllReduce 下每个节点的通信量。',
+    numGpus: 'GPU 数量（N）',
+    gradSize: '梯度大小',
+    serverTraffic: 'Parameter server：最忙节点的通信量',
+    ringTraffic: 'Ring-AllReduce：每个 GPU 的通信量',
+    serverFormula: '(N−1) × size —— 随 N 增长',
+    ringFormula: '2(N−1)/N × size —— 趋近于 2× size，基本走平',
+    note: '每加一块 GPU，server 端要承受的流入流量都会线性增长——它最终会变成整个系统的瓶颈。而 ring 里每个参与者的通信量都收敛到大约 2 倍梯度大小，几乎和 ring 里有多少块 GPU 无关。',
+  },
+};
+
+const RING_GPU_OPTIONS = [4, 8, 16, 32, 64, 128];
+const RING_SIZE_OPTIONS = [1, 4, 16, 64];
+
+export const RingAllReduceExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
+  const t = STR5[lang];
+  const [numGpus, setNumGpus] = useState(8);
+  const [gradSize, setGradSize] = useState(4);
+
+  const { serverTraffic, ringTraffic, maxTraffic } = useMemo(() => {
+    const server = (numGpus - 1) * gradSize;
+    const ring = ((2 * (numGpus - 1)) / numGpus) * gradSize;
+    return { serverTraffic: server, ringTraffic: ring, maxTraffic: Math.max(server, ring) };
+  }, [numGpus, gradSize]);
+
+  return (
+    <Card>
+      <h4 className="text-lg font-serif text-anthropic-text mb-1">{t.title}</h4>
+      <p className="text-sm text-anthropic-gray mb-4">{t.sub}</p>
+
+      <div className="mb-4">
+        <div className="text-xs uppercase tracking-wide text-anthropic-gray/70 mb-1.5">{t.numGpus}</div>
+        <div className="flex flex-wrap gap-2">
+          {RING_GPU_OPTIONS.map((n) => (
+            <Pill key={n} active={numGpus === n} onClick={() => setNumGpus(n)}>
+              {n}
+            </Pill>
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-5">
+        <div className="text-xs uppercase tracking-wide text-anthropic-gray/70 mb-1.5">{t.gradSize}</div>
+        <div className="flex flex-wrap gap-2">
+          {RING_SIZE_OPTIONS.map((s) => (
+            <Pill key={s} active={gradSize === s} onClick={() => setGradSize(s)}>
+              {s} GB
+            </Pill>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-4 mb-4">
+        <div>
+          <div className="flex justify-between text-xs mb-1">
+            <span className="text-anthropic-gray/70 uppercase tracking-wide">{t.serverTraffic}</span>
+            <span className="text-anthropic-text font-mono">{serverTraffic.toFixed(1)} GB</span>
+          </div>
+          <div className="w-full h-5 rounded-full bg-anthropic-stone/40 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-anthropic-accent"
+              style={{ width: `${(serverTraffic / maxTraffic) * 100}%` }}
+            />
+          </div>
+          <div className="text-xs text-anthropic-gray/60 mt-1 font-mono">{t.serverFormula}</div>
+        </div>
+
+        <div>
+          <div className="flex justify-between text-xs mb-1">
+            <span className="text-anthropic-gray/70 uppercase tracking-wide">{t.ringTraffic}</span>
+            <span className="text-anthropic-text font-mono">{ringTraffic.toFixed(1)} GB</span>
+          </div>
+          <div className="w-full h-5 rounded-full bg-anthropic-stone/40 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-anthropic-leaf"
+              style={{ width: `${(ringTraffic / maxTraffic) * 100}%` }}
+            />
+          </div>
+          <div className="text-xs text-anthropic-gray/60 mt-1 font-mono">{t.ringFormula}</div>
+        </div>
+      </div>
+
+      <p className="text-xs text-anthropic-gray leading-relaxed">{t.note}</p>
+    </Card>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/*  6. ZeRO Memory Calculator                                          */
+/* ------------------------------------------------------------------ */
+
+const STR6 = {
+  en: {
+    title: 'Interactive: how much does ZeRO actually save?',
+    sub: 'Pick a model size and a GPU count, then compare per-GPU memory for mixed-precision Adam across plain DDP and each ZeRO stage.',
+    modelSize: 'Model size (parameters)',
+    numGpus: 'Number of GPUs (N)',
+    stage: 'Partitioning strategy',
+    perGpuMem: 'Per-GPU memory (model states only)',
+    warning: 'This alone exceeds a single GPU’s HBM — partitioning (or offloading) isn’t optional at this size.',
+    fine: 'Comfortably fits alongside activations on a modern GPU.',
+    ddp: 'Plain DDP (no partitioning)',
+    z1: 'ZeRO-1 (optimizer states)',
+    z2: 'ZeRO-2 (+ gradients)',
+    z3: 'ZeRO-3 (+ parameters)',
+    formula: 'formula (Φ = parameters, in billions)',
+  },
+  zh: {
+    title: '交互演示：ZeRO 到底省了多少显存？',
+    sub: '选一个模型大小和 GPU 数量，对比 plain DDP 和各个 ZeRO stage 下，mixed-precision Adam 每张 GPU 的显存占用。',
+    modelSize: '模型大小（参数量）',
+    numGpus: 'GPU 数量（N）',
+    stage: '切分策略',
+    perGpuMem: '每张 GPU 的显存（仅 model states）',
+    warning: '光是这一项就已经超过单张 GPU 的 HBM 了——到这个规模，partition（或者 offload）已经不是可选项。',
+    fine: '和激活值一起放在一张现代 GPU 上，绰绰有余。',
+    ddp: 'Plain DDP（不切分）',
+    z1: 'ZeRO-1（切分优化器状态）',
+    z2: 'ZeRO-2（+ 切分梯度）',
+    z3: 'ZeRO-3（+ 切分参数）',
+    formula: '公式（Φ = 参数量，单位：十亿）',
+  },
+};
+
+type ZeroStage = 'ddp' | 'z1' | 'z2' | 'z3';
+const MODEL_SIZE_OPTIONS = [1, 7, 13, 70, 175];
+const ZERO_GPU_OPTIONS = [8, 16, 64, 256];
+
+export const ZeROMemoryCalculator: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
+  const t = STR6[lang];
+  const [modelSize, setModelSize] = useState(70);
+  const [numGpus, setNumGpus] = useState(64);
+  const [stage, setStage] = useState<ZeroStage>('z2');
+
+  const { perGpuGB, formula } = useMemo(() => {
+    const phi = modelSize; // billions of params; 1 byte/param == 1 GB per Φ
+    let gb = 0;
+    let f = '';
+    if (stage === 'ddp') {
+      gb = 16 * phi;
+      f = '(2 + 2 + 12) × Φ';
+    } else if (stage === 'z1') {
+      gb = 2 * phi + 2 * phi + (12 * phi) / numGpus;
+      f = '2Φ + 2Φ + 12Φ/N';
+    } else if (stage === 'z2') {
+      gb = 2 * phi + (2 * phi + 12 * phi) / numGpus;
+      f = '2Φ + 14Φ/N';
+    } else {
+      gb = (16 * phi) / numGpus;
+      f = '16Φ/N';
+    }
+    return { perGpuGB: gb, formula: f };
+  }, [modelSize, numGpus, stage]);
+
+  const overLimit = perGpuGB > 80;
+
+  return (
+    <Card>
+      <h4 className="text-lg font-serif text-anthropic-text mb-1">{t.title}</h4>
+      <p className="text-sm text-anthropic-gray mb-4">{t.sub}</p>
+
+      <div className="mb-4">
+        <div className="text-xs uppercase tracking-wide text-anthropic-gray/70 mb-1.5">{t.modelSize}</div>
+        <div className="flex flex-wrap gap-2">
+          {MODEL_SIZE_OPTIONS.map((m) => (
+            <Pill key={m} active={modelSize === m} onClick={() => setModelSize(m)}>
+              {m}B
+            </Pill>
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <div className="text-xs uppercase tracking-wide text-anthropic-gray/70 mb-1.5">{t.numGpus}</div>
+        <div className="flex flex-wrap gap-2">
+          {ZERO_GPU_OPTIONS.map((n) => (
+            <Pill key={n} active={numGpus === n} onClick={() => setNumGpus(n)}>
+              {n}
+            </Pill>
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-5">
+        <div className="text-xs uppercase tracking-wide text-anthropic-gray/70 mb-1.5">{t.stage}</div>
+        <div className="flex flex-wrap gap-2">
+          <Pill active={stage === 'ddp'} onClick={() => setStage('ddp')}>{t.ddp}</Pill>
+          <Pill active={stage === 'z1'} onClick={() => setStage('z1')}>{t.z1}</Pill>
+          <Pill active={stage === 'z2'} onClick={() => setStage('z2')}>{t.z2}</Pill>
+          <Pill active={stage === 'z3'} onClick={() => setStage('z3')}>{t.z3}</Pill>
+        </div>
+      </div>
+
+      <div className="mb-2">
+        <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide mb-1">{t.perGpuMem}</div>
+        <div className={`text-3xl font-mono ${overLimit ? 'text-anthropic-accent' : 'text-anthropic-leaf'}`}>
+          {perGpuGB.toFixed(1)} GB
+        </div>
+        <div className="text-xs text-anthropic-gray/60 mt-1">{t.formula}: <span className="font-mono">{formula}</span></div>
+      </div>
+
+      <p className="text-xs text-anthropic-gray leading-relaxed mt-3">{overLimit ? t.warning : t.fine}</p>
+    </Card>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/*  7. Pipeline Bubble Explorer                                        */
+/* ------------------------------------------------------------------ */
+
+const STR7 = {
+  en: {
+    title: 'Interactive: how many microbatches do you need?',
+    sub: 'Pick a pipeline depth (stages) and a microbatch count, and see what fraction of every GPU’s time is bubble — idle, waiting on the pipeline.',
+    stages: 'Pipeline stages (P)',
+    microbatches: 'Microbatches (M)',
+    bubbleFrac: 'Bubble fraction',
+    utilFrac: 'Useful-work fraction',
+    formula: '(P−1) / (P−1+M)',
+    lowNote: 'Too few microbatches for this many stages — a large share of every step is idle bubble, whichever schedule (GPipe or 1F1B) you use.',
+    okNote: 'A reasonable working point — most of each step is useful compute.',
+  },
+  zh: {
+    title: '交互演示：到底需要多少个 microbatch？',
+    sub: '选一个 pipeline 深度（stage 数）和 microbatch 数量，看看每张 GPU 的时间里有多少比例是 bubble——也就是在等 pipeline，空转。',
+    stages: 'Pipeline stage 数（P）',
+    microbatches: 'Microbatch 数（M）',
+    bubbleFrac: 'Bubble 占比',
+    utilFrac: '有效计算占比',
+    formula: '(P−1) / (P−1+M)',
+    lowNote: '相对于这么多 stage，microbatch 数太少了——不管用 GPipe 还是 1F1B，每一步都有很大比例在空转。',
+    okNote: '是一个还算合理的工作点——每一步里大部分时间都在做有效计算。',
+  },
+};
+
+const PB_STAGE_OPTIONS = [2, 4, 8, 16];
+
+export const PipelineBubbleExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
+  const t = STR7[lang];
+  const [stages, setStages] = useState(8);
+  const [microbatches, setMicrobatches] = useState(16);
+
+  const bubbleFrac = (stages - 1) / (stages - 1 + microbatches);
+  const utilFrac = 1 - bubbleFrac;
+
+  return (
+    <Card>
+      <h4 className="text-lg font-serif text-anthropic-text mb-1">{t.title}</h4>
+      <p className="text-sm text-anthropic-gray mb-4">{t.sub}</p>
+
+      <div className="mb-4">
+        <div className="text-xs uppercase tracking-wide text-anthropic-gray/70 mb-1.5">{t.stages}</div>
+        <div className="flex flex-wrap gap-2">
+          {PB_STAGE_OPTIONS.map((p) => (
+            <Pill key={p} active={stages === p} onClick={() => setStages(p)}>
+              {p}
+            </Pill>
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-5">
+        <div className="text-xs uppercase tracking-wide text-anthropic-gray/70 mb-1.5">
+          {t.microbatches}: <span className="text-anthropic-text font-mono">{microbatches}</span>
+        </div>
+        <input
+          type="range"
+          min={1}
+          max={64}
+          step={1}
+          value={microbatches}
+          onChange={(e) => setMicrobatches(parseInt(e.target.value, 10))}
+          className="w-full accent-anthropic-accent"
+        />
+      </div>
+
+      <div className="w-full h-7 rounded-full bg-anthropic-leaf/60 overflow-hidden mb-1 flex">
+        <div className="h-full bg-anthropic-stone flex items-center justify-center" style={{ width: `${bubbleFrac * 100}%` }}>
+          {bubbleFrac > 0.12 && (
+            <span className="text-[10px] text-anthropic-text font-mono">{(bubbleFrac * 100).toFixed(0)}%</span>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.bubbleFrac}</div>
+          <div className="text-anthropic-text font-mono">{(bubbleFrac * 100).toFixed(1)}%</div>
+        </div>
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.utilFrac}</div>
+          <div className="text-anthropic-text font-mono">{(utilFrac * 100).toFixed(1)}%</div>
+        </div>
+      </div>
+
+      <div className="text-xs text-anthropic-gray/60 mb-3 font-mono">{t.formula}</div>
+      <p className="text-xs text-anthropic-gray leading-relaxed">{bubbleFrac > 0.3 ? t.lowNote : t.okNote}</p>
+    </Card>
+  );
+};

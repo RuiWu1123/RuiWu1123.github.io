@@ -1,0 +1,145 @@
+<svg viewBox="0 0 900 860" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="900" height="860" fill="#F4F3EF"/>
+  <text x="450" y="38" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">Three Ways to Schedule a Pipeline</text>
+  <text x="450" y="60" text-anchor="middle" font-size="13" fill="#6B6B6B">4 stages, 4 microbatches — orange = forward, green = backward, gray = idle</text>
+
+  <!-- Panel 1: naive -->
+  <text x="150" y="98" font-size="14.5" font-weight="600" fill="#191919">naive model parallel — no microbatching</text>
+  <g transform="translate(150,110)">
+    <text x="-14" y="21" text-anchor="end" font-size="11.5" fill="#191919">Stage 0</text>
+    <text x="-14" y="58" text-anchor="end" font-size="11.5" fill="#191919">Stage 1</text>
+    <text x="-14" y="95" text-anchor="end" font-size="11.5" fill="#191919">Stage 2</text>
+    <text x="-14" y="132" text-anchor="end" font-size="11.5" fill="#191919">Stage 3</text>
+
+    <rect x="0" y="0" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="37" y="0" width="34" height="34" fill="#E6E4DD" stroke="#191919" stroke-width="0.6"/>
+    <rect x="74" y="0" width="34" height="34" fill="#E6E4DD" stroke="#191919" stroke-width="0.6"/>
+    <rect x="111" y="0" width="34" height="34" fill="#E6E4DD" stroke="#191919" stroke-width="0.6"/>
+    <rect x="0" y="37" width="34" height="34" fill="#E6E4DD" stroke="#191919" stroke-width="0.6"/>
+    <rect x="37" y="37" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="74" y="37" width="34" height="34" fill="#E6E4DD" stroke="#191919" stroke-width="0.6"/>
+    <rect x="111" y="37" width="34" height="34" fill="#E6E4DD" stroke="#191919" stroke-width="0.6"/>
+    <rect x="0" y="74" width="34" height="34" fill="#E6E4DD" stroke="#191919" stroke-width="0.6"/>
+    <rect x="37" y="74" width="34" height="34" fill="#E6E4DD" stroke="#191919" stroke-width="0.6"/>
+    <rect x="74" y="74" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="111" y="74" width="34" height="34" fill="#E6E4DD" stroke="#191919" stroke-width="0.6"/>
+    <rect x="0" y="111" width="34" height="34" fill="#E6E4DD" stroke="#191919" stroke-width="0.6"/>
+    <rect x="37" y="111" width="34" height="34" fill="#E6E4DD" stroke="#191919" stroke-width="0.6"/>
+    <rect x="74" y="111" width="34" height="34" fill="#E6E4DD" stroke="#191919" stroke-width="0.6"/>
+    <rect x="111" y="111" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+  </g>
+  <text x="150" y="278" font-size="12" fill="#6B6B6B">only 1 of 4 GPUs ever busy — the other 3 sit fully idle, every step</text>
+
+  <!-- Panel 2: GPipe -->
+  <text x="150" y="330" font-size="14.5" font-weight="600" fill="#191919">GPipe — all forwards, then all backwards</text>
+  <g transform="translate(150,342)">
+    <text x="-14" y="21" text-anchor="end" font-size="11.5" fill="#191919">Stage 0</text>
+    <text x="-14" y="58" text-anchor="end" font-size="11.5" fill="#191919">Stage 1</text>
+    <text x="-14" y="95" text-anchor="end" font-size="11.5" fill="#191919">Stage 2</text>
+    <text x="-14" y="132" text-anchor="end" font-size="11.5" fill="#191919">Stage 3</text>
+
+    <rect x="0" y="0" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="37" y="0" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="74" y="0" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="111" y="0" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="259" y="0" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="296" y="0" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="333" y="0" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="370" y="0" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+
+    <rect x="37" y="37" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="74" y="37" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="111" y="37" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="148" y="37" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="259" y="37" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="296" y="37" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="333" y="37" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="370" y="37" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+
+    <rect x="74" y="74" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="111" y="74" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="148" y="74" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="185" y="74" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="259" y="74" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="296" y="74" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="333" y="74" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="370" y="74" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+
+    <rect x="111" y="111" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="148" y="111" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="185" y="111" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="222" y="111" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="259" y="111" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="296" y="111" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="333" y="111" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="370" y="111" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+  </g>
+  <text x="150" y="510" font-size="12" fill="#6B6B6B">all M microbatches' activations must stay in memory until backward starts</text>
+
+  <!-- Panel 3: 1F1B -->
+  <text x="150" y="562" font-size="14.5" font-weight="600" fill="#191919">1F1B (PipeDream) — interleave as soon as possible</text>
+  <g transform="translate(150,574)">
+    <text x="-14" y="21" text-anchor="end" font-size="11.5" fill="#191919">Stage 0</text>
+    <text x="-14" y="58" text-anchor="end" font-size="11.5" fill="#191919">Stage 1</text>
+    <text x="-14" y="95" text-anchor="end" font-size="11.5" fill="#191919">Stage 2</text>
+    <text x="-14" y="132" text-anchor="end" font-size="11.5" fill="#191919">Stage 3</text>
+
+    <rect x="0" y="0" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="37" y="0" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="74" y="0" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="111" y="0" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="148" y="0" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="185" y="0" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="222" y="0" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="259" y="0" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="296" y="0" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="333" y="0" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="370" y="0" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="407" y="0" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="444" y="0" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="481" y="0" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+
+    <rect x="37" y="37" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="74" y="37" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="111" y="37" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="148" y="37" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="185" y="37" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="222" y="37" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="259" y="37" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="296" y="37" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="333" y="37" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="370" y="37" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="407" y="37" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="444" y="37" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="481" y="37" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+
+    <rect x="74" y="74" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="111" y="74" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="148" y="74" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="185" y="74" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="222" y="74" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="259" y="74" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="296" y="74" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="333" y="74" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="370" y="74" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="407" y="74" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="444" y="74" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="481" y="74" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+
+    <rect x="111" y="111" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="148" y="111" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="185" y="111" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="222" y="111" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="259" y="111" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="296" y="111" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="333" y="111" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="370" y="111" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="407" y="111" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+    <rect x="444" y="111" width="34" height="34" fill="#8DA399" stroke="#191919" stroke-width="0.6"/>
+    <rect x="481" y="111" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
+  </g>
+  <text x="150" y="742" font-size="12" fill="#6B6B6B">at most ~1 microbatch's activations per stage in flight — same total bubble time as GPipe, far less memory</text>
+
+  <text x="450" y="800" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">bubble fraction, either schedule: (P − 1) / (P − 1 + M) — more microbatches ⇒ smaller bubble</text>
+  <text x="450" y="822" text-anchor="middle" font-size="12" fill="#6B6B6B">schematic timing — real schedules also depend on per-stage compute time and communication latency</text>
+</svg>

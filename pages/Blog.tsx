@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ArrowLeft } from 'lucide-react';
 import { BLOG_POSTS, loadBlogContent } from '../constants';
-import { RooflineExplorer, GridBlockSimulator, TritonGridExplorer, AutotuneExplorer } from '../components/blog/Interactives';
+import { RooflineExplorer, GridBlockSimulator, TritonGridExplorer, AutotuneExplorer, RingAllReduceExplorer, ZeROMemoryCalculator, PipelineBubbleExplorer } from '../components/blog/Interactives';
 
 const Blog: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -222,6 +222,15 @@ const Blog: React.FC = () => {
                         }
                         if (alt === 'interactive:autotune') {
                           return <AutotuneExplorer lang={lang} />;
+                        }
+                        if (alt === 'interactive:ring-allreduce') {
+                          return <RingAllReduceExplorer lang={lang} />;
+                        }
+                        if (alt === 'interactive:zero-memory') {
+                          return <ZeROMemoryCalculator lang={lang} />;
+                        }
+                        if (alt === 'interactive:pipeline-bubble') {
+                          return <PipelineBubbleExplorer lang={lang} />;
                         }
                         return (
                           <img

@@ -137,6 +137,11 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: "distributed-training-for-dl",
+    title: "Distributed Training from First Principles: A Field Guide to Parallelism Strategies",
+    date: "2026/7/19"
+  },
+  {
     id: "triton-for-dl",
     title: "Triton from First Principles: Writing Fast GPU Kernels Without Writing CUDA",
     date: "2026/7/9"

@@ -1,0 +1,60 @@
+<svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="1000" height="600" fill="#F4F3EF"/>
+  <text x="500" y="38" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">ZeRO: Partitioning Away the Redundancy</text>
+  <text x="500" y="60" text-anchor="middle" font-size="13" fill="#6B6B6B">per-GPU memory for mixed-precision Adam, Φ = parameter count, example at N=64 GPUs</text>
+
+  <!-- baseline axis line -->
+  <line x1="60" y1="480" x2="940" y2="480" stroke="#191919" stroke-opacity="0.4"/>
+
+  <!-- Bar 1: baseline DDP -->
+  <g>
+    <rect x="90" y="285.0" width="140" height="195.0" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
+    <rect x="90" y="252.5" width="140" height="32.5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+    <rect x="90" y="220.0" width="140" height="32.5" fill="#D97757" stroke="#191919" stroke-width="1"/>
+    <text x="160" y="205" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">16Φ</text>
+    <text x="160" y="504" text-anchor="middle" font-size="12.5" font-weight="600" fill="#191919">Plain DDP</text>
+    <text x="160" y="520" text-anchor="middle" font-size="11" fill="#6B6B6B">no partitioning</text>
+  </g>
+
+  <!-- Bar 2: ZeRO-1 -->
+  <g>
+    <rect x="320" y="474.0" width="140" height="6.0" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
+    <rect x="320" y="410.5" width="140" height="63.5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+    <rect x="320" y="347.0" width="140" height="63.5" fill="#D97757" stroke="#191919" stroke-width="1"/>
+    <text x="390" y="332" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">≈4.2Φ</text>
+    <text x="390" y="504" text-anchor="middle" font-size="12.5" font-weight="600" fill="#191919">ZeRO-1</text>
+    <text x="390" y="520" text-anchor="middle" font-size="11" fill="#6B6B6B">optimizer states partitioned</text>
+  </g>
+
+  <!-- Bar 3: ZeRO-2 -->
+  <g>
+    <rect x="550" y="471.8" width="140" height="8.2" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
+    <rect x="550" y="470.4" width="140" height="1.4" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+    <rect x="550" y="383.2" width="140" height="87.3" fill="#D97757" stroke="#191919" stroke-width="1"/>
+    <text x="620" y="368" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">≈2.2Φ</text>
+    <text x="620" y="504" text-anchor="middle" font-size="12.5" font-weight="600" fill="#191919">ZeRO-2</text>
+    <text x="620" y="520" text-anchor="middle" font-size="11" fill="#6B6B6B">+ gradients partitioned</text>
+  </g>
+
+  <!-- Bar 4: ZeRO-3 -->
+  <g>
+    <rect x="780" y="455.6" width="140" height="24.4" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
+    <rect x="780" y="451.6" width="140" height="4.1" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+    <rect x="780" y="447.5" width="140" height="4.1" fill="#D97757" stroke="#191919" stroke-width="1"/>
+    <text x="850" y="432" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">0.25Φ</text>
+    <text x="850" y="504" text-anchor="middle" font-size="12.5" font-weight="600" fill="#191919">ZeRO-3</text>
+    <text x="850" y="520" text-anchor="middle" font-size="11" fill="#6B6B6B">+ parameters partitioned</text>
+  </g>
+
+  <!-- legend -->
+  <g transform="translate(90,555)">
+    <rect x="0" y="0" width="16" height="16" fill="#D97757" stroke="#191919" stroke-width="0.8"/>
+    <text x="22" y="13" font-size="12" fill="#191919">fp16 params (2Φ)</text>
+    <rect x="180" y="0" width="16" height="16" fill="#8DA399" stroke="#191919" stroke-width="0.8"/>
+    <text x="202" y="13" font-size="12" fill="#191919">fp16 gradients (2Φ)</text>
+    <rect x="400" y="0" width="16" height="16" fill="#E3EBF2" stroke="#191919" stroke-width="0.8"/>
+    <text x="422" y="13" font-size="12" fill="#191919">fp32 optimizer states (12Φ)</text>
+  </g>
+
+  <text x="850" y="555" text-anchor="end" font-size="11" fill="#6B6B6B">bar height ∝ √(total) for readability — exact totals labeled above each bar</text>
+</svg>

@@ -11,15 +11,15 @@ A note on confidence before the numbers: NVIDIA and AMD publish detailed datashe
 
 | Chip | Year | Memory | Bandwidth | Dense compute (BF16/FP16-class) | Interconnect | TDP |
 |---|---|---|---|---|---|---|
-| P100 | 2016 | 16 GB HBM2 | 0.72 TB/s | 21.2 TFLOPS FP16 (no Tensor Cores) | NVLink 1, 160 GB/s | 300 W |
-| V100 | 2017 | 32 GB HBM2 | 0.9 TB/s | 125 TFLOPS (1st-gen Tensor Cores) | NVLink 2, 300 GB/s | 300 W |
-| A100 (80GB) | 2020 | 80 GB HBM2e | 2.04 TB/s | 312 TFLOPS (TF32 introduced) | NVLink 3, 600 GB/s | 400 W |
-| H100 SXM5 | 2022 | 80 GB HBM3 | 3.35 TB/s | 990 TFLOPS (**FP8 introduced**, 1979 TFLOPS) | NVLink 4, 900 GB/s | 700 W |
-| H200 | 2024 | 141 GB HBM3e | 4.8 TB/s | 990 TFLOPS (same die as H100, memory-only refresh) | NVLink 4, 900 GB/s | 700 W |
-| B200 | 2024 | 192 GB HBM3e | 8 TB/s | 2,250 TFLOPS (**FP4 introduced**, ~9 PFLOPS FP4 sparse) | NVLink 5, 1.8 TB/s | 1,000 W |
-| B300 / GB300 | 2025 | 288 GB HBM3e | 8 TB/s | ~2,500 TFLOPS (FP64 sharply de-emphasized vs. B200) | NVLink 5, 1.8 TB/s | 1,400 W |
+| P100 | 2016 | 16 GB HBM2 | 0.72 TB/s | 21.2 TFLOPS | NVLink 1, 160 GB/s | 300 W |
+| V100 | 2017 | 32 GB HBM2 | 0.9 TB/s | 125 TFLOPS | NVLink 2, 300 GB/s | 300 W |
+| A100 (80GB) | 2020 | 80 GB HBM2e | 2.04 TB/s | 312 TFLOPS | NVLink 3, 600 GB/s | 400 W |
+| H100 SXM5 | 2022 | 80 GB HBM3 | 3.35 TB/s | 990 TFLOPS | NVLink 4, 900 GB/s | 700 W |
+| H200 | 2024 | 141 GB HBM3e | 4.8 TB/s | 990 TFLOPS | NVLink 4, 900 GB/s | 700 W |
+| B200 | 2024 | 192 GB HBM3e | 8 TB/s | 2,250 TFLOPS | NVLink 5, 1.8 TB/s | 1,000 W |
+| B300 / GB300 | 2025 | 288 GB HBM3e | 8 TB/s | 2,500 TFLOPS | NVLink 5, 1.8 TB/s | 1,400 W |
 
-The clearest structural break in this table is at Blackwell (B100/B200/B300): every NVIDIA datacenter GPU up through H200 was a single monolithic die, pushed right up against the reticle size limit (H100's die is 814 mm²). Blackwell is the first generation to go **dual-die** — two reticle-sized dies joined by a 10 TB/s die-to-die link, presented to software as a single GPU — because there was no more room to grow a single die, only to add a second one next to it.
+The clearest structural break in this table is at Blackwell (B100/B200/B300): every NVIDIA datacenter GPU up through H200 was a single monolithic die, pushed right up against the reticle size limit (H100's die is 814 mm²). Blackwell is the first generation to go dual-die — two reticle-sized dies joined by a 10 TB/s die-to-die link, presented to software as a single GPU — because there was no more room to grow a single die, only to add a second one next to it. Precision support expanded right alongside capacity: V100 introduced Tensor Cores, A100 added TF32, H100 introduced FP8 (its sparse FP8 throughput is roughly double the dense figure in the table), and B200 introduced FP4, with sparse FP4 throughput reaching roughly 9 PFLOPS. H200 is otherwise the same compute die as H100, just with more and faster memory.
 
 The other clear pattern is the "rack as the real product" shift. Starting with GB200 NVL72, NVIDIA's highest-end offering isn't really a chip you buy one of — it's a 72-GPU, liquid-cooled rack sharing a single NVLink domain with 130+ TB/s of aggregate bandwidth, and per-GPU numbers increasingly need that context to mean anything. TDP has grown right alongside all of this — 300 W (Pascal) to 700 W (Hopper) to 1,000–1,400 W (Blackwell) — nearly a 5× increase in under a decade, and the reason liquid cooling stopped being optional starting with Blackwell Ultra.
 
@@ -27,13 +27,13 @@ The other clear pattern is the "rack as the real product" shift. Starting with G
 
 | Chip | Year | Memory | Bandwidth | Dense compute (BF16/FP16-class) | Interconnect | TDP |
 |---|---|---|---|---|---|---|
-| MI100 | 2020 | 32 GB HBM2 | 1.2 TB/s | 184.6 TFLOPS FP16 | Infinity Fabric, ~276 GB/s | 300 W |
+| MI100 | 2020 | 32 GB HBM2 | 1.2 TB/s | 184.6 TFLOPS | Infinity Fabric, ~276 GB/s | 300 W |
 | MI250X | 2021 | 128 GB HBM2e | 3.2 TB/s | 383 TFLOPS | Infinity Fabric, 8×100 GB/s | 560 W |
-| MI300X | 2023 | 192 GB HBM3 | 5.3 TB/s | 1,307 TFLOPS (**FP8 introduced**, 2,615 TFLOPS) | Infinity Fabric, 7×128 GB/s | 750 W |
-| MI325X | 2024 | 256 GB HBM3e | 6.0 TB/s | 1,307 TFLOPS (same compute dies as MI300X) | Infinity Fabric, 7×128 GB/s | 1,000 W |
-| MI355X | 2025 | 288 GB HBM3e | 8 TB/s | ~2,500 TFLOPS (**MXFP6/MXFP4 introduced**) | Infinity Fabric, 7×153.6 GB/s | 1,400 W |
+| MI300X | 2023 | 192 GB HBM3 | 5.3 TB/s | 1,307 TFLOPS | Infinity Fabric, 7×128 GB/s | 750 W |
+| MI325X | 2024 | 256 GB HBM3e | 6.0 TB/s | 1,307 TFLOPS | Infinity Fabric, 7×128 GB/s | 1,000 W |
+| MI355X | 2025 | 288 GB HBM3e | 8 TB/s | 2,500 TFLOPS | Infinity Fabric, 7×153.6 GB/s | 1,400 W |
 
-AMD went multi-die earlier than anyone else at this scale — MI250X (2021) already packages two compute dies (GCDs), and MI300X (2023) pushes to eight compute chiplets plus separate I/O dies, a genuinely more aggressive chiplet strategy than NVIDIA adopted until Blackwell three years later. The strategic signature that shows up clearly in the numbers, though, is memory capacity. Checked against NVIDIA's contemporaneous flagship at each point in time, AMD's memory lead has been real and consistent, even as it's been narrowing:
+AMD went multi-die earlier than anyone else at this scale — MI250X (2021) already packages two compute dies (GCDs), and MI300X (2023) pushes to eight compute chiplets plus separate I/O dies, a genuinely more aggressive chiplet strategy than NVIDIA adopted until Blackwell three years later. MI300X also introduced FP8 support (its sparse FP8 throughput is roughly double the dense figure above), and MI355X added MXFP6/MXFP4; MI325X reuses MI300X's compute dies with more and faster memory rather than a new compute design. The strategic signature that shows up clearly in the numbers, though, is memory capacity. Checked against NVIDIA's contemporaneous flagship at each point in time, AMD's memory lead has been real and consistent, even as it's been narrowing:
 
 | Era | AMD chip | AMD memory | NVIDIA contemporary | NVIDIA memory | AMD's edge |
 |---|---|---|---|---|---|
@@ -47,25 +47,25 @@ The trade-off is legible too: AMD has generally matched, rather than led, on raw
 
 | Generation | Year | Memory | Bandwidth | Dense compute (BF16) | Interconnect | TDP |
 |---|---|---|---|---|---|---|
-| v2 | 2017 | 8 GB HBM | ~0.25 TB/s (est.) | 45 TFLOPS | ICI (undisclosed) | not disclosed |
-| v3 | 2018 | 32 GB HBM2 | 0.9 TB/s | 123 TFLOPS | ICI | 123–262 W (measured) |
-| v4 | 2021 | 32 GB HBM2 | 1.2 TB/s | 275 TFLOPS | ICI, **optical circuit switches** | 90–192 W (measured) |
+| v2 | 2017 | 8 GB HBM | 0.25 TB/s | 45 TFLOPS | ICI | not disclosed |
+| v3 | 2018 | 32 GB HBM2 | 0.9 TB/s | 123 TFLOPS | ICI | 123–262 W |
+| v4 | 2021 | 32 GB HBM2 | 1.2 TB/s | 275 TFLOPS | ICI, optical circuit switches | 90–192 W |
 | v5e | 2023 | 16 GB HBM2 | 0.82 TB/s | 197 TFLOPS | ICI, 400 GB/s | not disclosed |
 | v5p | 2023 | 95 GB HBM2e | 2.77 TB/s | 459 TFLOPS | ICI, 1.2 TB/s | not disclosed |
 | v6e (Trillium) | 2024 | 32 GB HBM | 1.64 TB/s | 918 TFLOPS | ICI, 800 GB/s | not disclosed |
-| v7 (Ironwood) | 2025 | 192 GB HBM (2×96 GB chiplets) | 7.38 TB/s | 2,307 TFLOPS (**FP8 introduced**, 4,614 TFLOPS) | ICI, 1.2 TB/s + fast die-to-die link | ~1,000 W (back-calculated est.) |
+| v7 (Ironwood) | 2025 | 192 GB HBM | 7.38 TB/s | 2,307 TFLOPS | ICI, 1.2 TB/s + die-to-die link | 1,000 W |
 
-Two things make TPU's table read differently from the other three. First, Google has never once published TDP for any generation — every figure in that column is a third-party estimate (SemiAnalysis, ServeTheHome), except the two generations (v3, v4) where Google's own Cloud docs happen to list measured min/mean/max power draw. Second, and more interesting: the jump from v5p to Trillium (v6e) delivered roughly double the peak FLOPS in a single generational step — the gain came from quadrupling the systolic array from 128×128 to 256×256 MXU tiles, an architectural change rather than simply scaling up power or die size. That's the cleanest "architecture, not brute force" data point in this whole comparison.
+Two things make TPU's table read differently from the other three. First, every figure in the TDP column is a third-party estimate (SemiAnalysis, ServeTheHome) rather than a Google-published number, except for v3 and v4, where Google's own Cloud docs happen to list measured min/mean/max power draw. Second, and more interesting: the jump from v5p to Trillium (v6e) delivered roughly double the peak FLOPS in a single generational step — the gain came from quadrupling the systolic array from 128×128 to 256×256 MXU tiles, an architectural change rather than simply scaling up power or die size. That's the cleanest "architecture, not brute force" data point in this whole comparison.
 
-Ironwood (v7) is TPU's Blackwell moment: it abandons the unified "MegaCore" die design used since v4 in favor of two chiplets per chip, and it's the first TPU with native FP8 hardware — a real jump in memory capacity (32 GB → 192 GB) and bandwidth (1.64 → 7.38 TB/s) in one step, both squarely aimed at the memory-bound parts of large model training.
+Ironwood (v7) is TPU's Blackwell moment: it packages two 96 GB HBM chiplets rather than one unified "MegaCore" die (the design used since v4), and it's the first TPU with native FP8 hardware, whose sparse throughput reaches roughly 4,614 TFLOPS — a real jump in memory capacity and bandwidth in one step, both squarely aimed at the memory-bound parts of large model training.
 
 ## 4. Huawei Ascend: scaling out to compensate for scaling up less
 
 | Chip | Year | Memory | Bandwidth | Dense compute (BF16/FP16-class) | Interconnect | TDP |
 |---|---|---|---|---|---|---|
-| 910 | 2019 | 32 GB HBM2 | 1.23 TB/s | ~320 TFLOPS FP16 | HCCS (early) | ~310 W |
-| 910B | 2023 | 64 GB HBM2e | 1.6 TB/s | ~400 TFLOPS FP16 (est.) | HCCS, ~336 GB/s (est.) | ~400 W (est.) |
-| 910C | 2025 | 128 GB HBM2e (reported) | ~3.2 TB/s (est.) | ~800 TFLOPS (est.) | HCCS + die-to-die (unconfirmed) | not disclosed |
+| 910 | 2019 | 32 GB HBM2 | 1.23 TB/s | 320 TFLOPS | HCCS | 310 W |
+| 910B | 2023 | 64 GB HBM2e | 1.6 TB/s | 400 TFLOPS | HCCS, 336 GB/s | 400 W |
+| 910C | 2025 | 128 GB HBM2e | 3.2 TB/s | 800 TFLOPS | HCCS + die-to-die | not disclosed |
 
 Ascend is the lineage where the public numbers carry the most uncertainty of the four — Huawei doesn't publish detailed datasheets the way NVIDIA and AMD do, and most figures above are compiled from Chinese-market cloud documentation, conference disclosures, and third-party analysis rather than an official spec sheet, so treat them as directional rather than exact. What's clear from even the directional numbers: each generation roughly doubles memory capacity (32 → 64 → 128 GB) and bandwidth, which is exactly the axis that matters most for fitting bigger models and longer context windows onto a single accelerator.
 

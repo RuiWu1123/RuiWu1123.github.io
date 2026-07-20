@@ -11,15 +11,15 @@ date: "2026/7/20"
 
 | 芯片 | 年份 | 显存 | 带宽 | 密集算力（BF16/FP16 级） | 互联 | TDP |
 |---|---|---|---|---|---|---|
-| P100 | 2016 | 16 GB HBM2 | 0.72 TB/s | 21.2 TFLOPS FP16（无 Tensor Core） | NVLink 1，160 GB/s | 300 W |
-| V100 | 2017 | 32 GB HBM2 | 0.9 TB/s | 125 TFLOPS（第一代 Tensor Core） | NVLink 2，300 GB/s | 300 W |
-| A100（80GB） | 2020 | 80 GB HBM2e | 2.04 TB/s | 312 TFLOPS（引入 TF32） | NVLink 3，600 GB/s | 400 W |
-| H100 SXM5 | 2022 | 80 GB HBM3 | 3.35 TB/s | 990 TFLOPS（**引入 FP8**，1979 TFLOPS） | NVLink 4，900 GB/s | 700 W |
-| H200 | 2024 | 141 GB HBM3e | 4.8 TB/s | 990 TFLOPS（与 H100 同一颗芯片，只是显存升级） | NVLink 4，900 GB/s | 700 W |
-| B200 | 2024 | 192 GB HBM3e | 8 TB/s | 2,250 TFLOPS（**引入 FP4**，稀疏 FP4 约 9 PFLOPS） | NVLink 5，1.8 TB/s | 1,000 W |
-| B300 / GB300 | 2025 | 288 GB HBM3e | 8 TB/s | 约 2,500 TFLOPS（FP64 相较 B200 被明显弱化） | NVLink 5，1.8 TB/s | 1,400 W |
+| P100 | 2016 | 16 GB HBM2 | 0.72 TB/s | 21.2 TFLOPS | NVLink 1，160 GB/s | 300 W |
+| V100 | 2017 | 32 GB HBM2 | 0.9 TB/s | 125 TFLOPS | NVLink 2，300 GB/s | 300 W |
+| A100（80GB） | 2020 | 80 GB HBM2e | 2.04 TB/s | 312 TFLOPS | NVLink 3，600 GB/s | 400 W |
+| H100 SXM5 | 2022 | 80 GB HBM3 | 3.35 TB/s | 990 TFLOPS | NVLink 4，900 GB/s | 700 W |
+| H200 | 2024 | 141 GB HBM3e | 4.8 TB/s | 990 TFLOPS | NVLink 4，900 GB/s | 700 W |
+| B200 | 2024 | 192 GB HBM3e | 8 TB/s | 2,250 TFLOPS | NVLink 5，1.8 TB/s | 1,000 W |
+| B300 / GB300 | 2025 | 288 GB HBM3e | 8 TB/s | 2,500 TFLOPS | NVLink 5，1.8 TB/s | 1,400 W |
 
-这张表里最明显的结构性断裂发生在 Blackwell（B100/B200/B300）这一代：从 H200 往前，NVIDIA 的每一代数据中心 GPU 都是单颗晶片，且已经顶到了光罩尺寸的物理极限（H100 的裸晶面积达 814 mm²）。Blackwell 是第一代采用**双芯合封**的产品——两颗光罩极限大小的裸晶通过 10 TB/s 的芯片间互联拼在一起，对软件呈现为一颗 GPU——因为单颗晶片已经没有再长大的空间了，只能再加一颗。
+这张表里最明显的结构性断裂发生在 Blackwell（B100/B200/B300）这一代：从 H200 往前，NVIDIA 的每一代数据中心 GPU 都是单颗晶片，且已经顶到了光罩尺寸的物理极限（H100 的裸晶面积达 814 mm²）。Blackwell 是第一代采用双芯合封的产品——两颗光罩极限大小的裸晶通过 10 TB/s 的芯片间互联拼在一起，对软件呈现为一颗 GPU——因为单颗晶片已经没有再长大的空间了，只能再加一颗。精度支持也在同步扩展：V100 引入了 Tensor Core，A100 加入了 TF32，H100 引入了 FP8（其稀疏 FP8 吞吐大约是表中密集数字的两倍），B200 引入了 FP4，稀疏 FP4 吞吐能达到约 9 PFLOPS。H200 本质上和 H100 是同一颗计算芯片，只是显存更大更快。
 
 另一个清晰的趋势是"机柜才是真正的产品"。从 GB200 NVL72 开始，NVIDIA 最高端的产品已经不太算是"一颗你买回去的芯片"了——而是一整个 72 卡、液冷、共享单一 NVLink 域、聚合带宽超过 130+ TB/s 的机柜，单卡数字越来越需要放在这个语境里才有意义。TDP 也是一路水涨船高——从 300 W（Pascal）到 700 W（Hopper）再到 1,000–1,400 W（Blackwell）——不到十年增长了近 5 倍，这也正是液冷从"可选项"变成"从 Blackwell Ultra 起的硬性要求"的原因。
 
@@ -27,13 +27,13 @@ date: "2026/7/20"
 
 | 芯片 | 年份 | 显存 | 带宽 | 密集算力（BF16/FP16 级） | 互联 | TDP |
 |---|---|---|---|---|---|---|
-| MI100 | 2020 | 32 GB HBM2 | 1.2 TB/s | 184.6 TFLOPS FP16 | Infinity Fabric，约 276 GB/s | 300 W |
+| MI100 | 2020 | 32 GB HBM2 | 1.2 TB/s | 184.6 TFLOPS | Infinity Fabric，约 276 GB/s | 300 W |
 | MI250X | 2021 | 128 GB HBM2e | 3.2 TB/s | 383 TFLOPS | Infinity Fabric，8×100 GB/s | 560 W |
-| MI300X | 2023 | 192 GB HBM3 | 5.3 TB/s | 1,307 TFLOPS（**引入 FP8**，2,615 TFLOPS） | Infinity Fabric，7×128 GB/s | 750 W |
-| MI325X | 2024 | 256 GB HBM3e | 6.0 TB/s | 1,307 TFLOPS（与 MI300X 同款计算裸晶） | Infinity Fabric，7×128 GB/s | 1,000 W |
-| MI355X | 2025 | 288 GB HBM3e | 8 TB/s | 约 2,500 TFLOPS（**引入 MXFP6/MXFP4**） | Infinity Fabric，7×153.6 GB/s | 1,400 W |
+| MI300X | 2023 | 192 GB HBM3 | 5.3 TB/s | 1,307 TFLOPS | Infinity Fabric，7×128 GB/s | 750 W |
+| MI325X | 2024 | 256 GB HBM3e | 6.0 TB/s | 1,307 TFLOPS | Infinity Fabric，7×128 GB/s | 1,000 W |
+| MI355X | 2025 | 288 GB HBM3e | 8 TB/s | 2,500 TFLOPS | Infinity Fabric，7×153.6 GB/s | 1,400 W |
 
-AMD 在这个规模上转向多芯合封的时间比谁都早——MI250X（2021）就已经封装了两颗计算裸晶（GCD），而 MI300X（2023）更是把这个思路推进到了 8 颗计算 chiplet 加上独立的 I/O 裸晶，比 NVIDIA 三年后才在 Blackwell 上采用的方案更激进。而真正在数字里体现出来的战略特征，是显存容量。把 AMD 每一代旗舰和同一时间点上 NVIDIA 的旗舰放在一起看，AMD 的显存优势一直都存在，只是差距在逐代收窄：
+AMD 在这个规模上转向多芯合封的时间比谁都早——MI250X（2021）就已经封装了两颗计算裸晶（GCD），而 MI300X（2023）更是把这个思路推进到了 8 颗计算 chiplet 加上独立的 I/O 裸晶，比 NVIDIA 三年后才在 Blackwell 上采用的方案更激进。MI300X 同时引入了 FP8 支持（其稀疏 FP8 吞吐大约是表中密集数字的两倍），MI355X 则加入了 MXFP6/MXFP4；MI325X 沿用的是 MI300X 的计算裸晶，只是换上了更大更快的显存，而非全新的计算设计。而真正在数字里体现出来的战略特征，是显存容量。把 AMD 每一代旗舰和同一时间点上 NVIDIA 的旗舰放在一起看，AMD 的显存优势一直都存在，只是差距在逐代收窄：
 
 | 时期 | AMD 芯片 | AMD 显存 | 同期 NVIDIA 产品 | NVIDIA 显存 | AMD 的优势倍数 |
 |---|---|---|---|---|---|
@@ -47,25 +47,25 @@ AMD 在这个规模上转向多芯合封的时间比谁都早——MI250X（2021
 
 | 代次 | 年份 | 显存 | 带宽 | 密集算力（BF16） | 互联 | TDP |
 |---|---|---|---|---|---|---|
-| v2 | 2017 | 8 GB HBM | 约 0.25 TB/s（估算） | 45 TFLOPS | ICI（未公开） | 未公开 |
-| v3 | 2018 | 32 GB HBM2 | 0.9 TB/s | 123 TFLOPS | ICI | 123–262 W（实测） |
-| v4 | 2021 | 32 GB HBM2 | 1.2 TB/s | 275 TFLOPS | ICI，**引入光交换机** | 90–192 W（实测） |
+| v2 | 2017 | 8 GB HBM | 0.25 TB/s | 45 TFLOPS | ICI | 未公开 |
+| v3 | 2018 | 32 GB HBM2 | 0.9 TB/s | 123 TFLOPS | ICI | 123–262 W |
+| v4 | 2021 | 32 GB HBM2 | 1.2 TB/s | 275 TFLOPS | ICI，引入光交换机 | 90–192 W |
 | v5e | 2023 | 16 GB HBM2 | 0.82 TB/s | 197 TFLOPS | ICI，400 GB/s | 未公开 |
 | v5p | 2023 | 95 GB HBM2e | 2.77 TB/s | 459 TFLOPS | ICI，1.2 TB/s | 未公开 |
 | v6e（Trillium） | 2024 | 32 GB HBM | 1.64 TB/s | 918 TFLOPS | ICI，800 GB/s | 未公开 |
-| v7（Ironwood） | 2025 | 192 GB HBM（2×96 GB chiplet） | 7.38 TB/s | 2,307 TFLOPS（**引入 FP8**，4,614 TFLOPS） | ICI，1.2 TB/s + 高速芯片间互联 | 约 1,000 W（反推估算） |
+| v7（Ironwood） | 2025 | 192 GB HBM | 7.38 TB/s | 2,307 TFLOPS | ICI，1.2 TB/s + 芯片间互联 | 1,000 W |
 
-TPU 这张表和其他三张表的阅读方式不太一样，原因有两点。第一，Google 从来没有正式公布过任何一代的 TDP——这一栏里的每个数字都是第三方估算（SemiAnalysis、ServeTheHome），只有 v3 和 v4 两代例外，因为 Google 自家的 Cloud 文档碰巧公布了实测的最小/平均/最大功耗。第二点更有意思：从 v5p 到 Trillium（v6e）只用了一代的跨度，峰值 FLOPS 就翻了大约一倍——这个提升来自把脉动阵列从 128×128 扩大到 256×256 个 MXU tile，是架构层面的变化，而不是简单地堆功耗或堆芯片面积。这大概是整篇文章里"架构而非蛮力"最干净的一个数据点。
+TPU 这张表和其他三张表的阅读方式不太一样，原因有两点。第一，TDP 这一栏里的每个数字都是第三方估算（SemiAnalysis、ServeTheHome），而非 Google 官方公布的数字，只有 v3 和 v4 两代例外，因为 Google 自家的 Cloud 文档碰巧公布了实测的最小/平均/最大功耗。第二点更有意思：从 v5p 到 Trillium（v6e）只用了一代的跨度，峰值 FLOPS 就翻了大约一倍——这个提升来自把脉动阵列从 128×128 扩大到 256×256 个 MXU tile，是架构层面的变化，而不是简单地堆功耗或堆芯片面积。这大概是整篇文章里"架构而非蛮力"最干净的一个数据点。
 
-Ironwood（v7）是 TPU 自己的 Blackwell 时刻：它放弃了从 v4 以来一直沿用的统一 "MegaCore" 单裸晶设计，转而采用每颗芯片两个 chiplet 的方案，也是第一代原生支持 FP8 硬件的 TPU——显存（32 GB → 192 GB）和带宽（1.64 → 7.38 TB/s）在这一代里实现了真正的跃升，而这两项恰恰是大模型训练里访存密集环节最看重的指标。
+Ironwood（v7）是 TPU 自己的 Blackwell 时刻：它用两颗 96 GB 的 HBM chiplet 取代了从 v4 以来一直沿用的统一 "MegaCore" 单裸晶设计，也是第一代原生支持 FP8 硬件的 TPU，其稀疏吞吐能达到约 4,614 TFLOPS——显存和带宽在这一代里实现了真正的跃升，而这两项恰恰是大模型训练里访存密集环节最看重的指标。
 
 ## 四、华为昇腾：用规模扩展弥补单卡扩展的不足
 
 | 芯片 | 年份 | 显存 | 带宽 | 密集算力（BF16/FP16 级） | 互联 | TDP |
 |---|---|---|---|---|---|---|
-| 910 | 2019 | 32 GB HBM2 | 1.23 TB/s | 约 320 TFLOPS FP16 | HCCS（早期版本） | 约 310 W |
-| 910B | 2023 | 64 GB HBM2e | 1.6 TB/s | 约 400 TFLOPS FP16（估算） | HCCS，约 336 GB/s（估算） | 约 400 W（估算） |
-| 910C | 2025 | 128 GB HBM2e（据报道） | 约 3.2 TB/s（估算） | 约 800 TFLOPS（估算） | HCCS + 芯片间互联（未确认） | 未公开 |
+| 910 | 2019 | 32 GB HBM2 | 1.23 TB/s | 320 TFLOPS | HCCS | 310 W |
+| 910B | 2023 | 64 GB HBM2e | 1.6 TB/s | 400 TFLOPS | HCCS，336 GB/s | 400 W |
+| 910C | 2025 | 128 GB HBM2e | 3.2 TB/s | 800 TFLOPS | HCCS + 芯片间互联 | 未公开 |
 
 昇腾是这四条谱系里公开数字不确定性最高的一条——华为不像 NVIDIA 和 AMD 那样发布详细的数据手册，上面大部分数字都是从国内云厂商文档、会议披露和第三方分析里拼凑出来的，而非官方规格表，所以请把它们当作方向性参考而非精确数字。即便只看方向性的数字也能看清一件事：每一代显存容量（32 → 64 → 128 GB）和带宽都大致翻倍，而这恰恰是把更大的模型、更长的上下文塞进单颗加速卡时最看重的那个维度。
 

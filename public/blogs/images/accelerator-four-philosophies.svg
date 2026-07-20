@@ -20,7 +20,7 @@
   <text x="260" y="272" text-anchor="middle" font-size="12" fill="#191919" font-weight="600">biggest, fastest scale-up fabric</text>
   <text x="260" y="292" text-anchor="middle" font-size="11" fill="#6B6B6B">130+ TB/s per rack; first to every new</text>
   <text x="260" y="308" text-anchor="middle" font-size="11" fill="#6B6B6B">low-precision format (TF32, FP8, FP4)</text>
-  <text x="260" y="336" text-anchor="middle" font-size="10.5" fill="#6B6B6B">P100 → Rubin: 30× memory bandwidth in 10 years</text>
+  <text x="260" y="336" text-anchor="middle" font-size="10.5" fill="#6B6B6B">P100 → B300: 11× memory bandwidth in under 10 years</text>
 
   <!-- AMD -->
   <rect x="520" y="90" width="440" height="270" rx="12" fill="#E6E4DD" stroke="#191919" stroke-width="1.4"/>
@@ -34,22 +34,22 @@
   <text x="740" y="272" text-anchor="middle" font-size="12" fill="#191919" font-weight="600">chiplets buy the biggest memory pool</text>
   <text x="740" y="292" text-anchor="middle" font-size="11" fill="#6B6B6B">8 compute chiplets + up to 8 HBM stacks</text>
   <text x="740" y="308" text-anchor="middle" font-size="11" fill="#6B6B6B">per package; power scales just as fast</text>
-  <text x="740" y="336" text-anchor="middle" font-size="10.5" fill="#6B6B6B">MI100 → MI400 roadmap: 300W → 2000W-class</text>
+  <text x="740" y="336" text-anchor="middle" font-size="10.5" fill="#6B6B6B">MI100 → MI355X: 300 W → 1,400 W in five years</text>
 
   <!-- TPU -->
   <rect x="40" y="380" width="440" height="270" rx="12" fill="#E6E4DD" stroke="#191919" stroke-width="1.4"/>
   <text x="260" y="412" text-anchor="middle" font-size="15" font-weight="600" fill="#191919">Google TPU</text>
-  <text x="260" y="432" text-anchor="middle" font-size="11.5" fill="#6B6B6B">architecture over node</text>
+  <text x="260" y="432" text-anchor="middle" font-size="11.5" fill="#6B6B6B">architecture over raw scaling</text>
   <g transform="translate(170,450)">
     <rect x="0" y="0" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="14" y="0" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="28" y="0" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="42" y="0" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="56" y="0" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="70" y="0" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="84" y="0" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="98" y="0" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/>
     <rect x="0" y="14" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="14" y="14" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="28" y="14" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="42" y="14" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="56" y="14" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="70" y="14" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="84" y="14" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="98" y="14" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/>
     <rect x="0" y="28" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="14" y="28" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="28" y="28" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="42" y="28" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="56" y="28" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="70" y="28" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="84" y="28" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/><rect x="98" y="28" width="12" height="12" fill="#E3EBF2" stroke="#191919" stroke-width="0.6"/>
   </g>
   <text x="260" y="522" text-anchor="middle" font-size="11.5" fill="#191919">systolic array: 128×128 → 256×256 (v5p→v6e)</text>
-  <text x="260" y="562" text-anchor="middle" font-size="12" fill="#191919" font-weight="600">same node, ~2× throughput from architecture</text>
+  <text x="260" y="562" text-anchor="middle" font-size="12" fill="#191919" font-weight="600">~2× throughput, one generation, architecture alone</text>
   <text x="260" y="582" text-anchor="middle" font-size="11" fill="#6B6B6B">software-reconfigurable optical circuit</text>
   <text x="260" y="598" text-anchor="middle" font-size="11" fill="#6B6B6B">switches reshape pod topology since v4</text>
-  <text x="260" y="626" text-anchor="middle" font-size="10.5" fill="#6B6B6B">2026 roadmap: splits into separate training/inference dies</text>
+  <text x="260" y="626" text-anchor="middle" font-size="10.5" fill="#6B6B6B">Ironwood (2025): first dual-chiplet TPU, native FP8</text>
 
   <!-- Ascend -->
   <rect x="520" y="380" width="440" height="270" rx="12" fill="#E6E4DD" stroke="#191919" stroke-width="1.4"/>
@@ -65,8 +65,8 @@
     <rect x="156" y="0" width="20" height="20" rx="3" fill="#F3ECE2" stroke="#191919" stroke-width="0.7"/>
   </g>
   <text x="740" y="502" text-anchor="middle" font-size="11.5" fill="#191919">many chips, tightly clustered (CloudMatrix 384)</text>
-  <text x="740" y="542" text-anchor="middle" font-size="12" fill="#191919" font-weight="600">packaging + cluster scale over raw node</text>
+  <text x="740" y="542" text-anchor="middle" font-size="12" fill="#191919" font-weight="600">packaging + cluster scale as the main lever</text>
   <text x="740" y="562" text-anchor="middle" font-size="11" fill="#6B6B6B">dual-chiplet packages, in-house HBM, and</text>
-  <text x="740" y="578" text-anchor="middle" font-size="11" fill="#6B6B6B">huge SuperPods offset a process-node gap</text>
-  <text x="740" y="606" text-anchor="middle" font-size="10.5" fill="#6B6B6B">910→910C: process node itself remains genuinely disputed</text>
+  <text x="740" y="578" text-anchor="middle" font-size="11" fill="#6B6B6B">huge SuperPods scale training capacity up</text>
+  <text x="740" y="606" text-anchor="middle" font-size="10.5" fill="#6B6B6B">910→910C: memory 32→128 GB, bandwidth 1.2→3.2 TB/s</text>
 </svg>

@@ -965,44 +965,36 @@ interface AccelChip {
   tdpW: number | null;
   computeTFLOPS: number | null;
   interconnect: string;
-  process: string;
-  roadmap?: boolean;
 }
 
 const VENDOR_LABEL: Record<Vendor, string> = { nvidia: 'NVIDIA', amd: 'AMD Instinct', tpu: 'Google TPU', ascend: 'Huawei Ascend' };
 const VENDOR_COLOR: Record<Vendor, string> = { nvidia: '#D97757', amd: '#8DA399', tpu: '#6B8CAE', ascend: '#191919' };
 
 const ACCEL_CHIPS: AccelChip[] = [
-  { vendor: 'nvidia', name: 'P100', year: 2016, memGB: 16, bwTBs: 0.72, tdpW: 300, computeTFLOPS: 21.2, interconnect: 'NVLink 1, 160 GB/s', process: 'TSMC 16nm' },
-  { vendor: 'nvidia', name: 'V100', year: 2017, memGB: 32, bwTBs: 0.9, tdpW: 300, computeTFLOPS: 125, interconnect: 'NVLink 2, 300 GB/s', process: 'TSMC 12nm' },
-  { vendor: 'nvidia', name: 'A100 80GB', year: 2020, memGB: 80, bwTBs: 2.04, tdpW: 400, computeTFLOPS: 312, interconnect: 'NVLink 3, 600 GB/s', process: 'TSMC 7nm' },
-  { vendor: 'nvidia', name: 'H100 SXM5', year: 2022, memGB: 80, bwTBs: 3.35, tdpW: 700, computeTFLOPS: 990, interconnect: 'NVLink 4, 900 GB/s', process: 'TSMC 4N' },
-  { vendor: 'nvidia', name: 'H200', year: 2024, memGB: 141, bwTBs: 4.8, tdpW: 700, computeTFLOPS: 990, interconnect: 'NVLink 4, 900 GB/s', process: 'TSMC 4N' },
-  { vendor: 'nvidia', name: 'B200', year: 2024.5, memGB: 192, bwTBs: 8, tdpW: 1000, computeTFLOPS: 2250, interconnect: 'NVLink 5, 1.8 TB/s', process: 'TSMC 4NP' },
-  { vendor: 'nvidia', name: 'B300 / GB300', year: 2025.4, memGB: 288, bwTBs: 8, tdpW: 1400, computeTFLOPS: 2500, interconnect: 'NVLink 5, 1.8 TB/s', process: 'TSMC 4NP' },
-  { vendor: 'nvidia', name: 'Rubin', year: 2026.3, memGB: 288, bwTBs: 22, tdpW: 2000, computeTFLOPS: null, interconnect: 'NVLink 6, 3.6 TB/s', process: 'TSMC N3', roadmap: true },
+  { vendor: 'nvidia', name: 'P100', year: 2016, memGB: 16, bwTBs: 0.72, tdpW: 300, computeTFLOPS: 21.2, interconnect: 'NVLink 1, 160 GB/s' },
+  { vendor: 'nvidia', name: 'V100', year: 2017, memGB: 32, bwTBs: 0.9, tdpW: 300, computeTFLOPS: 125, interconnect: 'NVLink 2, 300 GB/s' },
+  { vendor: 'nvidia', name: 'A100 80GB', year: 2020, memGB: 80, bwTBs: 2.04, tdpW: 400, computeTFLOPS: 312, interconnect: 'NVLink 3, 600 GB/s' },
+  { vendor: 'nvidia', name: 'H100 SXM5', year: 2022, memGB: 80, bwTBs: 3.35, tdpW: 700, computeTFLOPS: 990, interconnect: 'NVLink 4, 900 GB/s' },
+  { vendor: 'nvidia', name: 'H200', year: 2024, memGB: 141, bwTBs: 4.8, tdpW: 700, computeTFLOPS: 990, interconnect: 'NVLink 4, 900 GB/s' },
+  { vendor: 'nvidia', name: 'B200', year: 2024.5, memGB: 192, bwTBs: 8, tdpW: 1000, computeTFLOPS: 2250, interconnect: 'NVLink 5, 1.8 TB/s' },
+  { vendor: 'nvidia', name: 'B300 / GB300', year: 2025.4, memGB: 288, bwTBs: 8, tdpW: 1400, computeTFLOPS: 2500, interconnect: 'NVLink 5, 1.8 TB/s' },
 
-  { vendor: 'amd', name: 'MI100', year: 2020, memGB: 32, bwTBs: 1.2, tdpW: 300, computeTFLOPS: 184.6, interconnect: 'Infinity Fabric, ~276 GB/s', process: 'TSMC 7nm' },
-  { vendor: 'amd', name: 'MI250X', year: 2021, memGB: 128, bwTBs: 3.2, tdpW: 560, computeTFLOPS: 383, interconnect: 'Infinity Fabric, 8×100 GB/s', process: 'TSMC 6nm' },
-  { vendor: 'amd', name: 'MI300X', year: 2023, memGB: 192, bwTBs: 5.3, tdpW: 750, computeTFLOPS: 1307, interconnect: 'Infinity Fabric, 7×128 GB/s', process: 'TSMC 5nm/6nm' },
-  { vendor: 'amd', name: 'MI325X', year: 2024, memGB: 256, bwTBs: 6.0, tdpW: 1000, computeTFLOPS: 1307, interconnect: 'Infinity Fabric, 7×128 GB/s', process: 'TSMC 5nm/6nm' },
-  { vendor: 'amd', name: 'MI355X', year: 2025.5, memGB: 288, bwTBs: 8, tdpW: 1400, computeTFLOPS: 2500, interconnect: 'Infinity Fabric, 7×153.6 GB/s', process: 'TSMC N3P' },
-  { vendor: 'amd', name: 'MI400 (MI455X)', year: 2026.3, memGB: 432, bwTBs: 19.6, tdpW: 2000, computeTFLOPS: 10000, interconnect: 'UALink / Infinity Fabric', process: 'TSMC N2', roadmap: true },
+  { vendor: 'amd', name: 'MI100', year: 2020, memGB: 32, bwTBs: 1.2, tdpW: 300, computeTFLOPS: 184.6, interconnect: 'Infinity Fabric, ~276 GB/s' },
+  { vendor: 'amd', name: 'MI250X', year: 2021, memGB: 128, bwTBs: 3.2, tdpW: 560, computeTFLOPS: 383, interconnect: 'Infinity Fabric, 8×100 GB/s' },
+  { vendor: 'amd', name: 'MI300X', year: 2023, memGB: 192, bwTBs: 5.3, tdpW: 750, computeTFLOPS: 1307, interconnect: 'Infinity Fabric, 7×128 GB/s' },
+  { vendor: 'amd', name: 'MI325X', year: 2024, memGB: 256, bwTBs: 6.0, tdpW: 1000, computeTFLOPS: 1307, interconnect: 'Infinity Fabric, 7×128 GB/s' },
+  { vendor: 'amd', name: 'MI355X', year: 2025.5, memGB: 288, bwTBs: 8, tdpW: 1400, computeTFLOPS: 2500, interconnect: 'Infinity Fabric, 7×153.6 GB/s' },
 
-  { vendor: 'tpu', name: 'v2', year: 2017, memGB: 8, bwTBs: 0.25, tdpW: null, computeTFLOPS: 45, interconnect: 'ICI (unpublished)', process: '~16nm (est.)' },
-  { vendor: 'tpu', name: 'v3', year: 2018, memGB: 32, bwTBs: 0.9, tdpW: 220, computeTFLOPS: 123, interconnect: 'ICI', process: '~12nm (est.)' },
-  { vendor: 'tpu', name: 'v4', year: 2021, memGB: 32, bwTBs: 1.2, tdpW: 192, computeTFLOPS: 275, interconnect: 'ICI, optical circuit switches', process: '~7nm (est.)' },
-  { vendor: 'tpu', name: 'v5p', year: 2023, memGB: 95, bwTBs: 2.77, tdpW: null, computeTFLOPS: 459, interconnect: 'ICI, 1.2 TB/s', process: '~5nm (est.)' },
-  { vendor: 'tpu', name: 'v6e (Trillium)', year: 2024.4, memGB: 32, bwTBs: 1.64, tdpW: null, computeTFLOPS: 918, interconnect: 'ICI, 800 GB/s', process: 'TSMC N5' },
-  { vendor: 'tpu', name: 'v7 (Ironwood)', year: 2025.4, memGB: 192, bwTBs: 7.38, tdpW: 1000, computeTFLOPS: 2307, interconnect: 'ICI, 1.2 TB/s + die-to-die link', process: '~3nm (est.)' },
+  { vendor: 'tpu', name: 'v2', year: 2017, memGB: 8, bwTBs: 0.25, tdpW: null, computeTFLOPS: 45, interconnect: 'ICI (unpublished)' },
+  { vendor: 'tpu', name: 'v3', year: 2018, memGB: 32, bwTBs: 0.9, tdpW: 220, computeTFLOPS: 123, interconnect: 'ICI' },
+  { vendor: 'tpu', name: 'v4', year: 2021, memGB: 32, bwTBs: 1.2, tdpW: 192, computeTFLOPS: 275, interconnect: 'ICI, optical circuit switches' },
+  { vendor: 'tpu', name: 'v5p', year: 2023, memGB: 95, bwTBs: 2.77, tdpW: null, computeTFLOPS: 459, interconnect: 'ICI, 1.2 TB/s' },
+  { vendor: 'tpu', name: 'v6e (Trillium)', year: 2024.4, memGB: 32, bwTBs: 1.64, tdpW: null, computeTFLOPS: 918, interconnect: 'ICI, 800 GB/s' },
+  { vendor: 'tpu', name: 'v7 (Ironwood)', year: 2025.4, memGB: 192, bwTBs: 7.38, tdpW: 1000, computeTFLOPS: 2307, interconnect: 'ICI, 1.2 TB/s + die-to-die link' },
 
-  { vendor: 'ascend', name: '910', year: 2019, memGB: 32, bwTBs: 1.23, tdpW: 310, computeTFLOPS: 320, interconnect: 'HCCS (early)', process: 'TSMC 7nm (confirmed)' },
-  { vendor: 'ascend', name: '910B', year: 2023, memGB: 64, bwTBs: 1.6, tdpW: 400, computeTFLOPS: 400, interconnect: 'HCCS, ~336 GB/s (est.)', process: 'SMIC N+2 (disputed)' },
-  { vendor: 'ascend', name: '910C', year: 2025, memGB: 128, bwTBs: 3.2, tdpW: null, computeTFLOPS: 800, interconnect: 'HCCS + die-to-die (unconfirmed)', process: 'disputed — teardown found 2020-vintage TSMC 7nm dies' },
-];
-
-const ACCEL_ROADMAP: AccelChip[] = [
-  { vendor: 'ascend', name: '950', year: 2026.3, memGB: 0, bwTBs: 0, tdpW: null, computeTFLOPS: null, interconnect: '~2 TB/s (2.5× 910C, claimed)', process: 'not disclosed', roadmap: true },
+  { vendor: 'ascend', name: '910', year: 2019, memGB: 32, bwTBs: 1.23, tdpW: 310, computeTFLOPS: 320, interconnect: 'HCCS (early)' },
+  { vendor: 'ascend', name: '910B', year: 2023, memGB: 64, bwTBs: 1.6, tdpW: 400, computeTFLOPS: 400, interconnect: 'HCCS, ~336 GB/s (est.)' },
+  { vendor: 'ascend', name: '910C', year: 2025, memGB: 128, bwTBs: 3.2, tdpW: null, computeTFLOPS: 800, interconnect: 'HCCS + die-to-die (unconfirmed)' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -1014,7 +1006,7 @@ type Metric = 'mem' | 'bw' | 'tdp' | 'compute';
 const STR8 = {
   en: {
     title: 'Interactive: the trend lines, by metric',
-    sub: 'Pick a metric and watch ten years of hardware go by, one vendor at a time. Hollow markers are announced but not yet shipping.',
+    sub: 'Pick a metric and watch ten years of shipped hardware go by, one vendor at a time.',
     mem: 'Memory capacity (GB)',
     bw: 'Memory bandwidth (TB/s)',
     tdp: 'TDP (W)',
@@ -1024,7 +1016,7 @@ const STR8 = {
   },
   zh: {
     title: '交互演示：按指标看趋势',
-    sub: '选一个指标，看看十年硬件history是怎么一家一家演进的。空心标记代表"已宣布，但还没有出货"。',
+    sub: '选一个指标，看看十年已出货硬件是怎么一家一家演进的。',
     mem: '显存容量（GB）',
     bw: '显存带宽（TB/s）',
     tdp: 'TDP（瓦特）',
@@ -1055,7 +1047,7 @@ export const AcceleratorTrendExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en
   const plotH = H - padT - padB;
 
   const xMin = 2015.5;
-  const xMax = 2026.8;
+  const xMax = 2026;
 
   const allVals = ACCEL_CHIPS.map(getValue).filter((v): v is number => v !== null && v > 0);
   const yMinLog = Math.floor(Math.log10(Math.min(...allVals)) - 0.2);
@@ -1116,13 +1108,9 @@ export const AcceleratorTrendExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en
             return (
               <g key={v}>
                 <path d={pathD} fill="none" stroke={VENDOR_COLOR[v]} strokeWidth={1.6} strokeOpacity={0.55} />
-                {pts.map((p) =>
-                  p.c.roadmap ? (
-                    <circle key={p.c.name} cx={xOf(p.c.year)} cy={yOf(p.val)} r={4.5} fill="#F4F3EF" stroke={VENDOR_COLOR[v]} strokeWidth={1.6} strokeDasharray="2 1.5" />
-                  ) : (
-                    <circle key={p.c.name} cx={xOf(p.c.year)} cy={yOf(p.val)} r={4.5} fill={VENDOR_COLOR[v]} />
-                  )
-                )}
+                {pts.map((p) => (
+                  <circle key={p.c.name} cx={xOf(p.c.year)} cy={yOf(p.val)} r={4.5} fill={VENDOR_COLOR[v]} />
+                ))}
               </g>
             );
           })}
@@ -1159,9 +1147,7 @@ const STR9 = {
     compute: 'Dense compute (BF16/FP16-class)',
     interconnect: 'Interconnect',
     tdp: 'TDP',
-    process: 'Process node',
     notDisclosed: 'not publicly disclosed',
-    roadmapNote: 'Announced / roadmap — not yet shipping. Treat these numbers as preliminary.',
   },
   zh: {
     title: '交互演示：查一颗芯片',
@@ -1174,15 +1160,13 @@ const STR9 = {
     compute: 'Dense 算力（BF16/FP16 量级）',
     interconnect: '互联',
     tdp: 'TDP',
-    process: '制程节点',
     notDisclosed: '未公开披露',
-    roadmapNote: '已宣布 / 路线图——尚未出货。这些数字请当作初步信息看待。',
   },
 };
 
 export const AcceleratorSpecLookup: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
   const t = STR9[lang];
-  const allChips = useMemo(() => [...ACCEL_CHIPS, ...ACCEL_ROADMAP], []);
+  const allChips = ACCEL_CHIPS;
   const [vendor, setVendor] = useState<Vendor>('nvidia');
   const chipsForVendor = allChips.filter((c) => c.vendor === vendor);
   const [chipName, setChipName] = useState(chipsForVendor[0]?.name ?? '');
@@ -1247,18 +1231,11 @@ export const AcceleratorSpecLookup: React.FC<{ lang?: Lang }> = ({ lang = 'en' }
               <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.tdp}</div>
               <div className="text-anthropic-text font-mono">{chip.tdpW != null ? `${chip.tdpW} W` : t.notDisclosed}</div>
             </div>
-            <div>
-              <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.process}</div>
-              <div className="text-anthropic-text font-mono text-xs">{chip.process}</div>
-            </div>
           </div>
           <div className="mb-2">
             <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.interconnect}</div>
             <div className="text-anthropic-text text-sm">{chip.interconnect}</div>
           </div>
-          {chip.roadmap && (
-            <p className="text-xs text-anthropic-accent mt-3 leading-relaxed">{t.roadmapNote}</p>
-          )}
         </>
       )}
     </Card>

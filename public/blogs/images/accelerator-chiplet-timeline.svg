@@ -1,0 +1,96 @@
+<svg viewBox="0 0 1080 480" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="1080" height="480" fill="#F4F3EF"/>
+  <text x="540" y="34" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">Everyone Eventually Went Multi-Die</text>
+
+  <!-- legend, drawn as shapes rather than unicode glyphs -->
+  <circle cx="330" cy="52" r="5" fill="#6B6B6B"/>
+  <text x="342" y="56" font-size="12" fill="#6B6B6B">monolithic die</text>
+  <polygon points="455,45 462,52 455,59 448,52" fill="#6B6B6B"/>
+  <text x="470" y="56" font-size="12" fill="#6B6B6B">multi-chiplet package</text>
+  <circle cx="640" cy="52" r="5" fill="none" stroke="#6B6B6B" stroke-width="1.4" stroke-dasharray="2 2"/>
+  <text x="652" y="56" font-size="12" fill="#6B6B6B">announced / not yet shipping</text>
+
+  <!-- chiplet convergence band -->
+  <rect x="700" y="80" width="140" height="360" fill="#E6E4DD"/>
+  <line x1="700" y1="80" x2="700" y2="440" stroke="#191919" stroke-width="1" stroke-dasharray="4 3" stroke-opacity="0.4"/>
+  <line x1="840" y1="80" x2="840" y2="440" stroke="#191919" stroke-width="1" stroke-dasharray="4 3" stroke-opacity="0.4"/>
+  <text x="770" y="72" text-anchor="middle" font-size="11" fill="#6B6B6B">the chiplet convergence</text>
+
+  <!-- year axis -->
+  <line x1="80" y1="440" x2="1020" y2="440" stroke="#191919" stroke-opacity="0.3"/>
+  <text x="100" y="458" text-anchor="middle" font-size="10.5" fill="#6B6B6B">2016</text>
+  <text x="335" y="458" text-anchor="middle" font-size="10.5" fill="#6B6B6B">2019</text>
+  <text x="570" y="458" text-anchor="middle" font-size="10.5" fill="#6B6B6B">2022</text>
+  <text x="804" y="458" text-anchor="middle" font-size="10.5" fill="#6B6B6B">2025</text>
+  <text x="984" y="458" text-anchor="middle" font-size="10.5" fill="#6B6B6B">2027</text>
+
+  <!-- row labels -->
+  <text x="70" y="144" text-anchor="end" font-size="12.5" font-weight="600" fill="#191919">NVIDIA</text>
+  <text x="70" y="224" text-anchor="end" font-size="12.5" font-weight="600" fill="#191919">AMD</text>
+  <text x="70" y="304" text-anchor="end" font-size="12.5" font-weight="600" fill="#191919">TPU</text>
+  <text x="70" y="384" text-anchor="end" font-size="12.5" font-weight="600" fill="#191919">Ascend</text>
+
+  <!-- row baselines -->
+  <line x1="80" y1="140" x2="1020" y2="140" stroke="#191919" stroke-opacity="0.08"/>
+  <line x1="80" y1="220" x2="1020" y2="220" stroke="#191919" stroke-opacity="0.08"/>
+  <line x1="80" y1="300" x2="1020" y2="300" stroke="#191919" stroke-opacity="0.08"/>
+  <line x1="80" y1="380" x2="1020" y2="380" stroke="#191919" stroke-opacity="0.08"/>
+
+  <!-- NVIDIA row, y=140, color accent -->
+  <circle cx="100" cy="140" r="6" fill="#D97757"/>
+  <text x="100" y="122" text-anchor="middle" font-size="9" fill="#191919">P100</text>
+  <circle cx="178" cy="140" r="6" fill="#D97757"/>
+  <text x="178" y="158" text-anchor="middle" font-size="9" fill="#191919">V100</text>
+  <circle cx="413" cy="140" r="6" fill="#D97757"/>
+  <text x="413" y="122" text-anchor="middle" font-size="9" fill="#191919">A100</text>
+  <circle cx="570" cy="140" r="6" fill="#D97757"/>
+  <text x="570" y="158" text-anchor="middle" font-size="9" fill="#191919">H100</text>
+  <circle cx="750" cy="140" r="6" fill="#D97757"/>
+  <text x="750" y="122" text-anchor="middle" font-size="9" fill="#191919">H200</text>
+  <polygon points="781,133 788,140 781,147 774,140" fill="#D97757"/>
+  <text x="781" y="158" text-anchor="middle" font-size="9" fill="#191919">B200</text>
+  <polygon points="844,133 851,140 844,147 837,140" fill="#D97757"/>
+  <text x="844" y="122" text-anchor="middle" font-size="9" fill="#191919">B300</text>
+  <circle cx="906" cy="140" r="6" fill="none" stroke="#D97757" stroke-width="1.6" stroke-dasharray="2 2"/>
+  <text x="906" y="158" text-anchor="middle" font-size="9" fill="#191919">Rubin</text>
+
+  <!-- AMD row, y=220, color leaf -->
+  <circle cx="413" cy="220" r="6" fill="#8DA399"/>
+  <text x="413" y="202" text-anchor="middle" font-size="9" fill="#191919">MI100</text>
+  <polygon points="491,213 498,220 491,227 484,220" fill="#8DA399"/>
+  <text x="491" y="238" text-anchor="middle" font-size="9" fill="#191919">MI250X</text>
+  <polygon points="648,213 655,220 648,227 641,220" fill="#8DA399"/>
+  <text x="648" y="202" text-anchor="middle" font-size="9" fill="#191919">MI300X</text>
+  <polygon points="726,213 733,220 726,227 719,220" fill="#8DA399"/>
+  <text x="726" y="238" text-anchor="middle" font-size="9" fill="#191919">MI325X</text>
+  <polygon points="804,213 811,220 804,227 797,220" fill="#8DA399"/>
+  <text x="804" y="202" text-anchor="middle" font-size="9" fill="#191919">MI355X</text>
+  <circle cx="906" cy="220" r="6" fill="none" stroke="#8DA399" stroke-width="1.6" stroke-dasharray="2 2"/>
+  <text x="906" y="238" text-anchor="middle" font-size="9" fill="#191919">MI400</text>
+
+  <!-- TPU row, y=300, color mist w/ dark stroke -->
+  <circle cx="178" cy="300" r="6" fill="#E3EBF2" stroke="#191919" stroke-width="1.2"/>
+  <text x="178" y="282" text-anchor="middle" font-size="9" fill="#191919">v2</text>
+  <circle cx="256" cy="300" r="6" fill="#E3EBF2" stroke="#191919" stroke-width="1.2"/>
+  <text x="256" y="318" text-anchor="middle" font-size="9" fill="#191919">v3</text>
+  <circle cx="491" cy="300" r="6" fill="#E3EBF2" stroke="#191919" stroke-width="1.2"/>
+  <text x="491" y="282" text-anchor="middle" font-size="9" fill="#191919">v4</text>
+  <circle cx="648" cy="300" r="6" fill="#E3EBF2" stroke="#191919" stroke-width="1.2"/>
+  <text x="648" y="318" text-anchor="middle" font-size="9" fill="#191919">v5p</text>
+  <circle cx="765" cy="300" r="6" fill="#E3EBF2" stroke="#191919" stroke-width="1.2"/>
+  <text x="765" y="282" text-anchor="middle" font-size="9" fill="#191919">v6e</text>
+  <polygon points="844,293 851,300 844,307 837,300" fill="#E3EBF2" stroke="#191919" stroke-width="1.2"/>
+  <text x="844" y="318" text-anchor="middle" font-size="9" fill="#191919">Ironwood</text>
+  <circle cx="984" cy="300" r="6" fill="none" stroke="#191919" stroke-width="1.6" stroke-dasharray="2 2"/>
+  <text x="984" y="282" text-anchor="middle" font-size="9" fill="#191919">v8t</text>
+
+  <!-- Ascend row, y=380, color dark -->
+  <circle cx="335" cy="380" r="6" fill="#191919"/>
+  <text x="335" y="362" text-anchor="middle" font-size="9" fill="#191919">910</text>
+  <circle cx="648" cy="380" r="6" fill="#191919"/>
+  <text x="648" y="398" text-anchor="middle" font-size="9" fill="#191919">910B</text>
+  <polygon points="804,373 811,380 804,387 797,380" fill="#191919"/>
+  <text x="804" y="362" text-anchor="middle" font-size="9" fill="#191919">910C</text>
+  <circle cx="906" cy="380" r="6" fill="none" stroke="#191919" stroke-width="1.6" stroke-dasharray="2 2"/>
+  <text x="906" y="398" text-anchor="middle" font-size="9" fill="#191919">950</text>
+</svg>

@@ -137,6 +137,11 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: "accelerator-hardware-landscape",
+    title: "Training Silicon Across a Decade: NVIDIA, AMD, TPU, and Ascend Compared",
+    date: "2026/7/20"
+  },
+  {
     id: "distributed-training-for-dl",
     title: "Distributed Training from First Principles: A Field Guide to Parallelism Strategies",
     date: "2026/7/19"

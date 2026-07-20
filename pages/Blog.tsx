@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ArrowLeft } from 'lucide-react';
 import { BLOG_POSTS, loadBlogContent } from '../constants';
-import { RooflineExplorer, GridBlockSimulator, TritonGridExplorer, AutotuneExplorer, RingAllReduceExplorer, ZeROMemoryCalculator, PipelineBubbleExplorer } from '../components/blog/Interactives';
+import { RooflineExplorer, GridBlockSimulator, TritonGridExplorer, AutotuneExplorer, RingAllReduceExplorer, ZeROMemoryCalculator, PipelineBubbleExplorer, AcceleratorTrendExplorer, AcceleratorSpecLookup } from '../components/blog/Interactives';
 
 const Blog: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -231,6 +231,12 @@ const Blog: React.FC = () => {
                         }
                         if (alt === 'interactive:pipeline-bubble') {
                           return <PipelineBubbleExplorer lang={lang} />;
+                        }
+                        if (alt === 'interactive:accel-trend') {
+                          return <AcceleratorTrendExplorer lang={lang} />;
+                        }
+                        if (alt === 'interactive:accel-lookup') {
+                          return <AcceleratorSpecLookup lang={lang} />;
                         }
                         return (
                           <img

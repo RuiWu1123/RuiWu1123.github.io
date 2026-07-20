@@ -949,3 +949,318 @@ export const PipelineBubbleExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' 
     </Card>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/*  8. Accelerator hardware dataset (shared)                           */
+/* ------------------------------------------------------------------ */
+
+type Vendor = 'nvidia' | 'amd' | 'tpu' | 'ascend';
+
+interface AccelChip {
+  vendor: Vendor;
+  name: string;
+  year: number;
+  memGB: number;
+  bwTBs: number;
+  tdpW: number | null;
+  computeTFLOPS: number | null;
+  interconnect: string;
+  process: string;
+  roadmap?: boolean;
+}
+
+const VENDOR_LABEL: Record<Vendor, string> = { nvidia: 'NVIDIA', amd: 'AMD Instinct', tpu: 'Google TPU', ascend: 'Huawei Ascend' };
+const VENDOR_COLOR: Record<Vendor, string> = { nvidia: '#D97757', amd: '#8DA399', tpu: '#6B8CAE', ascend: '#191919' };
+
+const ACCEL_CHIPS: AccelChip[] = [
+  { vendor: 'nvidia', name: 'P100', year: 2016, memGB: 16, bwTBs: 0.72, tdpW: 300, computeTFLOPS: 21.2, interconnect: 'NVLink 1, 160 GB/s', process: 'TSMC 16nm' },
+  { vendor: 'nvidia', name: 'V100', year: 2017, memGB: 32, bwTBs: 0.9, tdpW: 300, computeTFLOPS: 125, interconnect: 'NVLink 2, 300 GB/s', process: 'TSMC 12nm' },
+  { vendor: 'nvidia', name: 'A100 80GB', year: 2020, memGB: 80, bwTBs: 2.04, tdpW: 400, computeTFLOPS: 312, interconnect: 'NVLink 3, 600 GB/s', process: 'TSMC 7nm' },
+  { vendor: 'nvidia', name: 'H100 SXM5', year: 2022, memGB: 80, bwTBs: 3.35, tdpW: 700, computeTFLOPS: 990, interconnect: 'NVLink 4, 900 GB/s', process: 'TSMC 4N' },
+  { vendor: 'nvidia', name: 'H200', year: 2024, memGB: 141, bwTBs: 4.8, tdpW: 700, computeTFLOPS: 990, interconnect: 'NVLink 4, 900 GB/s', process: 'TSMC 4N' },
+  { vendor: 'nvidia', name: 'B200', year: 2024.5, memGB: 192, bwTBs: 8, tdpW: 1000, computeTFLOPS: 2250, interconnect: 'NVLink 5, 1.8 TB/s', process: 'TSMC 4NP' },
+  { vendor: 'nvidia', name: 'B300 / GB300', year: 2025.4, memGB: 288, bwTBs: 8, tdpW: 1400, computeTFLOPS: 2500, interconnect: 'NVLink 5, 1.8 TB/s', process: 'TSMC 4NP' },
+  { vendor: 'nvidia', name: 'Rubin', year: 2026.3, memGB: 288, bwTBs: 22, tdpW: 2000, computeTFLOPS: null, interconnect: 'NVLink 6, 3.6 TB/s', process: 'TSMC N3', roadmap: true },
+
+  { vendor: 'amd', name: 'MI100', year: 2020, memGB: 32, bwTBs: 1.2, tdpW: 300, computeTFLOPS: 184.6, interconnect: 'Infinity Fabric, ~276 GB/s', process: 'TSMC 7nm' },
+  { vendor: 'amd', name: 'MI250X', year: 2021, memGB: 128, bwTBs: 3.2, tdpW: 560, computeTFLOPS: 383, interconnect: 'Infinity Fabric, 8×100 GB/s', process: 'TSMC 6nm' },
+  { vendor: 'amd', name: 'MI300X', year: 2023, memGB: 192, bwTBs: 5.3, tdpW: 750, computeTFLOPS: 1307, interconnect: 'Infinity Fabric, 7×128 GB/s', process: 'TSMC 5nm/6nm' },
+  { vendor: 'amd', name: 'MI325X', year: 2024, memGB: 256, bwTBs: 6.0, tdpW: 1000, computeTFLOPS: 1307, interconnect: 'Infinity Fabric, 7×128 GB/s', process: 'TSMC 5nm/6nm' },
+  { vendor: 'amd', name: 'MI355X', year: 2025.5, memGB: 288, bwTBs: 8, tdpW: 1400, computeTFLOPS: 2500, interconnect: 'Infinity Fabric, 7×153.6 GB/s', process: 'TSMC N3P' },
+  { vendor: 'amd', name: 'MI400 (MI455X)', year: 2026.3, memGB: 432, bwTBs: 19.6, tdpW: 2000, computeTFLOPS: 10000, interconnect: 'UALink / Infinity Fabric', process: 'TSMC N2', roadmap: true },
+
+  { vendor: 'tpu', name: 'v2', year: 2017, memGB: 8, bwTBs: 0.25, tdpW: null, computeTFLOPS: 45, interconnect: 'ICI (unpublished)', process: '~16nm (est.)' },
+  { vendor: 'tpu', name: 'v3', year: 2018, memGB: 32, bwTBs: 0.9, tdpW: 220, computeTFLOPS: 123, interconnect: 'ICI', process: '~12nm (est.)' },
+  { vendor: 'tpu', name: 'v4', year: 2021, memGB: 32, bwTBs: 1.2, tdpW: 192, computeTFLOPS: 275, interconnect: 'ICI, optical circuit switches', process: '~7nm (est.)' },
+  { vendor: 'tpu', name: 'v5p', year: 2023, memGB: 95, bwTBs: 2.77, tdpW: null, computeTFLOPS: 459, interconnect: 'ICI, 1.2 TB/s', process: '~5nm (est.)' },
+  { vendor: 'tpu', name: 'v6e (Trillium)', year: 2024.4, memGB: 32, bwTBs: 1.64, tdpW: null, computeTFLOPS: 918, interconnect: 'ICI, 800 GB/s', process: 'TSMC N5' },
+  { vendor: 'tpu', name: 'v7 (Ironwood)', year: 2025.4, memGB: 192, bwTBs: 7.38, tdpW: 1000, computeTFLOPS: 2307, interconnect: 'ICI, 1.2 TB/s + die-to-die link', process: '~3nm (est.)' },
+
+  { vendor: 'ascend', name: '910', year: 2019, memGB: 32, bwTBs: 1.23, tdpW: 310, computeTFLOPS: 320, interconnect: 'HCCS (early)', process: 'TSMC 7nm (confirmed)' },
+  { vendor: 'ascend', name: '910B', year: 2023, memGB: 64, bwTBs: 1.6, tdpW: 400, computeTFLOPS: 400, interconnect: 'HCCS, ~336 GB/s (est.)', process: 'SMIC N+2 (disputed)' },
+  { vendor: 'ascend', name: '910C', year: 2025, memGB: 128, bwTBs: 3.2, tdpW: null, computeTFLOPS: 800, interconnect: 'HCCS + die-to-die (unconfirmed)', process: 'disputed — teardown found 2020-vintage TSMC 7nm dies' },
+];
+
+const ACCEL_ROADMAP: AccelChip[] = [
+  { vendor: 'ascend', name: '950', year: 2026.3, memGB: 0, bwTBs: 0, tdpW: null, computeTFLOPS: null, interconnect: '~2 TB/s (2.5× 910C, claimed)', process: 'not disclosed', roadmap: true },
+];
+
+/* ------------------------------------------------------------------ */
+/*  9. Accelerator Trend Explorer                                      */
+/* ------------------------------------------------------------------ */
+
+type Metric = 'mem' | 'bw' | 'tdp' | 'compute';
+
+const STR8 = {
+  en: {
+    title: 'Interactive: the trend lines, by metric',
+    sub: 'Pick a metric and watch ten years of hardware go by, one vendor at a time. Hollow markers are announced but not yet shipping.',
+    mem: 'Memory capacity (GB)',
+    bw: 'Memory bandwidth (TB/s)',
+    tdp: 'TDP (W)',
+    compute: 'Dense compute (TFLOPS, BF16/FP16-class)',
+    xAxis: 'Release year',
+    note: 'Log-scale y-axis. Missing points mean the vendor hasn’t publicly disclosed that number for that chip — most often TPU and Ascend TDP.',
+  },
+  zh: {
+    title: '交互演示：按指标看趋势',
+    sub: '选一个指标，看看十年硬件history是怎么一家一家演进的。空心标记代表"已宣布，但还没有出货"。',
+    mem: '显存容量（GB）',
+    bw: '显存带宽（TB/s）',
+    tdp: 'TDP（瓦特）',
+    compute: 'Dense 算力（TFLOPS，BF16/FP16 量级）',
+    xAxis: '发布年份',
+    note: 'y 轴为 log 坐标。缺失的点代表该厂商没有公开披露这颗芯片的这项数据——最常见的是 TPU 和 Ascend 的 TDP。',
+  },
+};
+
+export const AcceleratorTrendExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
+  const t = STR8[lang];
+  const [metric, setMetric] = useState<Metric>('mem');
+
+  const getValue = (c: AccelChip): number | null => {
+    if (metric === 'mem') return c.memGB > 0 ? c.memGB : null;
+    if (metric === 'bw') return c.bwTBs > 0 ? c.bwTBs : null;
+    if (metric === 'tdp') return c.tdpW;
+    return c.computeTFLOPS;
+  };
+
+  const W = 680;
+  const H = 380;
+  const padL = 50;
+  const padR = 16;
+  const padT = 16;
+  const padB = 40;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  const xMin = 2015.5;
+  const xMax = 2026.8;
+
+  const allVals = ACCEL_CHIPS.map(getValue).filter((v): v is number => v !== null && v > 0);
+  const yMinLog = Math.floor(Math.log10(Math.min(...allVals)) - 0.2);
+  const yMaxLog = Math.ceil(Math.log10(Math.max(...allVals)) + 0.1);
+
+  const xOf = (year: number) => padL + ((year - xMin) / (xMax - xMin)) * plotW;
+  const yOf = (val: number) => {
+    const l = Math.log10(val);
+    return padT + plotH - ((l - yMinLog) / (yMaxLog - yMinLog)) * plotH;
+  };
+
+  const vendors: Vendor[] = ['nvidia', 'amd', 'tpu', 'ascend'];
+
+  const gridlinesY: number[] = [];
+  for (let p = yMinLog; p <= yMaxLog; p++) gridlinesY.push(p);
+
+  return (
+    <Card>
+      <h4 className="text-lg font-serif text-anthropic-text mb-1">{t.title}</h4>
+      <p className="text-sm text-anthropic-gray mb-4">{t.sub}</p>
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Pill active={metric === 'mem'} onClick={() => setMetric('mem')}>{t.mem}</Pill>
+        <Pill active={metric === 'bw'} onClick={() => setMetric('bw')}>{t.bw}</Pill>
+        <Pill active={metric === 'tdp'} onClick={() => setMetric('tdp')}>{t.tdp}</Pill>
+        <Pill active={metric === 'compute'} onClick={() => setMetric('compute')}>{t.compute}</Pill>
+      </div>
+
+      <div className="w-full overflow-x-auto">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-2xl mx-auto" style={{ minWidth: 480 }}>
+          <line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke="#191919" strokeOpacity={0.4} />
+          <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke="#191919" strokeOpacity={0.4} />
+
+          {gridlinesY.map((g) => (
+            <g key={`y-${g}`}>
+              <line x1={padL} y1={yOf(Math.pow(10, g))} x2={padL + plotW} y2={yOf(Math.pow(10, g))} stroke="#191919" strokeOpacity={0.06} />
+              <text x={padL - 8} y={yOf(Math.pow(10, g)) + 3} fontSize={9.5} textAnchor="end" fill="#6B6B6B">
+                {Math.pow(10, g) >= 1 ? Math.pow(10, g).toLocaleString() : Math.pow(10, g)}
+              </text>
+            </g>
+          ))}
+
+          {[2016, 2018, 2020, 2022, 2024, 2026].map((yr) => (
+            <text key={yr} x={xOf(yr)} y={padT + plotH + 16} fontSize={9.5} textAnchor="middle" fill="#6B6B6B">
+              {yr}
+            </text>
+          ))}
+          <text x={padL + plotW / 2} y={H - 4} fontSize={10.5} textAnchor="middle" fill="#191919">
+            {t.xAxis}
+          </text>
+
+          {vendors.map((v) => {
+            const pts = ACCEL_CHIPS.filter((c) => c.vendor === v)
+              .map((c) => ({ c, val: getValue(c) }))
+              .filter((p): p is { c: AccelChip; val: number } => p.val !== null && p.val > 0)
+              .sort((a, b) => a.c.year - b.c.year);
+            const pathD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xOf(p.c.year)} ${yOf(p.val)}`).join(' ');
+            return (
+              <g key={v}>
+                <path d={pathD} fill="none" stroke={VENDOR_COLOR[v]} strokeWidth={1.6} strokeOpacity={0.55} />
+                {pts.map((p) =>
+                  p.c.roadmap ? (
+                    <circle key={p.c.name} cx={xOf(p.c.year)} cy={yOf(p.val)} r={4.5} fill="#F4F3EF" stroke={VENDOR_COLOR[v]} strokeWidth={1.6} strokeDasharray="2 1.5" />
+                  ) : (
+                    <circle key={p.c.name} cx={xOf(p.c.year)} cy={yOf(p.val)} r={4.5} fill={VENDOR_COLOR[v]} />
+                  )
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      <div className="flex flex-wrap gap-4 mt-3 mb-3 justify-center">
+        {vendors.map((v) => (
+          <div key={v} className="flex items-center gap-1.5 text-xs text-anthropic-gray">
+            <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: VENDOR_COLOR[v] }} />
+            {VENDOR_LABEL[v]}
+          </div>
+        ))}
+      </div>
+
+      <p className="text-xs text-anthropic-gray/70 leading-relaxed">{t.note}</p>
+    </Card>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/*  10. Accelerator Spec Lookup                                        */
+/* ------------------------------------------------------------------ */
+
+const STR9 = {
+  en: {
+    title: 'Interactive: look up a chip',
+    sub: 'Pick a vendor, then a chip, for the full spec rundown.',
+    vendor: 'Vendor',
+    chip: 'Chip',
+    year: 'Year',
+    memory: 'Memory',
+    bandwidth: 'Memory bandwidth',
+    compute: 'Dense compute (BF16/FP16-class)',
+    interconnect: 'Interconnect',
+    tdp: 'TDP',
+    process: 'Process node',
+    notDisclosed: 'not publicly disclosed',
+    roadmapNote: 'Announced / roadmap — not yet shipping. Treat these numbers as preliminary.',
+  },
+  zh: {
+    title: '交互演示：查一颗芯片',
+    sub: '先选厂商，再选具体型号，看完整的规格清单。',
+    vendor: '厂商',
+    chip: '型号',
+    year: '发布年份',
+    memory: '显存',
+    bandwidth: '显存带宽',
+    compute: 'Dense 算力（BF16/FP16 量级）',
+    interconnect: '互联',
+    tdp: 'TDP',
+    process: '制程节点',
+    notDisclosed: '未公开披露',
+    roadmapNote: '已宣布 / 路线图——尚未出货。这些数字请当作初步信息看待。',
+  },
+};
+
+export const AcceleratorSpecLookup: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
+  const t = STR9[lang];
+  const allChips = useMemo(() => [...ACCEL_CHIPS, ...ACCEL_ROADMAP], []);
+  const [vendor, setVendor] = useState<Vendor>('nvidia');
+  const chipsForVendor = allChips.filter((c) => c.vendor === vendor);
+  const [chipName, setChipName] = useState(chipsForVendor[0]?.name ?? '');
+
+  const chip = allChips.find((c) => c.vendor === vendor && c.name === chipName) ?? chipsForVendor[0];
+
+  const handleVendor = (v: Vendor) => {
+    setVendor(v);
+    const first = allChips.find((c) => c.vendor === v);
+    if (first) setChipName(first.name);
+  };
+
+  const vendors: Vendor[] = ['nvidia', 'amd', 'tpu', 'ascend'];
+
+  return (
+    <Card>
+      <h4 className="text-lg font-serif text-anthropic-text mb-1">{t.title}</h4>
+      <p className="text-sm text-anthropic-gray mb-4">{t.sub}</p>
+
+      <div className="mb-4">
+        <div className="text-xs uppercase tracking-wide text-anthropic-gray/70 mb-1.5">{t.vendor}</div>
+        <div className="flex flex-wrap gap-2">
+          {vendors.map((v) => (
+            <Pill key={v} active={vendor === v} onClick={() => handleVendor(v)}>
+              {VENDOR_LABEL[v]}
+            </Pill>
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-5">
+        <div className="text-xs uppercase tracking-wide text-anthropic-gray/70 mb-1.5">{t.chip}</div>
+        <div className="flex flex-wrap gap-2">
+          {chipsForVendor.map((c) => (
+            <Pill key={c.name} active={chipName === c.name} onClick={() => setChipName(c.name)}>
+              {c.name}
+            </Pill>
+          ))}
+        </div>
+      </div>
+
+      {chip && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-4">
+            <div>
+              <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.year}</div>
+              <div className="text-anthropic-text font-mono">{Math.floor(chip.year)}</div>
+            </div>
+            <div>
+              <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.memory}</div>
+              <div className="text-anthropic-text font-mono">{chip.memGB > 0 ? `${chip.memGB} GB` : t.notDisclosed}</div>
+            </div>
+            <div>
+              <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.bandwidth}</div>
+              <div className="text-anthropic-text font-mono">{chip.bwTBs > 0 ? `${chip.bwTBs} TB/s` : t.notDisclosed}</div>
+            </div>
+            <div>
+              <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.compute}</div>
+              <div className="text-anthropic-text font-mono">{chip.computeTFLOPS != null ? `${chip.computeTFLOPS.toLocaleString()} TFLOPS` : t.notDisclosed}</div>
+            </div>
+            <div>
+              <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.tdp}</div>
+              <div className="text-anthropic-text font-mono">{chip.tdpW != null ? `${chip.tdpW} W` : t.notDisclosed}</div>
+            </div>
+            <div>
+              <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.process}</div>
+              <div className="text-anthropic-text font-mono text-xs">{chip.process}</div>
+            </div>
+          </div>
+          <div className="mb-2">
+            <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.interconnect}</div>
+            <div className="text-anthropic-text text-sm">{chip.interconnect}</div>
+          </div>
+          {chip.roadmap && (
+            <p className="text-xs text-anthropic-accent mt-3 leading-relaxed">{t.roadmapNote}</p>
+          )}
+        </>
+      )}
+    </Card>
+  );
+};

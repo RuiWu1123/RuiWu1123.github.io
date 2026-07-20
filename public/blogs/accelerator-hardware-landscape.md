@@ -71,9 +71,6 @@ Ascend is the lineage where the public numbers carry the most uncertainty of the
 
 The 910C (2025) is also a confirmed dual-chiplet package — two 910B-class compute dies in one package, the same structural move NVIDIA made with Blackwell and AMD made years earlier — a way of adding more memory, bandwidth, and compute per accelerator without needing a single larger die. And the training-relevant story that matters most for this lineage isn't really about any one chip at all: Huawei leans harder than any other vendor here on cluster-scale systems as the actual product. The CloudMatrix 384 system links 384 Ascend accelerators into a single tightly-coupled cluster, aiming to make up in aggregate cluster memory, bandwidth, and compute what any individual chip in the lineup doesn't match on its own.
 
-![Four different bets on the same problem](blogs/images/accelerator-four-philosophies.svg?v=1)
-^Same underlying constraint — not enough memory, bandwidth, or compute on one die — four structurally different answers to it.
-
 ## 5. Everyone eventually went multi-die
 
 Look across all four tables and one architectural transition shows up in every single lineage, just on a different clock: the move from a single monolithic die to a package of multiple compute chiplets. AMD got there first, out of necessity, with MI250X in 2021. NVIDIA held out on a monolithic H100/H200 die through 2024, then switched decisively with Blackwell once a bigger single die became physically impossible to manufacture. TPU held out even longer, keeping its "MegaCore" unified-die design all the way through Trillium (2024), before Ironwood (2025) adopted the same dual-chiplet pattern. Huawei's 910C (2025) did the same.

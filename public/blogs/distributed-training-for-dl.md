@@ -118,10 +118,7 @@ There's a second, more specific problem worth naming: under a **causal mask** (t
 
 ## 10. Megatron Context Parallel: balancing the ring
 
-**Megatron's Context Parallelism** takes Ring Attention's mechanism and fixes exactly this load-imbalance problem with a **zigzag** (round-robin) chunk assignment: instead of GPU 0 getting the first contiguous chunk and GPU 3 getting the last, each GPU is given a *mix* of early and late chunks — enough that every GPU ends up doing roughly the same amount of causal-masked work per ring step, regardless of position.
-
-![Ring Attention and load balancing](blogs/images/ring-attention.svg?v=1)
-^Naive contiguous chunking leaves early-position GPUs underused under a causal mask; a zigzag assignment gives every GPU a balanced mix of early and late positions.
+**Megatron's Context Parallelism** takes Ring Attention's mechanism and fixes exactly this load-imbalance problem with a **zigzag** (round-robin) chunk assignment: instead of GPU 0 getting the first contiguous chunk and GPU 3 getting the last, each GPU is given a *mix* of early and late chunks — enough that every GPU ends up doing roughly the same amount of causal-masked work per ring step, regardless of position (the naive-vs-zigzag comparison in the diagram above illustrates exactly this fix).
 
 This is a genuinely practical engineering refinement rather than a new algorithmic idea — the underlying communication pattern is still Ring Attention's rotating K/V — but it's the difference between a context-parallel implementation that scales cleanly to production causal-LM training and one that quietly wastes a large fraction of its GPUs on the early end of every ring.
 

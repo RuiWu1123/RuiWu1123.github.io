@@ -37,19 +37,19 @@
   <rect x="530" y="86" width="440" height="440" rx="12" fill="#E6E4DD" stroke="#191919" stroke-width="1.5"/>
   <text x="750" y="118" text-anchor="middle" font-size="15" font-weight="600" fill="#191919">DDP: Ring-AllReduce</text>
 
-  <rect x="670" y="150" width="80" height="55" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
-  <text x="710" y="182" text-anchor="middle" font-size="12" fill="#191919">GPU 0</text>
-  <rect x="870" y="150" width="80" height="55" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
-  <text x="910" y="182" text-anchor="middle" font-size="12" fill="#191919">GPU 1</text>
-  <rect x="870" y="390" width="80" height="55" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
-  <text x="910" y="422" text-anchor="middle" font-size="12" fill="#191919">GPU 2</text>
-  <rect x="670" y="390" width="80" height="55" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
-  <text x="710" y="422" text-anchor="middle" font-size="12" fill="#191919">GPU 3</text>
+  <rect x="610" y="150" width="80" height="55" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+  <text x="650" y="182" text-anchor="middle" font-size="12" fill="#191919">GPU 0</text>
+  <rect x="810" y="150" width="80" height="55" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+  <text x="850" y="182" text-anchor="middle" font-size="12" fill="#191919">GPU 1</text>
+  <rect x="810" y="390" width="80" height="55" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+  <text x="850" y="422" text-anchor="middle" font-size="12" fill="#191919">GPU 2</text>
+  <rect x="610" y="390" width="80" height="55" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
+  <text x="650" y="422" text-anchor="middle" font-size="12" fill="#191919">GPU 3</text>
 
-  <line x1="750" y1="177" x2="870" y2="177" stroke="#191919" stroke-width="1.4" marker-end="url(#rarrow)"/>
-  <line x1="910" y1="205" x2="910" y2="390" stroke="#191919" stroke-width="1.4" marker-end="url(#rarrow)"/>
-  <line x1="870" y1="417" x2="750" y2="417" stroke="#191919" stroke-width="1.4" marker-end="url(#rarrow)"/>
-  <line x1="710" y1="390" x2="710" y2="205" stroke="#191919" stroke-width="1.4" marker-end="url(#rarrow)"/>
+  <line x1="690" y1="177" x2="810" y2="177" stroke="#191919" stroke-width="1.4" marker-end="url(#rarrow)"/>
+  <line x1="850" y1="205" x2="850" y2="390" stroke="#191919" stroke-width="1.4" marker-end="url(#rarrow)"/>
+  <line x1="810" y1="417" x2="690" y2="417" stroke="#191919" stroke-width="1.4" marker-end="url(#rarrow)"/>
+  <line x1="650" y1="390" x2="650" y2="205" stroke="#191919" stroke-width="1.4" marker-end="url(#rarrow)"/>
 
   <text x="750" y="480" text-anchor="middle" font-size="12.5" font-weight="600" fill="#191919">every GPU only talks to its 2 ring neighbors</text>
   <text x="750" y="500" text-anchor="middle" font-size="12" fill="#6B6B6B">per-GPU traffic ≈ 2(N-1)/N × gradient size — flat as N grows</text>

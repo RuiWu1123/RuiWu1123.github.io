@@ -12,6 +12,7 @@ const Blog: React.FC = () => {
   const [blogContent, setBlogContent] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [lang, setLang] = useState<'en' | 'zh'>('en');
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; alt: string } | null>(null);
 
   const postId = searchParams.get('id');
   const activePost = BLOG_POSTS.find(p => p.id === postId);
@@ -28,6 +29,21 @@ const Blog: React.FC = () => {
       setBlogContent('');
     }
   }, [activePost, lang]);
+
+  // Close the lightbox whenever the post or language changes
+  useEffect(() => {
+    setLightboxImage(null);
+  }, [activePost, lang]);
+
+  // Close the lightbox on Escape
+  useEffect(() => {
+    if (!lightboxImage) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxImage(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxImage]);
 
   // Function to handle navigation
   const handlePostClick = (id: string) => {
@@ -244,13 +260,21 @@ const Blog: React.FC = () => {
                         if (alt === 'interactive:moe-lookup') {
                           return <MoEModelLookup lang={lang} />;
                         }
+                        const resolvedAlt = alt || 'Blog illustration';
                         return (
-                          <img
-                            src={src || ''}
-                            alt={alt || 'Blog illustration'}
-                            className="mx-auto w-full max-w-2xl h-auto rounded-lg shadow-sm border border-anthropic-text/5 object-cover"
-                            loading="lazy"
-                          />
+                          <button
+                            type="button"
+                            onClick={() => setLightboxImage({ src: src || '', alt: resolvedAlt })}
+                            className="block w-full max-w-2xl mx-auto cursor-zoom-in group"
+                            aria-label={lang === 'zh' ? '点击放大图片' : 'Click to enlarge image'}
+                          >
+                            <img
+                              src={src || ''}
+                              alt={resolvedAlt}
+                              className="w-full h-auto rounded-lg shadow-sm border border-anthropic-text/5 object-cover transition-opacity group-hover:opacity-90"
+                              loading="lazy"
+                            />
+                          </button>
                         );
                       },
                       table: ({ children }) => (
@@ -328,6 +352,30 @@ const Blog: React.FC = () => {
           </div>
         )}
       </div>
+
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-anthropic-text/90 p-4 md:p-10 cursor-zoom-out animate-fade-in"
+          onClick={() => setLightboxImage(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            onClick={() => setLightboxImage(null)}
+            aria-label={lang === 'zh' ? '关闭' : 'Close'}
+            className="absolute top-5 right-5 md:top-8 md:right-8 text-anthropic-bg/80 hover:text-anthropic-bg text-4xl leading-none transition-colors"
+          >
+            &times;
+          </button>
+          <img
+            src={lightboxImage.src}
+            alt={lightboxImage.alt}
+            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -1241,3 +1241,409 @@ export const AcceleratorSpecLookup: React.FC<{ lang?: Lang }> = ({ lang = 'en' }
     </Card>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/*  11. MoE Sparsity Explorer                                          */
+/* ------------------------------------------------------------------ */
+
+interface MoEPreset {
+  id: string;
+  label: string;
+  n: number;
+  k: number;
+  s: number;
+}
+
+const MOE_PRESETS: MoEPreset[] = [
+  { id: 'v3', label: 'DeepSeek-V3', n: 256, k: 8, s: 1 },
+  { id: 'glm', label: 'GLM-5.2', n: 256, k: 8, s: 1 },
+  { id: 'v4flash', label: 'DeepSeek-V4-Flash', n: 256, k: 6, s: 1 },
+  { id: 'v4pro', label: 'DeepSeek-V4-Pro', n: 384, k: 6, s: 1 },
+  { id: 'mai', label: 'MAI-Thinking-1', n: 512, k: 8, s: 0 },
+  { id: 'kimi', label: 'Kimi K3', n: 896, k: 16, s: 1 },
+];
+
+const STR10 = {
+  en: {
+    title: 'Interactive: how sparse is a MoE layer?',
+    sub: 'Pick a preset from a real 2026 model, or drag the sliders — see how much of the expert pool actually fires per token.',
+    experts: 'Routed experts (N)',
+    topk: 'Active per token (top-K)',
+    shared: 'Shared experts (always on)',
+    sparsity: 'Sparsity (K / N)',
+    activeShare: 'Active share of the full pool',
+    poolLabel: 'the routed expert pool',
+    activeLabel: 'active this token',
+    sharedLabel: 'shared, always on',
+    note: 'Total parameters scale with N + S; active parameters per token scale with K + S. A bigger pool only costs more compute if K grows with it — closing that gap between total and active is the entire point of MoE.',
+  },
+  zh: {
+    title: '交互演示：一层 MoE 到底有多稀疏？',
+    sub: '选一个 2026 年真实模型的预设，或者直接拖动滑块——看看每个 token 到底激活了整个专家池的多大比例。',
+    experts: '路由专家数（N）',
+    topk: '每 token 激活数（top-K）',
+    shared: '共享专家数（常驻激活）',
+    sparsity: '稀疏度（K / N）',
+    activeShare: '激活比例（占整个专家池）',
+    poolLabel: '路由专家池',
+    activeLabel: '本次激活',
+    sharedLabel: '共享专家，常驻',
+    note: '总参数量随 N + S 增长；每个 token 的激活参数量只随 K + S 增长。专家池变大并不会让每个 token 变贵，只要 K 不跟着涨——拉开总量和激活量之间的差距，正是 MoE 存在的全部意义。',
+  },
+};
+
+export const MoESparsityExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
+  const t = STR10[lang];
+  const [n, setN] = useState(256);
+  const [k, setK] = useState(8);
+  const [s, setS] = useState(1);
+  const [activePreset, setActivePreset] = useState<string | null>('v3');
+
+  const applyPreset = (p: MoEPreset) => {
+    setN(p.n);
+    setK(p.k);
+    setS(p.s);
+    setActivePreset(p.id);
+  };
+
+  const sparsity = (k / n) * 100;
+  const activeShare = ((k + s) / (n + s)) * 100;
+
+  const barW = 600;
+  const barH = 28;
+  const kWidth = Math.max((k / n) * barW, 3);
+
+  return (
+    <Card>
+      <h4 className="text-lg font-serif text-anthropic-text mb-1">{t.title}</h4>
+      <p className="text-sm text-anthropic-gray mb-4">{t.sub}</p>
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        {MOE_PRESETS.map((p) => (
+          <Pill key={p.id} active={activePreset === p.id} onClick={() => applyPreset(p)}>
+            {p.label}
+          </Pill>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <div>
+          <div className="flex justify-between text-xs text-anthropic-gray/70 mb-1">
+            <span>{t.experts}</span>
+            <span className="font-mono text-anthropic-text">{n}</span>
+          </div>
+          <input
+            type="range"
+            min={8}
+            max={1024}
+            step={8}
+            value={n}
+            onChange={(e) => {
+              setN(Number(e.target.value));
+              setActivePreset(null);
+            }}
+            className="w-full accent-anthropic-accent"
+          />
+        </div>
+        <div>
+          <div className="flex justify-between text-xs text-anthropic-gray/70 mb-1">
+            <span>{t.topk}</span>
+            <span className="font-mono text-anthropic-text">{k}</span>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={32}
+            step={1}
+            value={k}
+            onChange={(e) => {
+              setK(Number(e.target.value));
+              setActivePreset(null);
+            }}
+            className="w-full accent-anthropic-accent"
+          />
+        </div>
+        <div>
+          <div className="flex justify-between text-xs text-anthropic-gray/70 mb-1">
+            <span>{t.shared}</span>
+            <span className="font-mono text-anthropic-text">{s}</span>
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={2}
+            step={1}
+            value={s}
+            onChange={(e) => {
+              setS(Number(e.target.value));
+              setActivePreset(null);
+            }}
+            className="w-full accent-anthropic-accent"
+          />
+        </div>
+      </div>
+
+      <div className="w-full overflow-x-auto mb-4">
+        <svg viewBox={`0 0 ${barW + 100} 90`} className="w-full max-w-2xl mx-auto" style={{ minWidth: 420 }}>
+          <text x="0" y="12" fontSize={10.5} fill="#6B6B6B">
+            {t.poolLabel}
+          </text>
+          <rect x="0" y="18" width={barW} height={barH} rx={5} fill="#FFFFFF" stroke="#191919" strokeOpacity={0.3} />
+          <rect x="0" y="18" width={kWidth} height={barH} rx={5} fill="#D97757" />
+          <text x={Math.min(kWidth + 6, barW - 4)} y="36" fontSize={9.5} fill="#191919">
+            {t.activeLabel}
+          </text>
+
+          {Array.from({ length: s }).map((_, i) => (
+            <rect key={i} x={barW + 12 + i * 26} y="18" width={22} height={barH} rx={5} fill="#8DA399" />
+          ))}
+          {s > 0 && (
+            <text x={barW + 12} y="64" fontSize={9} fill="#6B6B6B">
+              {t.sharedLabel}
+            </text>
+          )}
+        </svg>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.sparsity}</div>
+          <div className="text-anthropic-text font-mono text-lg">{sparsity.toFixed(1)}%</div>
+        </div>
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.activeShare}</div>
+          <div className="text-anthropic-text font-mono text-lg">{activeShare.toFixed(1)}%</div>
+        </div>
+      </div>
+
+      <p className="text-xs text-anthropic-gray/70 leading-relaxed">{t.note}</p>
+    </Card>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/*  12. MoE Model Spec Lookup                                          */
+/* ------------------------------------------------------------------ */
+
+interface MoEModelSpec {
+  id: string;
+  name: string;
+  org: string;
+  totalB: number;
+  activeB: number | null;
+  routedExperts: string;
+  sharedExperts: string;
+  topK: string;
+  gating: string;
+  balancing: string;
+  innovation: { en: string; zh: string };
+}
+
+const MOE_MODELS: MoEModelSpec[] = [
+  {
+    id: 'v3',
+    name: 'DeepSeek-V3',
+    org: 'DeepSeek-AI',
+    totalB: 671,
+    activeB: 37,
+    routedExperts: '256',
+    sharedExperts: '1',
+    topK: '8',
+    gating: 'Sigmoid',
+    balancing: 'Aux-loss-free (learned bias)',
+    innovation: {
+      en: "Established the modern default recipe: fine-grained routed experts plus one isolated shared expert, sigmoid affinity scoring, bias-based aux-loss-free balancing, and multi-token prediction (MTP).",
+      zh: '确立了如今的默认范式：细粒度路由专家 + 一个独立共享专家、sigmoid 打分、基于偏置项的免辅助损失负载均衡，以及多 token 预测（MTP）。',
+    },
+  },
+  {
+    id: 'v4flash',
+    name: 'DeepSeek-V4-Flash',
+    org: 'DeepSeek-AI',
+    totalB: 284,
+    activeB: 13,
+    routedExperts: '256',
+    sharedExperts: '1',
+    topK: '6',
+    gating: 'Sqrt(Softplus)',
+    balancing: 'Aux-loss-free + sequence-wise balance loss',
+    innovation: {
+      en: "Swaps V3's sigmoid affinity for Sqrt(Softplus), adds Hash routing (deterministic, no learned gate) to the first 3 MoE layers, and introduces Anticipatory Routing — computing routing decisions from stale weights — to suppress MoE-driven loss spikes.",
+      zh: '把 V3 的 sigmoid 打分换成 Sqrt(Softplus)，前 3 层 MoE 改用 Hash 路由（确定性、不需要学习的门控），并引入 Anticipatory Routing——用滞后的参数计算路由决策——来抑制 MoE 引发的 loss 尖峰。',
+    },
+  },
+  {
+    id: 'v4pro',
+    name: 'DeepSeek-V4-Pro',
+    org: 'DeepSeek-AI',
+    totalB: 1600,
+    activeB: 49,
+    routedExperts: '384',
+    sharedExperts: '1',
+    topK: '6',
+    gating: 'Sqrt(Softplus)',
+    balancing: 'Aux-loss-free + sequence-wise balance loss',
+    innovation: {
+      en: 'Same architecture family as V4-Flash at larger scale; pairs it with a new pipelined expert-parallel "MegaMoE" kernel that overlaps dispatch, compute, and combine in waves for large speedups at inference and RL-rollout time.',
+      zh: '和 V4-Flash 同一套架构在更大规模上的版本；配合新的流水线式专家并行 "MegaMoE" 内核，把 dispatch、计算、combine 分波次重叠执行，在推理和 RL rollout 场景下带来明显加速。',
+    },
+  },
+  {
+    id: 'glm',
+    name: 'GLM-5.2',
+    org: 'Zhipu / Z.ai',
+    totalB: 753,
+    activeB: 40,
+    routedExperts: '256',
+    sharedExperts: '1',
+    topK: '8',
+    gating: 'Sigmoid',
+    balancing: 'Aux-loss-free (DeepSeekMoE-style)',
+    innovation: {
+      en: 'Keeps the DeepSeek-V3-style MoE recipe almost unchanged; this generation\'s gains come from the attention side (an indexer shared across every 4 sparse-attention layers) and infrastructure (an improved MTP layer, a custom Slime RL framework), not from new MoE mechanics.',
+      zh: 'MoE 部分基本沿用 DeepSeek-V3 式配方，几乎没有变化；这一代的提升主要来自注意力侧（每 4 层稀疏注意力共享一个索引器）和基础设施（改进的 MTP 层、自研 Slime RL 框架），而不是新的 MoE 机制。',
+    },
+  },
+  {
+    id: 'mai',
+    name: 'MAI-Thinking-1',
+    org: 'Microsoft AI',
+    totalB: 962,
+    activeB: 34.7,
+    routedExperts: '512',
+    sharedExperts: '0',
+    topK: '8',
+    gating: 'Softmax (pre-compression)',
+    balancing: 'Global-batch loss, fully dropless',
+    innovation: {
+      en: "Adopts LatentMoE: experts operate in a compressed latent space (roughly 2x compression, letting the expert count grow about 3x for the same budget), interleaved with dense FFN layers rather than MoE at every layer. Shared experts were tested but didn't help in this interleaved layout, so the final model ships without one.",
+      zh: '采用 LatentMoE：专家在压缩后的潜空间中运算（压缩约 2 倍，同等预算下专家数可扩大约 3 倍），并与稠密 FFN 层交替排布，而非每层都用 MoE。这种交替结构下共享专家没有带来收益，因此最终版本没有使用共享专家。',
+    },
+  },
+  {
+    id: 'kimi',
+    name: 'Kimi K3',
+    org: 'Moonshot AI',
+    totalB: 2800,
+    activeB: null,
+    routedExperts: '896',
+    sharedExperts: 'yes (count undisclosed)',
+    topK: '16',
+    gating: 'Stable LatentMoE (details undisclosed)',
+    balancing: 'Quantile Balancing (router-score quantiles)',
+    innovation: {
+      en: 'Pushes expert granularity further than any other 2026 report — 896 experts, top-16 — inside a "Stable LatentMoE" framework, and replaces bias-based balancing with Quantile Balancing, which derives expert allocation directly from router-score quantiles instead of a tuned hyperparameter.',
+      zh: '把专家粒度做得比 2026 年任何其他报告都更细——896 个专家、top-16——放在 "Stable LatentMoE" 框架里，并用 Quantile Balancing 取代基于偏置项的均衡方式，直接从路由打分的分位数推导专家分配，不需要额外调的超参数。',
+    },
+  },
+  {
+    id: 'longcat',
+    name: 'LongCat-2.0',
+    org: 'Meituan',
+    totalB: 1600,
+    activeB: 48,
+    routedExperts: 'dynamic pool incl. zero-computation experts',
+    sharedExperts: '3 task-specialized groups instead',
+    topK: 'dynamic, ~33–56B active per token',
+    gating: 'router picks real vs. zero-computation experts',
+    balancing: 'not publicly detailed',
+    innovation: {
+      en: 'The most structurally different design here: some "experts" are Zero-Computation Experts that just pass the token through unchanged, so simple tokens cost almost nothing while hard tokens engage more real experts — adaptive per-token compute rather than a fixed top-K. A shortcut-connected backbone (ScMoE) and three task-specialized expert groups (Agent / Reasoning / Interaction) layer on top.',
+      zh: '这里结构上最不一样的设计：一部分"专家"是 Zero-Computation Expert，直接原样透传 token，简单 token 几乎不花算力，难 token 才会调用更多真正的专家——是按 token 自适应分配算力，而不是固定的 top-K。再叠加一个 shortcut-connected 的骨干（ScMoE）和三个按任务划分的专家组（Agent / Reasoning / Interaction）。',
+    },
+  },
+];
+
+const STR11 = {
+  en: {
+    title: "Interactive: look up a model's MoE recipe",
+    sub: "Every figure here is drawn from that model's own release material.",
+    org: 'Organization',
+    total: 'Total parameters',
+    active: 'Active parameters',
+    routed: 'Routed experts',
+    shared: 'Shared experts',
+    topk: 'Top-K',
+    gating: 'Gating function',
+    balancing: 'Load balancing',
+    innovation: "What's new here",
+    notDisclosed: 'not disclosed',
+  },
+  zh: {
+    title: '交互演示：查一个模型的 MoE 配方',
+    sub: '这里的每一个数字都来自该模型自己的发布材料。',
+    org: '机构',
+    total: '总参数量',
+    active: '激活参数量',
+    routed: '路由专家数',
+    shared: '共享专家数',
+    topk: 'Top-K',
+    gating: '门控函数',
+    balancing: '负载均衡',
+    innovation: '这里的新东西',
+    notDisclosed: '未公开',
+  },
+};
+
+export const MoEModelLookup: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
+  const t = STR11[lang];
+  const [modelId, setModelId] = useState('v3');
+  const model = MOE_MODELS.find((m) => m.id === modelId) ?? MOE_MODELS[0];
+
+  return (
+    <Card>
+      <h4 className="text-lg font-serif text-anthropic-text mb-1">{t.title}</h4>
+      <p className="text-sm text-anthropic-gray mb-4">{t.sub}</p>
+
+      <div className="mb-5 flex flex-wrap gap-2">
+        {MOE_MODELS.map((m) => (
+          <Pill key={m.id} active={modelId === m.id} onClick={() => setModelId(m.id)}>
+            {m.name}
+          </Pill>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-4">
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.org}</div>
+          <div className="text-anthropic-text">{model.org}</div>
+        </div>
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.total}</div>
+          <div className="text-anthropic-text font-mono">
+            {model.totalB >= 1000 ? `${(model.totalB / 1000).toFixed(1)}T` : `${model.totalB}B`}
+          </div>
+        </div>
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.active}</div>
+          <div className="text-anthropic-text font-mono">{model.activeB != null ? `${model.activeB}B` : t.notDisclosed}</div>
+        </div>
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.routed}</div>
+          <div className="text-anthropic-text font-mono text-xs">{model.routedExperts}</div>
+        </div>
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.shared}</div>
+          <div className="text-anthropic-text font-mono text-xs">{model.sharedExperts}</div>
+        </div>
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.topk}</div>
+          <div className="text-anthropic-text font-mono text-xs">{model.topK}</div>
+        </div>
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.gating}</div>
+          <div className="text-anthropic-text text-xs">{model.gating}</div>
+        </div>
+        <div>
+          <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide">{t.balancing}</div>
+          <div className="text-anthropic-text text-xs">{model.balancing}</div>
+        </div>
+      </div>
+
+      <div>
+        <div className="text-anthropic-gray/70 text-xs uppercase tracking-wide mb-1">{t.innovation}</div>
+        <p className="text-anthropic-text text-sm leading-relaxed">{model.innovation[lang]}</p>
+      </div>
+    </Card>
+  );
+};

@@ -137,6 +137,11 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: "moe-field-guide-for-dl",
+    title: "Mixture-of-Experts from First Principles: A Field Guide to How 2026's Frontier Models Actually Route",
+    date: "2026/7/21"
+  },
+  {
     id: "accelerator-hardware-landscape",
     title: "Training Silicon Across a Decade: NVIDIA, AMD, TPU, and Ascend Compared",
     date: "2026/7/20"

@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ArrowLeft } from 'lucide-react';
 import { BLOG_POSTS, loadBlogContent } from '../constants';
-import { RooflineExplorer, GridBlockSimulator, TritonGridExplorer, AutotuneExplorer, RingAllReduceExplorer, ZeROMemoryCalculator, PipelineBubbleExplorer, AcceleratorTrendExplorer, AcceleratorSpecLookup } from '../components/blog/Interactives';
+import { RooflineExplorer, GridBlockSimulator, TritonGridExplorer, AutotuneExplorer, RingAllReduceExplorer, ZeROMemoryCalculator, PipelineBubbleExplorer, AcceleratorTrendExplorer, AcceleratorSpecLookup, MoESparsityExplorer, MoEModelLookup } from '../components/blog/Interactives';
 
 const Blog: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -237,6 +237,12 @@ const Blog: React.FC = () => {
                         }
                         if (alt === 'interactive:accel-lookup') {
                           return <AcceleratorSpecLookup lang={lang} />;
+                        }
+                        if (alt === 'interactive:moe-sparsity') {
+                          return <MoESparsityExplorer lang={lang} />;
+                        }
+                        if (alt === 'interactive:moe-lookup') {
+                          return <MoEModelLookup lang={lang} />;
                         }
                         return (
                           <img

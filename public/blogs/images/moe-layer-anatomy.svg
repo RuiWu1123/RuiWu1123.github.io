@@ -1,0 +1,85 @@
+<svg viewBox="0 0 1000 520" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="1000" height="520" fill="#F4F3EF"/>
+  <text x="500" y="36" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">Anatomy of a Modern MoE Layer</text>
+  <text x="500" y="58" text-anchor="middle" font-size="13" fill="#6B6B6B">one token, one layer: every routed expert is a candidate, only a handful actually run</text>
+
+  <!-- input token -->
+  <rect x="450" y="84" width="100" height="40" rx="8" fill="#191919"/>
+  <text x="500" y="109" text-anchor="middle" font-size="13" fill="#F4F3EF">token x</text>
+
+  <!-- split down to router and shared expert -->
+  <line x1="500" y1="124" x2="500" y2="150" stroke="#191919" stroke-opacity="0.4" stroke-width="1.4"/>
+  <line x1="500" y1="150" x2="300" y2="150" stroke="#191919" stroke-opacity="0.4" stroke-width="1.4"/>
+  <line x1="500" y1="150" x2="700" y2="150" stroke="#191919" stroke-opacity="0.4" stroke-width="1.4"/>
+  <line x1="300" y1="150" x2="300" y2="176" stroke="#191919" stroke-opacity="0.4" stroke-width="1.4"/>
+  <polygon points="300,176 295,166 305,166" fill="#191919" fill-opacity="0.4"/>
+  <line x1="700" y1="150" x2="700" y2="176" stroke="#191919" stroke-opacity="0.4" stroke-width="1.4"/>
+  <polygon points="700,176 695,166 705,166" fill="#191919" fill-opacity="0.4"/>
+
+  <!-- router -->
+  <rect x="230" y="176" width="140" height="46" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+  <text x="300" y="198" text-anchor="middle" font-size="12.5" font-weight="600" fill="#191919">router</text>
+  <text x="300" y="213" text-anchor="middle" font-size="10.5" fill="#6B6B6B">affinity scores, top-k</text>
+
+  <!-- shared expert, always on -->
+  <rect x="630" y="176" width="140" height="46" rx="8" fill="#8DA399" stroke="#191919" stroke-width="1.2"/>
+  <text x="700" y="198" text-anchor="middle" font-size="12.5" font-weight="600" fill="#F4F3EF">shared expert</text>
+  <text x="700" y="213" text-anchor="middle" font-size="10.5" fill="#F4F3EF">always active</text>
+
+  <!-- router fans out to expert pool -->
+  <line x1="300" y1="222" x2="300" y2="248" stroke="#191919" stroke-opacity="0.35" stroke-width="1.2"/>
+  <line x1="80" y1="248" x2="520" y2="248" stroke="#191919" stroke-opacity="0.35" stroke-width="1.2"/>
+
+  <!-- expert pool: 10 boxes, 2 selected (accent), rest idle (outline only) -->
+  <!-- idle experts -->
+  <g stroke="#191919" stroke-width="1" fill="#FFFFFF" fill-opacity="0.4">
+    <rect x="80" y="248" width="64" height="46" rx="6"/>
+    <rect x="154" y="248" width="64" height="46" rx="6"/>
+    <rect x="228" y="248" width="64" height="46" rx="6" stroke-dasharray="0"/>
+    <rect x="376" y="248" width="64" height="46" rx="6"/>
+    <rect x="450" y="248" width="64" height="46" rx="6"/>
+  </g>
+  <text x="112" y="275" text-anchor="middle" font-size="10" fill="#6B6B6B">E1</text>
+  <text x="186" y="275" text-anchor="middle" font-size="10" fill="#6B6B6B">E2</text>
+  <text x="260" y="275" text-anchor="middle" font-size="10" fill="#6B6B6B">E3</text>
+  <text x="408" y="275" text-anchor="middle" font-size="10" fill="#6B6B6B">E5</text>
+  <text x="482" y="275" text-anchor="middle" font-size="10" fill="#6B6B6B">E6</text>
+  <text x="500" y="238" text-anchor="middle" font-size="10.5" fill="#6B6B6B">hundreds more routed experts, most of them idle for this token</text>
+
+  <!-- selected experts, highlighted -->
+  <rect x="302" y="248" width="64" height="46" rx="6" fill="#D97757" stroke="#191919" stroke-width="1.4"/>
+  <text x="334" y="275" text-anchor="middle" font-size="10" fill="#F4F3EF">E4</text>
+  <rect x="524" y="248" width="64" height="46" rx="6" fill="#D97757" stroke="#191919" stroke-width="1.4"/>
+  <text x="556" y="275" text-anchor="middle" font-size="10" fill="#F4F3EF">E7</text>
+
+  <!-- lines from selected experts down to combine -->
+  <line x1="334" y1="294" x2="334" y2="330" stroke="#191919" stroke-width="1.4"/>
+  <line x1="334" y1="330" x2="500" y2="330" stroke="#191919" stroke-width="1.4"/>
+  <line x1="556" y1="294" x2="556" y2="330" stroke="#191919" stroke-width="1.4"/>
+  <line x1="556" y1="330" x2="500" y2="330" stroke="#191919" stroke-width="1.4"/>
+  <line x1="500" y1="330" x2="500" y2="356" stroke="#191919" stroke-width="1.4"/>
+
+  <!-- shared expert down to combine -->
+  <line x1="700" y1="222" x2="700" y2="330" stroke="#191919" stroke-width="1.4"/>
+  <line x1="700" y1="330" x2="520" y2="330" stroke="#191919" stroke-width="1.4"/>
+
+  <polygon points="500,362 493,350 507,350" fill="#191919"/>
+
+  <!-- combine box -->
+  <rect x="420" y="366" width="160" height="46" rx="8" fill="#E3EBF2" stroke="#191919" stroke-width="1.2"/>
+  <text x="500" y="388" text-anchor="middle" font-size="12.5" font-weight="600" fill="#191919">weighted combine</text>
+  <text x="500" y="403" text-anchor="middle" font-size="10.5" fill="#6B6B6B">shared + top-k routed</text>
+
+  <line x1="500" y1="412" x2="500" y2="438" stroke="#191919" stroke-width="1.4"/>
+  <polygon points="500,444 493,432 507,432" fill="#191919"/>
+
+  <!-- output token -->
+  <rect x="450" y="448" width="100" height="40" rx="8" fill="#191919"/>
+  <text x="500" y="473" text-anchor="middle" font-size="13" fill="#F4F3EF">output y</text>
+
+  <!-- side annotation: cost -->
+  <text x="850" y="270" text-anchor="middle" font-size="11" fill="#6B6B6B">total params</text>
+  <text x="850" y="284" text-anchor="middle" font-size="11" fill="#6B6B6B">≈ all experts</text>
+  <text x="850" y="330" text-anchor="middle" font-size="11" fill="#191919" font-weight="600">active params</text>
+  <text x="850" y="344" text-anchor="middle" font-size="11" fill="#191919" font-weight="600">≈ shared + top-k</text>
+</svg>

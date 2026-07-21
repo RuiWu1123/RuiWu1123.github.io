@@ -138,7 +138,7 @@ export const NEWS_ITEMS: NewsItem[] = [
 export const BLOG_POSTS: BlogPost[] = [
   {
     id: "moe-field-guide-for-dl",
-    title: "Mixture-of-Experts from First Principles: A Field Guide to How 2026's Frontier Models Actually Route",
+    title: "Sparse by Design: How Mixture-of-Experts Actually Works in 2026",
     date: "2026/7/21"
   },
   {
@@ -148,17 +148,17 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     id: "distributed-training-for-dl",
-    title: "Distributed Training from First Principles: A Field Guide to Parallelism Strategies",
+    title: "Splitting the Model: How Large-Scale Training Actually Works",
     date: "2026/7/19"
   },
   {
     id: "triton-for-dl",
-    title: "Triton from First Principles: Writing Fast GPU Kernels Without Writing CUDA",
+    title: "Writing Fast GPU Kernels Without Touching CUDA",
     date: "2026/7/9"
   },
   {
     id: "gpu-field-guide-for-dl",
-    title: "GPUs from First Principles: A Field Guide for Deep Learning Researchers",
+    title: "Inside the GPU: A Field Guide for Deep Learning Researchers",
     date: "2026/7/2"
   },
   {

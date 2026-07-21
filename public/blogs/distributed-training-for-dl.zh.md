@@ -1,5 +1,5 @@
 ---
-title: "Distributed Training from First Principles: A Field Guide to Parallelism Strategies"
+title: "Splitting the Model: How Large-Scale Training Actually Works"
 date: "2026/7/19"
 ---
 

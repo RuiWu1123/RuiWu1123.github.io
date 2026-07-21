@@ -1,5 +1,5 @@
 ---
-title: "Triton from First Principles: Writing Fast GPU Kernels Without Writing CUDA"
+title: "Writing Fast GPU Kernels Without Touching CUDA"
 date: "2026/7/9"
 ---
 

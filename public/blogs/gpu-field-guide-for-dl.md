@@ -1,5 +1,5 @@
 ---
-title: "GPUs from First Principles: A Field Guide for Deep Learning Researchers"
+title: "Inside the GPU: A Field Guide for Deep Learning Researchers"
 date: "2026/7/2"
 ---
 

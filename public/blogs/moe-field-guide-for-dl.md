@@ -9,7 +9,7 @@ Mixture-of-Experts (MoE) is the architecture underneath nearly every frontier la
 
 Strip away everything vendor-specific and a 2026-era MoE layer looks like this: a token arrives, a small router network scores every expert's "affinity" for that token, the top-K highest-scoring experts actually run their feed-forward computation, and, in almost every current design, one additional shared expert runs on every token regardless of what the router decided. The outputs get combined into a single vector, weighted by the router's own scores, and that's the layer's output.
 
-![Anatomy of a modern MoE layer](blogs/images/moe-layer-anatomy.svg?v=1)
+![Anatomy of a modern MoE layer](blogs/images/moe-layer-anatomy.svg?v=2)
 ^One token, one layer: every routed expert is a candidate, only a handful actually run. The shared expert is the one exception that always fires.
 
 The entire appeal of this design is in the gap between two numbers. **Total parameters** scale with how many experts exist in the pool: this is the number vendors put in a headline ("2.8 trillion parameters"). **Active parameters** scale with how many experts actually run per token, top-K plus the shared expert, and this is the number that actually determines inference cost. A model can have an enormous total parameter count and still be cheap to run per token, provided K stays small relative to the pool. That gap between total and active is the entire reason MoE exists, and every design choice covered below is, one way or another, an attempt to widen that gap without hurting quality.
@@ -18,7 +18,7 @@ The entire appeal of this design is in the gap between two numbers. **Total para
 
 Almost every mechanism discussed in this post is a variation on a much older idea, or a direct continuation of one specific 2024 paper. It's worth walking through that lineage before getting into what's changed recently. The idea is older than the deep-learning era it's usually associated with: **Jacobs et al., 1991** first proposed mixture-of-experts as a way to let different sub-networks specialize on different parts of a task, decades before anything resembling a modern transformer existed. What follows is the lineage that starts once the idea got adapted to large neural sequence models, the part of the history most people actually mean when they say "MoE."
 
-![Nine years of MoE design](blogs/images/moe-lineage-timeline.svg?v=1)
+![Nine years of MoE design](blogs/images/moe-lineage-timeline.svg?v=2)
 ^Most of 2026's frontier MoE designs trace back to one 2024 fork: DeepSeekMoE's fine-grained-experts-plus-shared-expert recipe.
 
 **Shazeer et al., 2017** introduced the modern sparsely-gated MoE layer for deep learning: a noisy top-k softmax router with an auxiliary loss to keep expert usage balanced. This is the ancestor of essentially everything that follows.
@@ -63,7 +63,7 @@ None of these four ideas individually reads as a dramatic departure from GShard-
 
 Everything so far has assumed learned routing: a trainable gate scores experts, and gradient descent shapes those scores over time. That's the industry default, but it's a choice, not the only option, and comparing it against the alternatives explains why the field has spent so much engineering effort on load balancing rather than simply picking a routing mechanism that's balanced by construction.
 
-![Three ways to assign tokens to experts](blogs/images/moe-routing-comparison.svg?v=1)
+![Three ways to assign tokens to experts](blogs/images/moe-routing-comparison.svg?v=2)
 ^Same 8 tokens, same 4 experts, three different assignment rules. Only one of the three both balances load and reads the tokens.
 
 $$
@@ -110,7 +110,7 @@ $$
 
 In every case, $x$ is the token's hidden representation and $e_i$ is expert $i$'s learned key vector, so $x\cdot e_i$ is their dot-product similarity, the raw logit. Softmax normalizes these logits across the whole pool of $N$ experts at once, so all $N$ scores are forced to sum to one: raising expert $i$'s logit necessarily lowers every other $g_j$. Sigmoid and Sqrt(Softplus) instead apply an independent function to each logit on its own, with no normalization across experts, so one expert's score moving has no effect on any other expert's score.
 
-![Competing for a budget vs. scoring independently](blogs/images/moe-gating-comparison.svg?v=1)
+![Competing for a budget vs. scoring independently](blogs/images/moe-gating-comparison.svg?v=2)
 ^Same 5 experts, same starting logits, only expert 3's logit goes up. Under softmax, everyone else's score has to shrink to compensate; under sigmoid, nothing else moves at all.
 
 Early MoE work (Shazeer, GShard, Switch Transformer, Mixtral) used softmax across all candidate experts, forcing every expert to compete for a shared probability budget: raising one expert's score necessarily lowers everyone else's, whether or not that's actually the right call for those other experts. DeepSeek-V3 switched to sigmoid, scoring each expert against a fixed threshold rather than against the rest of the pool. That distinction is largely cosmetic at single-digit expert counts, but it matters more as expert counts climb into the hundreds: with 256 or 896 experts, a single softmax adjustment gets divided across the entire pool, while sigmoid's independence stays constant no matter how large N gets.
@@ -121,7 +121,7 @@ That sigmoid choice has mostly held. [GLM-5.2](https://www.zhipuai.cn/zh/researc
 
 Nothing in a router's training objective naturally prevents it from routing every token to the same handful of experts and ignoring the rest, a failure mode usually called routing collapse. How to prevent it without hurting quality is the part of MoE design that has visibly been reinvented the most in the last two years.
 
-![DeepSeek-V3's bias-based balancing loop](blogs/images/moe-balancing-loop.svg?v=1)
+![DeepSeek-V3's bias-based balancing loop](blogs/images/moe-balancing-loop.svg?v=2)
 ^No competing loss term. The router's own bias adjusts itself, one training step at a time, based on last step's measured load.
 
 $$
@@ -152,7 +152,7 @@ $$
 
 Here $N$ is the number of experts in the coarse-grained baseline and $m$ is the segmentation factor DeepSeekMoE introduces. Each original expert's feed-forward block is split into $m$ equal-sized pieces, so the fine-grained pool has $N\cdot m$ experts instead of $N$, and top-$K$ becomes top-$(K\cdot m)$ to keep the same fraction of the pool active. The active compute per token is identical either way, since the same total width is doing the work, but the router now chooses from a far larger combinatorial space: with $N=8$ and $K=2$ there are only a handful of possible pairings, while $N\cdot m=64$ and $K\cdot m=16$ opens up millions.
 
-![Same total capacity, sliced differently](blogs/images/moe-granularity-comparison.svg?v=1)
+![Same total capacity, sliced differently](blogs/images/moe-granularity-comparison.svg?v=2)
 ^8 experts, top-2 gives 4 possible pairs. Split the same total width into 64 pieces at top-16, and the number of ways to fill that budget explodes into the millions: same compute, far more ways to specialize.
 
 DeepSeekMoE's fine-grained-experts idea is no longer under active debate the way the shared-expert half of its recipe is: it's the substrate nearly everything in this post starts from. Kimi K3 pushes this further than anyone else in this comparison, with 896 experts and top-16 selected.
@@ -178,7 +178,7 @@ $$
 
 Here $x$ is the token's full-dimension representation, with dimension $d$, and $z$ is its projection into a smaller latent space of dimension $\ell < d$ via a learned down-projection matrix $W_{\text{down}}$. The expert computation happens entirely in this compressed space, and a learned up-projection $W_{\text{up}}$ expands the result back to dimension $d$ before it's combined with the rest of the layer's output. Because both the per-expert compute and the all-to-all communication payload scale with $\ell$ rather than $d$, the cost of running $N$ experts at top-$K$ scales as shown above instead of the usual $Nd, Kd$. The gap between $d$ and $\ell$ is exactly the budget that a larger expert pool or a larger top-K can be paid for with, at no extra total cost.
 
-![LatentMoE: compress, compute, expand](blogs/images/moe-latentmoe-flow.svg?v=1)
+![LatentMoE: compress, compute, expand](blogs/images/moe-latentmoe-flow.svg?v=2)
 ^Standard MoE pays the full token dimension d for every expert and every all-to-all hop. LatentMoE pays a compressed dimension l instead, and reinvests the difference into a bigger pool.
 
 Every idea covered so far leaves the expert computation itself alone and only changes routing or balancing around it. LatentMoE, first proposed by NVIDIA in early 2026 and already shipping in NVIDIA's own Nemotron-3 Super and Ultra models, changes the computation directly.

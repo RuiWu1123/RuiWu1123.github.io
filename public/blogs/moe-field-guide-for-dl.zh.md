@@ -121,7 +121,7 @@ sigmoid 这个选择基本上延续了下来。[GLM-5.2](https://www.zhipuai.cn/
 
 路由器的训练目标本身并不会自然而然地阻止它把所有 token 都送去同样那几个专家、然后把其余专家全部闲置，这种失效模式通常被称为路由坍缩（routing collapse）。如何在不伤害模型质量的前提下防止它，是 MoE 设计里过去两年被重新发明次数最多的部分。
 
-![DeepSeek-V3 基于偏置项的均衡闭环](blogs/images/moe-balancing-loop.svg?v=2)
+![DeepSeek-V3 基于偏置项的均衡闭环](blogs/images/moe-balancing-loop.svg?v=3)
 ^没有另外的竞争损失项。路由器自己的偏置根据上一步测得的负载自我调整，一步一步进行。
 
 $$

@@ -31,9 +31,10 @@
   <line x1="615" y1="140" x2="705" y2="140" stroke="#191919" stroke-opacity="0.5" stroke-width="1.6"/>
   <polygon points="705,140 691,133 691,147" fill="#191919" fill-opacity="0.6"/>
 
-  <line x1="825" y1="194" x2="825" y2="245" stroke="#191919" stroke-opacity="0.5" stroke-width="1.6"/>
-  <line x1="825" y1="245" x2="618" y2="315" stroke="#191919" stroke-opacity="0.5" stroke-width="1.6"/>
-  <polygon points="618,315 632,312 626,325" fill="#191919" fill-opacity="0.6"/>
+  <line x1="825" y1="194" x2="825" y2="260" stroke="#191919" stroke-opacity="0.5" stroke-width="1.6"/>
+  <line x1="825" y1="260" x2="500" y2="260" stroke="#191919" stroke-opacity="0.5" stroke-width="1.6"/>
+  <line x1="500" y1="260" x2="500" y2="274" stroke="#191919" stroke-opacity="0.5" stroke-width="1.6"/>
+  <polygon points="500,280 493,267 507,267" fill="#191919" fill-opacity="0.6"/>
 
   <!-- loop back to routing -->
   <line x1="385" y1="327" x2="175" y2="327" stroke="#191919" stroke-opacity="0.5" stroke-width="1.6"/>

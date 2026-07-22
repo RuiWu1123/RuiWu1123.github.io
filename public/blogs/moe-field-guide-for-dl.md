@@ -121,7 +121,7 @@ That sigmoid choice has mostly held. [GLM-5.2](https://www.zhipuai.cn/zh/researc
 
 Nothing in a router's training objective naturally prevents it from routing every token to the same handful of experts and ignoring the rest, a failure mode usually called routing collapse. How to prevent it without hurting quality is the part of MoE design that has visibly been reinvented the most in the last two years.
 
-![DeepSeek-V3's bias-based balancing loop](blogs/images/moe-balancing-loop.svg?v=2)
+![DeepSeek-V3's bias-based balancing loop](blogs/images/moe-balancing-loop.svg?v=3)
 ^No competing loss term. The router's own bias adjusts itself, one training step at a time, based on last step's measured load.
 
 $$

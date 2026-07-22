@@ -9,7 +9,7 @@ Mixture-of-Experts (MoE) is the architecture underneath nearly every frontier la
 
 Strip away everything vendor-specific and a 2026-era MoE layer looks like this: a token arrives, a small router network scores every expert's "affinity" for that token, the top-K highest-scoring experts actually run their feed-forward computation, and, in almost every current design, one additional shared expert runs on every token regardless of what the router decided. The outputs get combined into a single vector, weighted by the router's own scores, and that's the layer's output.
 
-![Anatomy of a modern MoE layer](blogs/images/moe-layer-anatomy.svg?v=2)
+![Anatomy of a modern MoE layer](blogs/images/moe-layer-anatomy.svg?v=3)
 ^One token, one layer: every routed expert is a candidate, only a handful actually run. The shared expert is the one exception that always fires.
 
 The entire appeal of this design is in the gap between two numbers. **Total parameters** scale with how many experts exist in the pool: this is the number vendors put in a headline ("2.8 trillion parameters"). **Active parameters** scale with how many experts actually run per token, top-K plus the shared expert, and this is the number that actually determines inference cost. A model can have an enormous total parameter count and still be cheap to run per token, provided K stays small relative to the pool. That gap between total and active is the entire reason MoE exists, and every design choice covered below is, one way or another, an attempt to widen that gap without hurting quality.
@@ -63,16 +63,26 @@ None of these four ideas individually reads as a dramatic departure from GShard-
 
 Everything so far has assumed learned routing: a trainable gate scores experts, and gradient descent shapes those scores over time. That's the industry default, but it's a choice, not the only option, and comparing it against the alternatives explains why the field has spent so much engineering effort on load balancing rather than simply picking a routing mechanism that's balanced by construction.
 
-![Three ways to assign tokens to experts](blogs/images/moe-routing-comparison.svg?v=2)
+![Three ways to assign tokens to experts](blogs/images/moe-routing-comparison.svg?v=3)
 ^Same 8 tokens, same 4 experts, three different assignment rules. Only one of the three both balances load and reads the tokens.
+
+Hash routing is the simplest of the three: it doesn't look at the token at all, just its position in the batch, so no two tokens ever fight over the same expert and no expert is ever starved.
 
 $$
 \text{expert}(x) = h(\text{id}) \bmod N
 $$
 
+Here $x$ is the token, and $h(\text{id})$ is a fixed hash of the token's position or identifier, mapped onto one of $N$ experts with no learned parameters at all. That guarantee is also this method's ceiling. Because assignment carries zero information about what the token actually is, the router has nothing to exploit, and the measured gain over a compute-matched dense model tops out around 1.5% at 16 experts and barely improves as the expert count grows, since adding more experts doesn't give a content-blind assignment rule any more signal to work with.
+
+Learned routing is the opposite trade: because the gate is trained on the actual token representation, it can genuinely specialize.
+
 $$
 g_i = \text{router}(x)\cdot e_i, \qquad \text{selected} = \operatorname{top\text{-}}k(g_1,\dots,g_N)
 $$
+
+Here $e_i$ is expert $i$'s learned key vector, so $g_i$ is the router's trained affinity score for expert $i$ (the specific function computing $g_i$ from softmax, sigmoid, or a variant is covered in section 5), and top-$k$ selects the $k$ highest-scoring experts. This specialization is real (roughly 4% improvement at 16 experts, well over double hash routing's), but nothing in the training objective on its own prevents the router from routing every token to the same handful of experts. That failure mode, routing collapse, tends to hit hardest in a network's first and last few layers, which is exactly the gap a shared expert (section 7) or an explicit balancing loss (section 6) is built to cover.
+
+Sinkhorn routing tries to get both properties at once, by alternately normalizing the token-by-expert affinity matrix across its rows and its columns before top-k selection happens.
 
 $$
 A \leftarrow \text{row\_normalize}(A), \qquad A \leftarrow \text{col\_normalize}(A)
@@ -82,13 +92,7 @@ $$
 \text{selected} = \operatorname{top\text{-}}k(A_i)
 $$
 
-Across all three, $x$ is the token's representation, $e_i$ is expert $i$'s learned key vector, and $N$ is the size of the expert pool. For hash routing, $h(\text{id})$ is a fixed hash of the token's position or identifier, with no learned parameters at all. For learned routing, $g_i$ is the router's trained affinity score for expert $i$, and top-$k$ selects the $k$ highest-scoring experts (the specific function computing $g_i$ from softmax, sigmoid, or a variant is covered in section 5). For Sinkhorn routing, $A$ is the affinity matrix for an entire batch, tokens by experts; the row and column normalization steps repeat for a handful of rounds before top-$k$ selection is applied to the normalized matrix $A_i$, though the combine weight afterward still uses the original, un-normalized $g_i$ rather than $A_i$, for reasons covered below.
-
-Hash routing is the simplest of the three: it doesn't look at the token at all, just its position in the batch, so no two tokens ever fight over the same expert and no expert is ever starved. That guarantee is also its ceiling. Because assignment carries zero information about what the token actually is, the router has nothing to exploit, and the measured gain over a compute-matched dense model tops out around 1.5% at 16 experts and barely improves as the expert count grows, since adding more experts doesn't give a content-blind assignment rule any more signal to work with.
-
-Learned routing is the opposite trade: because the gate is trained on the actual token representation, it can genuinely specialize (roughly 4% improvement at 16 experts, well over double hash routing's), but nothing in its training objective on its own prevents it from routing every token to the same handful of experts. That failure mode, routing collapse, tends to hit hardest in a network's first and last few layers, which is exactly the gap a shared expert (section 7) or an explicit balancing loss (section 6) is built to cover.
-
-Sinkhorn routing tries to get both properties at once. Before top-k selection happens, the token-by-expert affinity matrix for an entire batch gets alternately normalized across its rows and its columns: row-normalize so each token's scores sum to one, column-normalize so each expert's incoming load sums to one, and repeat a handful of times. This converges toward a matrix that's simultaneously well-calibrated per token and evenly loaded per expert, achieving hash-level balance across every layer rather than only on average. The catch is that this near-perfect balance constrains how specialized any one expert can become relative to plain learned routing, and there's a specific implementation trap: because the Sinkhorn normalization is a fixed procedure with no gradient of its own, using its output directly as the combination weight silently detaches the router from the training signal entirely. The fix used in practice is to use the Sinkhorn-normalized matrix only to decide which experts get selected, while still computing the actual combination weights from the original, un-normalized logits, so the router keeps learning even though selection is balanced by a separate, non-differentiable process.
+Here $A$ is the affinity matrix for an entire batch, tokens by experts. Row-normalizing makes each token's scores sum to one, column-normalizing makes each expert's incoming load sum to one, and the two steps repeat for a handful of rounds; top-$k$ selection then applies to the normalized matrix $A_i$. This converges toward a matrix that's simultaneously well-calibrated per token and evenly loaded per expert, achieving hash-level balance across every layer rather than only on average. The catch is that this near-perfect balance constrains how specialized any one expert can become relative to plain learned routing, and there's a specific implementation trap: because the Sinkhorn normalization is a fixed procedure with no gradient of its own, using its output directly as the combination weight silently detaches the router from the training signal entirely. The fix used in practice is to use the Sinkhorn-normalized matrix only to decide which experts get selected, while still computing the actual combination weight from the original, un-normalized $g_i$ rather than $A_i$, so the router keeps learning even though selection is balanced by a separate, non-differentiable process.
 
 Learned routing's collapse risk is also where a much smaller, more obscure implementation detail turns out to matter more than it should. With top-1 routing specifically, the standard way of normalizing gate weights (dividing a token's gate value by the sum of gate values across its selected experts) collapses to dividing a number by itself, which always equals one. That silently zeroes out the gradient the router receives from the language-modeling loss, leaving only the load-balancing loss's gradient reaching the router at all: the router can learn to balance load perfectly while learning nothing about which expert actually suits which token. One documented fix is adding a "null expert": a phantom option that never actually computes anything, costs zero extra parameters and zero extra compute, but gives the router something real to contrast its top-1 choice against, restoring a working gradient signal from the main loss. It's a one-line fix for a bug that a router's usage statistics alone will never reveal, since perfectly balanced expert utilization looks identical whether or not the router is actually learning anything.
 
@@ -110,9 +114,6 @@ $$
 
 In every case, $x$ is the token's hidden representation and $e_i$ is expert $i$'s learned key vector, so $x\cdot e_i$ is their dot-product similarity, the raw logit. Softmax normalizes these logits across the whole pool of $N$ experts at once, so all $N$ scores are forced to sum to one: raising expert $i$'s logit necessarily lowers every other $g_j$. Sigmoid and Sqrt(Softplus) instead apply an independent function to each logit on its own, with no normalization across experts, so one expert's score moving has no effect on any other expert's score.
 
-![Competing for a budget vs. scoring independently](blogs/images/moe-gating-comparison.svg?v=2)
-^Same 5 experts, same starting logits, only expert 3's logit goes up. Under softmax, everyone else's score has to shrink to compensate; under sigmoid, nothing else moves at all.
-
 Early MoE work (Shazeer, GShard, Switch Transformer, Mixtral) used softmax across all candidate experts, forcing every expert to compete for a shared probability budget: raising one expert's score necessarily lowers everyone else's, whether or not that's actually the right call for those other experts. DeepSeek-V3 switched to sigmoid, scoring each expert against a fixed threshold rather than against the rest of the pool. That distinction is largely cosmetic at single-digit expert counts, but it matters more as expert counts climb into the hundreds: with 256 or 896 experts, a single softmax adjustment gets divided across the entire pool, while sigmoid's independence stays constant no matter how large N gets.
 
 That sigmoid choice has mostly held. [GLM-5.2](https://www.zhipuai.cn/zh/research/161) keeps it unchanged, and [DeepSeek-V4](https://arxiv.org/pdf/2606.19348) keeps the same independent-scoring philosophy while swapping the specific function to Sqrt(Softplus), described as only a minor adjustment from V3's sigmoid rather than a change in kind. [MAI-Thinking-1](https://microsoft.ai/pdf/mai-thinking-1.pdf) is the one clear departure, reverting to ordinary softmax computed on the token's original uncompressed representation, even though the actual expert computation happens in a compressed latent space (section 8). Notably, MAI-Thinking-1 is also the one architecture here that doesn't run MoE at every layer, interleaving dense feed-forward blocks with sparse MoE ones, which raises the possibility that the gating-function choice is somewhat coupled to how densely MoE is applied through the network rather than a universal improvement. [Kimi K3](https://www.kimi.com/blog/kimi-k3)'s gating function isn't disclosed in its release material. Qwen's lineage, notably, never left softmax at all through any of its generations, a reminder that sigmoid's advantages are real but not universal.
@@ -120,9 +121,6 @@ That sigmoid choice has mostly held. [GLM-5.2](https://www.zhipuai.cn/zh/researc
 ## 6. Load balancing: from auxiliary losses to bias terms to quantiles
 
 Nothing in a router's training objective naturally prevents it from routing every token to the same handful of experts and ignoring the rest, a failure mode usually called routing collapse. How to prevent it without hurting quality is the part of MoE design that has visibly been reinvented the most in the last two years.
-
-![DeepSeek-V3's bias-based balancing loop](blogs/images/moe-balancing-loop.svg?v=3)
-^No competing loss term. The router's own bias adjusts itself, one training step at a time, based on last step's measured load.
 
 $$
 L_{\text{aux}} = \alpha \cdot N \cdot \sum_{i=1}^N f_i \, P_i
@@ -152,15 +150,9 @@ $$
 
 Here $N$ is the number of experts in the coarse-grained baseline and $m$ is the segmentation factor DeepSeekMoE introduces. Each original expert's feed-forward block is split into $m$ equal-sized pieces, so the fine-grained pool has $N\cdot m$ experts instead of $N$, and top-$K$ becomes top-$(K\cdot m)$ to keep the same fraction of the pool active. The active compute per token is identical either way, since the same total width is doing the work, but the router now chooses from a far larger combinatorial space: with $N=8$ and $K=2$ there are only a handful of possible pairings, while $N\cdot m=64$ and $K\cdot m=16$ opens up millions.
 
-![Same total capacity, sliced differently](blogs/images/moe-granularity-comparison.svg?v=2)
-^8 experts, top-2 gives 4 possible pairs. Split the same total width into 64 pieces at top-16, and the number of ways to fill that budget explodes into the millions: same compute, far more ways to specialize.
-
 DeepSeekMoE's fine-grained-experts idea is no longer under active debate the way the shared-expert half of its recipe is: it's the substrate nearly everything in this post starts from. Kimi K3 pushes this further than anyone else in this comparison, with 896 experts and top-16 selected.
 
 Whether a shared expert belongs alongside those fine-grained experts is a genuinely open question, not a settled default. Alibaba's Qwen team has run the longest, most public experiment on exactly this question, reversing its own answer twice.
-
-![Qwen's shared-expert reversal](blogs/images/moe-qwen-lineage.svg?v=1)
-^Same lineage, opposite conclusion, then a partial walk-back: Qwen kept adding shared experts for a year, then removed them entirely, then a newer model reportedly brought one back.
 
 Qwen1.5-MoE (March 2024) and Qwen2-MoE (mid-2024) both combined fine-grained routed experts with several always-on shared experts: first 4 shared plus 60 routed at top-4, then 8 shared plus 64 routed at top-8. Qwen2's own technical report states plainly that shared experts "facilitate the application of...experts across various tasks while reserving others for selective use in specific routing scenarios," citing the same router-collapse concern that motivated DeepSeekMoE and DeepSeek-V3's shared expert. Qwen3 (May 2025) then reversed course entirely: its technical report states directly that "unlike Qwen2.5-MoE, the Qwen3-MoE design excludes shared experts," relying instead on the global-batch load balancing loss covered in section 6 as its insurance against router collapse. Secondary reporting on Qwen3-Next (September 2025), not yet confirmed in a primary technical report, describes a shared expert reappearing alongside 10 routed-of-512 experts, which if accurate would make Qwen's own history a complete round trip inside about eighteen months: shared experts in, then out, then reportedly back in again.
 
@@ -177,9 +169,6 @@ $$
 $$
 
 Here $x$ is the token's full-dimension representation, with dimension $d$, and $z$ is its projection into a smaller latent space of dimension $\ell < d$ via a learned down-projection matrix $W_{\text{down}}$. The expert computation happens entirely in this compressed space, and a learned up-projection $W_{\text{up}}$ expands the result back to dimension $d$ before it's combined with the rest of the layer's output. Because both the per-expert compute and the all-to-all communication payload scale with $\ell$ rather than $d$, the cost of running $N$ experts at top-$K$ scales as shown above instead of the usual $Nd, Kd$. The gap between $d$ and $\ell$ is exactly the budget that a larger expert pool or a larger top-K can be paid for with, at no extra total cost.
-
-![LatentMoE: compress, compute, expand](blogs/images/moe-latentmoe-flow.svg?v=2)
-^Standard MoE pays the full token dimension d for every expert and every all-to-all hop. LatentMoE pays a compressed dimension l instead, and reinvests the difference into a bigger pool.
 
 Every idea covered so far leaves the expert computation itself alone and only changes routing or balancing around it. LatentMoE, first proposed by NVIDIA in early 2026 and already shipping in NVIDIA's own Nemotron-3 Super and Ultra models, changes the computation directly.
 

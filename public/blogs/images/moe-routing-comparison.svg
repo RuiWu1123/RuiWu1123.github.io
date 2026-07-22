@@ -1,131 +1,131 @@
-<svg viewBox="0 0 1000 1150" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
-  <rect x="0" y="0" width="1000" height="1150" fill="#F4F3EF"/>
-  <text x="500" y="36" text-anchor="middle" font-size="24" font-weight="600" fill="#191919">Three Ways to Assign Tokens to Experts</text>
-  <text x="500" y="60" text-anchor="middle" font-size="14" fill="#6B6B6B">same 8 tokens, same 4 experts, a different rule for who goes where (orange = code tokens, gray = text tokens)</text>
+<svg viewBox="0 0 760 1260" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="760" height="1260" fill="#F4F3EF"/>
+  <text x="380" y="36" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">Three Ways to Assign Tokens to Experts</text>
+  <text x="380" y="60" text-anchor="middle" font-size="13" fill="#6B6B6B">same 8 tokens, same 4 experts (orange = code tokens, gray = text tokens)</text>
 
   <!-- ================= Panel 1: Hash (top=80) ================= -->
   <g>
-    <rect x="20" y="80" width="960" height="330" rx="14" fill="#FFFFFF" stroke="#191919" stroke-opacity="0.12" stroke-width="1.2"/>
-    <text x="500" y="114" text-anchor="middle" font-size="18" font-weight="600" fill="#191919">Hash routing</text>
-    <text x="500" y="135" text-anchor="middle" font-size="13" fill="#6B6B6B">hash(token id) mod N — fixed, ignores content</text>
+    <rect x="20" y="80" width="720" height="360" rx="14" fill="#FFFFFF" stroke="#191919" stroke-opacity="0.12" stroke-width="1.2"/>
+    <text x="380" y="114" text-anchor="middle" font-size="17" font-weight="600" fill="#191919">Hash routing</text>
+    <text x="380" y="135" text-anchor="middle" font-size="12.5" fill="#6B6B6B">hash(token id) mod N, fixed, ignores content</text>
 
     <!-- tokens -->
-    <circle cx="60" cy="190" r="11" fill="#D97757"/>
-    <circle cx="186" cy="190" r="11" fill="#6B6B6B"/>
-    <circle cx="311" cy="190" r="11" fill="#D97757"/>
-    <circle cx="437" cy="190" r="11" fill="#6B6B6B"/>
-    <circle cx="563" cy="190" r="11" fill="#D97757"/>
-    <circle cx="689" cy="190" r="11" fill="#6B6B6B"/>
-    <circle cx="814" cy="190" r="11" fill="#D97757"/>
-    <circle cx="940" cy="190" r="11" fill="#6B6B6B"/>
+    <circle cx="60" cy="200" r="11" fill="#D97757"/>
+    <circle cx="151" cy="200" r="11" fill="#6B6B6B"/>
+    <circle cx="243" cy="200" r="11" fill="#D97757"/>
+    <circle cx="334" cy="200" r="11" fill="#6B6B6B"/>
+    <circle cx="426" cy="200" r="11" fill="#D97757"/>
+    <circle cx="517" cy="200" r="11" fill="#6B6B6B"/>
+    <circle cx="609" cy="200" r="11" fill="#D97757"/>
+    <circle cx="700" cy="200" r="11" fill="#6B6B6B"/>
 
     <!-- experts -->
-    <rect x="58" y="256" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
-    <rect x="309" y="256" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
-    <rect x="561" y="256" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
-    <rect x="812" y="256" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
-    <text x="123" y="294" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E1</text>
-    <text x="374" y="294" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E2</text>
-    <text x="626" y="294" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E3</text>
-    <text x="877" y="294" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E4</text>
+    <rect x="60" y="280" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <rect x="230" y="280" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <rect x="400" y="280" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <rect x="570" y="280" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <text x="125" y="318" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E1</text>
+    <text x="295" y="318" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E2</text>
+    <text x="465" y="318" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E3</text>
+    <text x="635" y="318" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E4</text>
 
     <!-- fixed round-robin connections -->
     <g stroke="#191919" stroke-opacity="0.35" stroke-width="1.4">
-      <line x1="60" y1="201" x2="123" y2="256"/>
-      <line x1="186" y1="201" x2="374" y2="256"/>
-      <line x1="311" y1="201" x2="626" y2="256"/>
-      <line x1="437" y1="201" x2="877" y2="256"/>
-      <line x1="563" y1="201" x2="123" y2="256"/>
-      <line x1="689" y1="201" x2="374" y2="256"/>
-      <line x1="814" y1="201" x2="626" y2="256"/>
-      <line x1="940" y1="201" x2="877" y2="256"/>
+      <line x1="60" y1="211" x2="125" y2="280"/>
+      <line x1="151" y1="211" x2="295" y2="280"/>
+      <line x1="243" y1="211" x2="465" y2="280"/>
+      <line x1="334" y1="211" x2="635" y2="280"/>
+      <line x1="426" y1="211" x2="125" y2="280"/>
+      <line x1="517" y1="211" x2="295" y2="280"/>
+      <line x1="609" y1="211" x2="465" y2="280"/>
+      <line x1="700" y1="211" x2="635" y2="280"/>
     </g>
 
-    <text x="500" y="356" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">2 tokens per expert, always</text>
-    <text x="500" y="378" text-anchor="middle" font-size="13" fill="#6B6B6B">perfect balance, zero content awareness</text>
+    <text x="380" y="380" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">2 tokens per expert, always</text>
+    <text x="380" y="402" text-anchor="middle" font-size="13" fill="#6B6B6B">perfect balance, zero content awareness</text>
   </g>
 
-  <!-- ================= Panel 2: Learned (top=430) ================= -->
+  <!-- ================= Panel 2: Learned (top=470) ================= -->
   <g>
-    <rect x="20" y="430" width="960" height="330" rx="14" fill="#FFFFFF" stroke="#191919" stroke-opacity="0.12" stroke-width="1.2"/>
-    <text x="500" y="464" text-anchor="middle" font-size="18" font-weight="600" fill="#191919">Learned routing</text>
-    <text x="500" y="485" text-anchor="middle" font-size="13" fill="#6B6B6B">a gradient-trained gate scores each expert</text>
+    <rect x="20" y="470" width="720" height="360" rx="14" fill="#FFFFFF" stroke="#191919" stroke-opacity="0.12" stroke-width="1.2"/>
+    <text x="380" y="504" text-anchor="middle" font-size="17" font-weight="600" fill="#191919">Learned routing</text>
+    <text x="380" y="525" text-anchor="middle" font-size="12.5" fill="#6B6B6B">a gradient-trained gate scores each expert</text>
 
-    <circle cx="60" cy="540" r="11" fill="#D97757"/>
-    <circle cx="186" cy="540" r="11" fill="#D97757"/>
-    <circle cx="311" cy="540" r="11" fill="#D97757"/>
-    <circle cx="437" cy="540" r="11" fill="#D97757"/>
-    <circle cx="563" cy="540" r="11" fill="#D97757"/>
-    <circle cx="689" cy="540" r="11" fill="#6B6B6B"/>
-    <circle cx="814" cy="540" r="11" fill="#6B6B6B"/>
-    <circle cx="940" cy="540" r="11" fill="#6B6B6B"/>
+    <circle cx="60" cy="590" r="11" fill="#D97757"/>
+    <circle cx="151" cy="590" r="11" fill="#D97757"/>
+    <circle cx="243" cy="590" r="11" fill="#D97757"/>
+    <circle cx="334" cy="590" r="11" fill="#D97757"/>
+    <circle cx="426" cy="590" r="11" fill="#D97757"/>
+    <circle cx="517" cy="590" r="11" fill="#6B6B6B"/>
+    <circle cx="609" cy="590" r="11" fill="#6B6B6B"/>
+    <circle cx="700" cy="590" r="11" fill="#6B6B6B"/>
 
-    <rect x="58" y="606" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
-    <rect x="309" y="606" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
-    <rect x="561" y="606" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
-    <rect x="812" y="606" width="130" height="64" rx="8" fill="none" stroke="#191919" stroke-width="1.2" stroke-dasharray="4 4"/>
-    <text x="123" y="644" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E1</text>
-    <text x="374" y="644" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E2</text>
-    <text x="626" y="644" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E3</text>
-    <text x="877" y="644" text-anchor="middle" font-size="16" font-weight="600" fill="#6B6B6B">E4</text>
+    <rect x="60" y="670" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <rect x="230" y="670" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <rect x="400" y="670" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <rect x="570" y="670" width="130" height="64" rx="8" fill="none" stroke="#191919" stroke-width="1.2" stroke-dasharray="4 4"/>
+    <text x="125" y="708" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E1</text>
+    <text x="295" y="708" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E2</text>
+    <text x="465" y="708" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E3</text>
+    <text x="635" y="708" text-anchor="middle" font-size="16" font-weight="600" fill="#6B6B6B">E4</text>
 
-    <!-- content-driven, clustered, uneven — E4 idle -->
+    <!-- content-driven, clustered, uneven: E4 idle -->
     <g stroke="#D97757" stroke-opacity="0.55" stroke-width="1.4">
-      <line x1="60" y1="551" x2="123" y2="606"/>
-      <line x1="186" y1="551" x2="123" y2="606"/>
-      <line x1="311" y1="551" x2="374" y2="606"/>
-      <line x1="437" y1="551" x2="374" y2="606"/>
-      <line x1="563" y1="551" x2="374" y2="606"/>
+      <line x1="60" y1="601" x2="125" y2="670"/>
+      <line x1="151" y1="601" x2="125" y2="670"/>
+      <line x1="243" y1="601" x2="295" y2="670"/>
+      <line x1="334" y1="601" x2="295" y2="670"/>
+      <line x1="426" y1="601" x2="295" y2="670"/>
     </g>
     <g stroke="#6B6B6B" stroke-opacity="0.55" stroke-width="1.4">
-      <line x1="689" y1="551" x2="626" y2="606"/>
-      <line x1="814" y1="551" x2="626" y2="606"/>
-      <line x1="940" y1="551" x2="626" y2="606"/>
+      <line x1="517" y1="601" x2="465" y2="670"/>
+      <line x1="609" y1="601" x2="465" y2="670"/>
+      <line x1="700" y1="601" x2="465" y2="670"/>
     </g>
 
-    <text x="500" y="706" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">0, 2, 6, 0 tokens per expert</text>
-    <text x="500" y="728" text-anchor="middle" font-size="13" fill="#6B6B6B">content-aware, but can collapse — E4 starves</text>
+    <text x="380" y="770" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">0, 2, 6, 0 tokens per expert</text>
+    <text x="380" y="792" text-anchor="middle" font-size="13" fill="#6B6B6B">content-aware, but can collapse: E4 starves</text>
   </g>
 
-  <!-- ================= Panel 3: Sinkhorn (top=780) ================= -->
+  <!-- ================= Panel 3: Sinkhorn (top=860) ================= -->
   <g>
-    <rect x="20" y="780" width="960" height="330" rx="14" fill="#FFFFFF" stroke="#191919" stroke-opacity="0.12" stroke-width="1.2"/>
-    <text x="500" y="814" text-anchor="middle" font-size="18" font-weight="600" fill="#191919">Sinkhorn routing</text>
-    <text x="500" y="835" text-anchor="middle" font-size="13" fill="#6B6B6B">iterative bi-normalization before top-k</text>
+    <rect x="20" y="860" width="720" height="360" rx="14" fill="#FFFFFF" stroke="#191919" stroke-opacity="0.12" stroke-width="1.2"/>
+    <text x="380" y="894" text-anchor="middle" font-size="17" font-weight="600" fill="#191919">Sinkhorn routing</text>
+    <text x="380" y="915" text-anchor="middle" font-size="12.5" fill="#6B6B6B">iterative bi-normalization before top-k</text>
 
-    <circle cx="60" cy="890" r="11" fill="#D97757"/>
-    <circle cx="186" cy="890" r="11" fill="#D97757"/>
-    <circle cx="311" cy="890" r="11" fill="#D97757"/>
-    <circle cx="437" cy="890" r="11" fill="#D97757"/>
-    <circle cx="563" cy="890" r="11" fill="#D97757"/>
-    <circle cx="689" cy="890" r="11" fill="#6B6B6B"/>
-    <circle cx="814" cy="890" r="11" fill="#6B6B6B"/>
-    <circle cx="940" cy="890" r="11" fill="#6B6B6B"/>
+    <circle cx="60" cy="980" r="11" fill="#D97757"/>
+    <circle cx="151" cy="980" r="11" fill="#D97757"/>
+    <circle cx="243" cy="980" r="11" fill="#D97757"/>
+    <circle cx="334" cy="980" r="11" fill="#D97757"/>
+    <circle cx="426" cy="980" r="11" fill="#D97757"/>
+    <circle cx="517" cy="980" r="11" fill="#6B6B6B"/>
+    <circle cx="609" cy="980" r="11" fill="#6B6B6B"/>
+    <circle cx="700" cy="980" r="11" fill="#6B6B6B"/>
 
-    <rect x="58" y="956" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
-    <rect x="309" y="956" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
-    <rect x="561" y="956" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
-    <rect x="812" y="956" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
-    <text x="123" y="994" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E1</text>
-    <text x="374" y="994" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E2</text>
-    <text x="626" y="994" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E3</text>
-    <text x="877" y="994" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E4</text>
+    <rect x="60" y="1060" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <rect x="230" y="1060" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <rect x="400" y="1060" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <rect x="570" y="1060" width="130" height="64" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <text x="125" y="1098" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E1</text>
+    <text x="295" y="1098" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E2</text>
+    <text x="465" y="1098" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E3</text>
+    <text x="635" y="1098" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">E4</text>
 
     <!-- forced-even but still content-correlated -->
     <g stroke="#D97757" stroke-opacity="0.55" stroke-width="1.4">
-      <line x1="60" y1="901" x2="123" y2="956"/>
-      <line x1="186" y1="901" x2="123" y2="956"/>
-      <line x1="311" y1="901" x2="374" y2="956"/>
-      <line x1="437" y1="901" x2="626" y2="956"/>
-      <line x1="563" y1="901" x2="877" y2="956"/>
+      <line x1="60" y1="991" x2="125" y2="1060"/>
+      <line x1="151" y1="991" x2="125" y2="1060"/>
+      <line x1="243" y1="991" x2="295" y2="1060"/>
+      <line x1="334" y1="991" x2="465" y2="1060"/>
+      <line x1="426" y1="991" x2="635" y2="1060"/>
     </g>
     <g stroke="#6B6B6B" stroke-opacity="0.55" stroke-width="1.4">
-      <line x1="689" y1="901" x2="374" y2="956"/>
-      <line x1="814" y1="901" x2="626" y2="956"/>
-      <line x1="940" y1="901" x2="877" y2="956"/>
+      <line x1="517" y1="991" x2="295" y2="1060"/>
+      <line x1="609" y1="991" x2="465" y2="1060"/>
+      <line x1="700" y1="991" x2="635" y2="1060"/>
     </g>
 
-    <text x="500" y="1056" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">2 tokens per expert, always</text>
-    <text x="500" y="1078" text-anchor="middle" font-size="13" fill="#6B6B6B">balanced like hash, but content still nudges assignment</text>
+    <text x="380" y="1160" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">2 tokens per expert, always</text>
+    <text x="380" y="1182" text-anchor="middle" font-size="13" fill="#6B6B6B">balanced like hash, but content still nudges assignment</text>
   </g>
 </svg>

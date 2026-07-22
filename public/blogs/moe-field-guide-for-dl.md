@@ -43,14 +43,13 @@ If DeepSeekMoE (2024) is the fork point, DeepSeek-V3 (late 2024) is the release 
 
 The headline change was **auxiliary-loss-free load balancing**: instead of adding a separate loss term that competes with the language-modeling objective for gradient signal, DeepSeek-V3 gives each expert a learned bias term that gets added only to the routing decision (which experts get selected), not to the weight used to combine their outputs. After each training step, the bias for an overloaded expert nudges down and an underloaded expert's bias nudges up, by a small fixed step size:
 
-```
-routing_score_i  = g_i + b_i      (used only to pick the top-K experts)
-combine_weight_i = g_i            (the bias never touches the output)
+$$
+\text{score}_i = g_i + b_i \quad\text{(top-}K\text{ selection)} \qquad \text{weight}_i = g_i \quad\text{(output combination — bias excluded)}
+$$
 
-after each step:
-  expert i overloaded  → b_i -= γ
-  expert i underloaded → b_i += γ
-```
+$$
+b_i \leftarrow b_i - \gamma \ \ \text{(expert } i \text{ overloaded)} \qquad b_i \leftarrow b_i + \gamma \ \ \text{(expert } i \text{ underloaded)}
+$$
 
 Balancing happens entirely through this bias adjustment, with no competing loss coefficient to tune. Layered on top, at a very small weight, is a complementary sequence-wise balance loss — a traditional GShard-style term, kept around specifically to catch imbalance within a single sequence that a bias term (updated at a coarser, batch-level granularity) can miss on its own. The bias mechanism is the primary balancing signal; the sequence-wise loss is closer to a backstop. (Section 6 below places this alongside the other balancing mechanisms the rest of the field has tried.)
 
@@ -65,18 +64,21 @@ Everything so far has assumed learned routing — a trainable gate scores expert
 ![Three ways to assign tokens to experts](blogs/images/moe-routing-comparison.svg?v=1)
 ^Same 8 tokens, same 4 experts, three different assignment rules — only one of the three both balances load and reads the tokens.
 
-```
-Hash:      expert(token) = hash(token_id) mod N
-           — fixed, deterministic, no learnable parameters at all
+$$
+\textbf{Hash:}\quad \text{expert}(x) = h(\text{token\_id}) \bmod N \qquad \text{— fixed, deterministic, no learnable parameters}
+$$
 
-Learned:   g_i = router(x) · e_i          (softmax or sigmoid — see section 5)
-           selected = top_k(g_1, ..., g_N)
-           — g comes from a trained network, reshaped by gradient descent
+$$
+\textbf{Learned:}\quad g_i = \text{router}(x)\cdot e_i \quad\text{(softmax or sigmoid — section 5)}, \qquad \text{selected} = \operatorname{top\text{-}}k(g_1,\dots,g_N)
+$$
 
-Sinkhorn:  A ← row_normalize(A);  A ← column_normalize(A)   (repeat a few rounds)
-           selected = top_k(A_i)   but the combine weight still uses the original g_i
-           — A is the affinity matrix (tokens × experts) for the whole batch
-```
+$$
+\textbf{Sinkhorn:}\quad A \leftarrow \text{row\_normalize}(A), \quad A \leftarrow \text{col\_normalize}(A) \quad \text{(repeat a few rounds)}
+$$
+
+$$
+\text{selected} = \operatorname{top\text{-}}k(A_i) \qquad \text{but the combine weight still uses the original } g_i
+$$
 
 Hash routing is the simplest of the three: it doesn't look at the token at all, just its position in the batch, so no two tokens ever fight over the same expert and no expert is ever starved. That guarantee is also its ceiling — because assignment carries zero information about what the token actually is, the router has nothing to exploit, and the measured gain over a compute-matched dense model tops out around 1.5% at 16 experts and barely improves as the expert count grows, since adding more experts doesn't give a content-blind assignment rule any more signal to work with.
 
@@ -90,11 +92,17 @@ Learned routing's collapse risk is also where a much smaller, more obscure imple
 
 The router's core job is turning a token's representation into a score per expert, and which function does that scoring has quietly become one of the more consequential design choices in the whole architecture.
 
-```
-Softmax:        g_i = exp(x · e_i) / Σ_j exp(x · e_j)     — every expert shares one probability budget
-Sigmoid:        g_i = 1 / (1 + exp(-x · e_i))              — every expert scored on its own, independently
-Sqrt(Softplus): g_i = sqrt( log(1 + exp(x · e_i)) )        — same independent family as sigmoid, DeepSeek-V4
-```
+$$
+\textbf{Softmax:}\quad g_i = \frac{\exp(x\cdot e_i)}{\sum_j \exp(x\cdot e_j)} \qquad \text{— every expert shares one probability budget}
+$$
+
+$$
+\textbf{Sigmoid:}\quad g_i = \frac{1}{1+\exp(-x\cdot e_i)} \qquad \text{— every expert scored on its own, independently}
+$$
+
+$$
+\textbf{Sqrt(Softplus):}\quad g_i = \sqrt{\log(1+\exp(x\cdot e_i))} \qquad \text{— same independent family as sigmoid, DeepSeek-V4}
+$$
 
 ![Competing for a budget vs. scoring independently](blogs/images/moe-gating-comparison.svg?v=1)
 ^Same 5 experts, same starting logits — only expert 3's logit goes up. Under softmax, everyone else's score has to shrink to compensate; under sigmoid, nothing else moves at all.
@@ -110,31 +118,35 @@ Nothing in a router's training objective naturally prevents it from routing ever
 ![DeepSeek-V3's bias-based balancing loop](blogs/images/moe-balancing-loop.svg?v=1)
 ^No competing loss term — the router's own bias adjusts itself, one training step at a time, based on last step's measured load.
 
-```
-GShard-style auxiliary loss:   L_aux = α · N · Σ_i f_i · P_i
-                                f_i = fraction of tokens actually sent to expert i (a hard count)
-                                P_i = average routing probability assigned to expert i (soft, differentiable)
+$$
+\text{GShard-style auxiliary loss:}\quad L_{\text{aux}} = \alpha \cdot N \cdot \sum_{i=1}^N f_i \, P_i
+$$
 
-Switch / ST-MoE router z-loss: L_z = (1/B) · Σ_tokens ( log Σ_i exp(logit_i) )^2
-                                — penalizes large logits directly, keeping the softmax numerically stable
+$$
+\text{Switch / ST-MoE router z-loss:}\quad L_z = \frac{1}{B}\sum_{\text{tokens}} \Big(\log \sum_i \exp(\text{logit}_i)\Big)^{2}
+$$
 
-DeepSeek-V3 bias update:       see section 3 — no extra loss term, an adjustable per-expert bias instead
-```
+$$
+\text{DeepSeek-V3 bias update (section 3):}\quad \text{no extra loss term, an adjustable per-expert bias instead}
+$$
 
-GShard's original solution was that straightforward auxiliary loss added to the training objective: `f_i` alone can't be backpropagated through (it's a hard, non-differentiable count), so multiplying it by the differentiable `P_i` gives a term that pushes down on experts that are both frequently selected and confidently scored. Switch Transformer and ST-MoE layered a second loss, the router z-loss, specifically to stop the raw logits feeding into softmax from drifting to extreme values during training, which otherwise destabilizes the whole layer independent of load balance. DeepSeek-V3 replaced the auxiliary loss entirely with the bias mechanism described in section 3 — balancing load without competing against the language-modeling loss for any gradient at all. DeepSeek-V4 keeps that bias mechanism but layers a small additional sequence-wise balance loss on top, specifically to catch imbalance within a single long sequence that looks fine only when averaged across an entire training batch — relevant given V4's million-token context target.
+GShard's original solution was that straightforward auxiliary loss added to the training objective: $f_i$ alone can't be backpropagated through (it's a hard, non-differentiable count), so multiplying it by the differentiable $P_i$ gives a term that pushes down on experts that are both frequently selected and confidently scored. Switch Transformer and ST-MoE layered a second loss, the router z-loss, specifically to stop the raw logits feeding into softmax from drifting to extreme values during training, which otherwise destabilizes the whole layer independent of load balance. DeepSeek-V3 replaced the auxiliary loss entirely with the bias mechanism described in section 3 — balancing load without competing against the language-modeling loss for any gradient at all. DeepSeek-V4 keeps that bias mechanism but layers a small additional sequence-wise balance loss on top, specifically to catch imbalance within a single long sequence that looks fine only when averaged across an entire training batch — relevant given V4's million-token context target.
 
-MAI-Thinking-1 goes a different direction, using a fairly traditional GShard-style auxiliary loss rather than a bias term — but the paper reports that once `f_i` and `P_i` are aggregated globally across the whole training batch rather than computed per-microbatch, it performs about as well as the bias-based approach. Qwen3 reaches a strikingly similar conclusion independently, about a year earlier: the standard auxiliary loss is normally computed per micro-batch, and if a micro-batch happens to be domain-skewed — all code, say, because of how the data loader happened to batch it — that loss actively punishes the router for doing the sensible thing and sending code tokens to code-specialized experts, forcing artificial uniformity within every micro-batch. Qwen's fix, described in a dedicated write-up and formalized in a companion paper on load-balancing-loss implementation details, synchronizes each expert's selection frequency across all micro-batches before computing the loss, so the balance constraint applies to the corpus as a whole rather than to every individual slice of it — individual micro-batches stay free to be domain-skewed while the aggregate stays balanced. Two labs, a year apart, converging on the same fix: the aggregation granularity of a balancing loss seems to matter more than the specific formula built on top of it.
+MAI-Thinking-1 goes a different direction, using a fairly traditional GShard-style auxiliary loss rather than a bias term — but the paper reports that once $f_i$ and $P_i$ are aggregated globally across the whole training batch rather than computed per-microbatch, it performs about as well as the bias-based approach. Qwen3 reaches a strikingly similar conclusion independently, about a year earlier: the standard auxiliary loss is normally computed per micro-batch, and if a micro-batch happens to be domain-skewed — all code, say, because of how the data loader happened to batch it — that loss actively punishes the router for doing the sensible thing and sending code tokens to code-specialized experts, forcing artificial uniformity within every micro-batch. Qwen's fix, described in a dedicated write-up and formalized in a companion paper on load-balancing-loss implementation details, synchronizes each expert's selection frequency across all micro-batches before computing the loss, so the balance constraint applies to the corpus as a whole rather than to every individual slice of it — individual micro-batches stay free to be domain-skewed while the aggregate stays balanced. Two labs, a year apart, converging on the same fix: the aggregation granularity of a balancing loss seems to matter more than the specific formula built on top of it.
 
 Kimi K3 departs furthest from the DeepSeek-V3 default: rather than a bias term at all, it uses what Moonshot calls Quantile Balancing, deriving expert allocation directly from the quantiles of the router's own score distribution — eliminating both the heuristic bias-update rule and a separate balancing hyperparameter that needed tuning. At Kimi K3's 896-of-16 sparsity, small routing imperfections have more room to compound than they do at DeepSeek-V3's 256-of-8, making one less hyperparameter to get wrong a reasonable thing for a frontier lab to want. Several different balancing mechanisms, shipping within about eighteen months of each other, with no released material making a clean, controlled case that any one dominates the others — largely because each was tuned inside a specific architecture (different granularity, different gating function, different degree of dropless-ness) that makes an apples-to-apples comparison hard to extract from public reports alone.
 
 ## 7. Granularity and the shared-expert question
 
-```
-Coarse-grained:              N experts, each a full-width FFN, top-K active
-Fine-grained (DeepSeekMoE):  split each FFN into m equal segments
-                              → N·m experts, top-(K·m) active — same active compute,
-                                but the router now chooses from a far larger combinatorial space
-```
+$$
+\textbf{Coarse-grained:}\quad N \text{ experts, each a full-width FFN, top-}K\text{ active}
+$$
+
+$$
+\textbf{Fine-grained (DeepSeekMoE):}\quad \text{split each FFN into } m \text{ equal segments} \ \Rightarrow\ N\!\cdot\! m \text{ experts, top-}(K\!\cdot\! m)\text{ active}
+$$
+
+Same active compute either way — but the router now chooses from a far larger combinatorial space.
 
 ![Same total capacity, sliced differently](blogs/images/moe-granularity-comparison.svg?v=1)
 ^8 experts, top-2 gives 4 possible pairs. Split the same total width into 64 pieces at top-16, and the number of ways to fill that budget explodes into the millions — same compute, far more ways to specialize.
@@ -152,13 +164,15 @@ MAI-Thinking-1 arrives at "no shared expert" from a different angle: the team te
 
 ## 8. Compressing the computation itself: LatentMoE
 
-```
-z   = W_down · x            (token x has dim d, latent z has dim l, with l < d)
-y_i = expert_i(z)           (expert compute and the all-to-all exchange both run at dim l)
-out = W_up · y_i             (expand back to dim d before combining)
+$$
+z = W_{\text{down}}\, x \qquad y_i = \text{expert}_i(z) \qquad \text{out} = W_{\text{up}}\, y_i
+$$
 
-cost of N experts, top-K   ∝  N·l, K·l     instead of    N·d, K·d
-```
+where token $x$ has dimension $d$ and the latent $z$ has dimension $\ell < d$, so both the expert compute and the all-to-all exchange run at $\ell$ instead of $d$:
+
+$$
+\text{cost of } N \text{ experts, top-}K \ \propto\ N\ell,\ K\ell \qquad \text{instead of} \qquad Nd,\ Kd
+$$
 
 ![LatentMoE: compress, compute, expand](blogs/images/moe-latentmoe-flow.svg?v=1)
 ^Standard MoE pays the full token dimension d for every expert and every all-to-all hop. LatentMoE pays a compressed dimension l instead, and reinvests the difference into a bigger pool.

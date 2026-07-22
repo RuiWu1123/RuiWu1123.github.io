@@ -1,0 +1,45 @@
+<svg viewBox="0 0 1000 380" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="1000" height="380" fill="#F4F3EF"/>
+  <text x="500" y="34" text-anchor="middle" font-size="20" font-weight="600" fill="#191919">DeepSeek-V3's Bias-Based Balancing Loop</text>
+  <text x="500" y="55" text-anchor="middle" font-size="12.5" fill="#6B6B6B">no extra loss term — the router corrects itself every step</text>
+
+  <!-- 4 boxes in a cycle -->
+  <rect x="70" y="100" width="220" height="80" rx="10" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+  <text x="180" y="132" text-anchor="middle" font-size="12.5" font-weight="600" fill="#191919">Route tokens</text>
+  <text x="180" y="150" text-anchor="middle" font-size="10" fill="#6B6B6B">score = g_i + b_i</text>
+  <text x="180" y="164" text-anchor="middle" font-size="10" fill="#6B6B6B">select top-K by score</text>
+
+  <rect x="390" y="100" width="220" height="80" rx="10" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+  <text x="500" y="132" text-anchor="middle" font-size="12.5" font-weight="600" fill="#191919">Combine outputs</text>
+  <text x="500" y="150" text-anchor="middle" font-size="10" fill="#6B6B6B">weight = g_i (bias excluded)</text>
+  <text x="500" y="164" text-anchor="middle" font-size="10" fill="#6B6B6B">bias never touches the output</text>
+
+  <rect x="710" y="100" width="220" height="80" rx="10" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+  <text x="820" y="132" text-anchor="middle" font-size="12.5" font-weight="600" fill="#191919">Measure load</text>
+  <text x="820" y="150" text-anchor="middle" font-size="10" fill="#6B6B6B">count tokens per expert</text>
+  <text x="820" y="164" text-anchor="middle" font-size="10" fill="#6B6B6B">this step's batch</text>
+
+  <rect x="390" y="260" width="220" height="80" rx="10" fill="#191919"/>
+  <text x="500" y="292" text-anchor="middle" font-size="12.5" font-weight="600" fill="#F4F3EF">Update bias</text>
+  <text x="500" y="310" text-anchor="middle" font-size="10" fill="#E6E4DD">overloaded: b_i −= γ</text>
+  <text x="500" y="324" text-anchor="middle" font-size="10" fill="#E6E4DD">underloaded: b_i += γ</text>
+
+  <!-- arrows: use small triangle polygons instead of markers -->
+  <line x1="290" y1="140" x2="385" y2="140" stroke="#191919" stroke-opacity="0.5" stroke-width="1.4"/>
+  <polygon points="385,140 373,134 373,146" fill="#191919" fill-opacity="0.6"/>
+
+  <line x1="610" y1="140" x2="705" y2="140" stroke="#191919" stroke-opacity="0.5" stroke-width="1.4"/>
+  <polygon points="705,140 693,134 693,146" fill="#191919" fill-opacity="0.6"/>
+
+  <line x1="820" y1="180" x2="820" y2="230" stroke="#191919" stroke-opacity="0.5" stroke-width="1.4"/>
+  <line x1="820" y1="230" x2="610" y2="300" stroke="#191919" stroke-opacity="0.5" stroke-width="1.4"/>
+  <polygon points="610,300 622,297 617,309" fill="#191919" fill-opacity="0.6"/>
+
+  <!-- loop back to routing -->
+  <line x1="390" y1="300" x2="180" y2="300" stroke="#191919" stroke-opacity="0.5" stroke-width="1.4"/>
+  <line x1="180" y1="300" x2="180" y2="184" stroke="#191919" stroke-opacity="0.5" stroke-width="1.4"/>
+  <polygon points="180,184 174,196 186,196" fill="#191919" fill-opacity="0.6"/>
+  <text x="270" y="316" text-anchor="middle" font-size="10" fill="#6B6B6B">next training step</text>
+
+  <text x="500" y="365" text-anchor="middle" font-size="10.5" fill="#6B6B6B">a small extra sequence-wise loss (not shown) catches imbalance within one long sequence</text>
+</svg>

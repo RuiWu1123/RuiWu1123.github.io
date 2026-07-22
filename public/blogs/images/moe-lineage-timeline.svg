@@ -1,107 +1,57 @@
-<svg viewBox="0 0 1200 620" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
-  <rect x="0" y="0" width="1200" height="620" fill="#F4F3EF"/>
-  <text x="600" y="34" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">Nine Years of MoE Design</text>
-  <text x="600" y="56" text-anchor="middle" font-size="13" fill="#6B6B6B">most of 2026's frontier MoE reports trace back to one 2024 fork</text>
+<svg viewBox="0 0 1200 260" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="1200" height="260" fill="#F4F3EF"/>
+  <text x="600" y="34" text-anchor="middle" font-size="20" font-weight="600" fill="#191919">Nine Years of MoE Design</text>
+  <text x="600" y="55" text-anchor="middle" font-size="12.5" fill="#6B6B6B">one continuous line, from a 1991 idea to 2026's frontier reports</text>
 
-  <!-- Row 1: foundations -->
-  <text x="20" y="116" font-size="11" fill="#6B6B6B">foundations</text>
-  <line x1="90" y1="120" x2="900" y2="120" stroke="#191919" stroke-opacity="0.3" stroke-width="1.4"/>
-  <circle cx="90" cy="120" r="6" fill="#6B6B6B"/>
-  <text x="90" y="98" text-anchor="middle" font-size="10.5" fill="#191919">Shazeer et al.</text>
-  <text x="90" y="144" text-anchor="middle" font-size="10" fill="#6B6B6B">2017 · sparse top-k</text>
+  <line x1="70" y1="140" x2="1130" y2="140" stroke="#191919" stroke-opacity="0.3" stroke-width="1.4"/>
 
-  <circle cx="240" cy="120" r="6" fill="#6B6B6B"/>
-  <text x="240" y="98" text-anchor="middle" font-size="10.5" fill="#191919">GShard</text>
-  <text x="240" y="144" text-anchor="middle" font-size="10" fill="#6B6B6B">2020 · expert parallelism</text>
+  <!-- 1991 precursor: muted, dashed -->
+  <circle cx="70" cy="140" r="6" fill="none" stroke="#6B6B6B" stroke-width="1.4" stroke-dasharray="2 2"/>
+  <text x="70" y="112" text-anchor="middle" font-size="10.5" fill="#6B6B6B">Jacobs et al.</text>
+  <text x="70" y="164" text-anchor="middle" font-size="9.5" fill="#6B6B6B">1991</text>
+  <text x="70" y="177" text-anchor="middle" font-size="9.5" fill="#6B6B6B">pre-deep-learning idea</text>
 
-  <circle cx="400" cy="120" r="6" fill="#6B6B6B"/>
-  <text x="400" y="98" text-anchor="middle" font-size="10.5" fill="#191919">Switch / GLaM</text>
-  <text x="400" y="144" text-anchor="middle" font-size="10" fill="#6B6B6B">2021 · trillion-scale routing</text>
+  <circle cx="205" cy="140" r="6" fill="#6B6B6B"/>
+  <text x="205" y="112" text-anchor="middle" font-size="10.5" fill="#191919">Shazeer et al.</text>
+  <text x="205" y="164" text-anchor="middle" font-size="9.5" fill="#6B6B6B">2017</text>
+  <text x="205" y="177" text-anchor="middle" font-size="9.5" fill="#6B6B6B">sparse top-k for deep nets</text>
 
-  <circle cx="570" cy="120" r="6" fill="#6B6B6B"/>
-  <text x="570" y="98" text-anchor="middle" font-size="10.5" fill="#191919">ST-MoE / Expert Choice</text>
-  <text x="570" y="144" text-anchor="middle" font-size="10" fill="#6B6B6B">2022 · stability &amp; routing</text>
+  <circle cx="340" cy="140" r="6" fill="#6B6B6B"/>
+  <text x="340" y="112" text-anchor="middle" font-size="10.5" fill="#191919">GShard</text>
+  <text x="340" y="164" text-anchor="middle" font-size="9.5" fill="#6B6B6B">2020</text>
+  <text x="340" y="177" text-anchor="middle" font-size="9.5" fill="#6B6B6B">expert parallelism</text>
 
-  <circle cx="730" cy="120" r="6" fill="#6B6B6B"/>
-  <text x="730" y="98" text-anchor="middle" font-size="10.5" fill="#191919">Mixtral</text>
-  <text x="730" y="144" text-anchor="middle" font-size="10" fill="#6B6B6B">2024 · open-source MoE</text>
+  <circle cx="475" cy="140" r="6" fill="#6B6B6B"/>
+  <text x="475" y="112" text-anchor="middle" font-size="10.5" fill="#191919">Switch / GLaM</text>
+  <text x="475" y="164" text-anchor="middle" font-size="9.5" fill="#6B6B6B">2021</text>
+  <text x="475" y="177" text-anchor="middle" font-size="9.5" fill="#6B6B6B">trillion-scale routing</text>
 
-  <circle cx="900" cy="120" r="9" fill="#D97757" stroke="#191919" stroke-width="1.2"/>
-  <text x="900" y="94" text-anchor="middle" font-size="11.5" font-weight="600" fill="#191919">DeepSeekMoE</text>
-  <text x="900" y="150" text-anchor="middle" font-size="10" fill="#191919" font-weight="600">2024 · fine-grained experts</text>
-  <text x="900" y="163" text-anchor="middle" font-size="10" fill="#191919" font-weight="600">+ isolated shared expert</text>
+  <circle cx="610" cy="140" r="6" fill="#6B6B6B"/>
+  <text x="610" y="112" text-anchor="middle" font-size="10.5" fill="#191919">ST-MoE / Expert Choice</text>
+  <text x="610" y="164" text-anchor="middle" font-size="9.5" fill="#6B6B6B">2022</text>
+  <text x="610" y="177" text-anchor="middle" font-size="9.5" fill="#6B6B6B">stability &amp; routing</text>
 
-  <!-- stems from DeepSeekMoE down -->
-  <line x1="900" y1="120" x2="900" y2="200" stroke="#191919" stroke-opacity="0.4" stroke-width="1.4"/>
-  <line x1="865" y1="120" x2="865" y2="255" stroke="#191919" stroke-opacity="0.3" stroke-width="1.2" stroke-dasharray="3 3"/>
+  <circle cx="745" cy="140" r="6" fill="#6B6B6B"/>
+  <text x="745" y="112" text-anchor="middle" font-size="10.5" fill="#191919">Mixtral</text>
+  <text x="745" y="164" text-anchor="middle" font-size="9.5" fill="#6B6B6B">2024</text>
+  <text x="745" y="177" text-anchor="middle" font-size="9.5" fill="#6B6B6B">open-source MoE</text>
 
-  <!-- Row 2: 2024-late / 2026 direct descendants -->
-  <text x="20" y="296" font-size="11" fill="#6B6B6B">2024–2026</text>
-  <line x1="900" y1="200" x2="820" y2="200" stroke="#191919" stroke-opacity="0.4" stroke-width="1.4"/>
-  <line x1="900" y1="200" x2="1000" y2="200" stroke="#191919" stroke-opacity="0.4" stroke-width="1.4"/>
-  <line x1="820" y1="200" x2="820" y2="270" stroke="#191919" stroke-opacity="0.4" stroke-width="1.4"/>
-  <line x1="1000" y1="200" x2="1000" y2="270" stroke="#191919" stroke-opacity="0.4" stroke-width="1.4"/>
+  <!-- DeepSeekMoE: the fork, highlighted -->
+  <circle cx="890" cy="140" r="9" fill="#D97757" stroke="#191919" stroke-width="1.2"/>
+  <text x="890" y="108" text-anchor="middle" font-size="11.5" font-weight="600" fill="#191919">DeepSeekMoE</text>
+  <text x="890" y="167" text-anchor="middle" font-size="10" font-weight="600" fill="#191919">2024 · the fork</text>
+  <text x="890" y="180" text-anchor="middle" font-size="9.5" fill="#6B6B6B">fine-grained + shared expert</text>
 
-  <rect x="740" y="270" width="160" height="50" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
-  <text x="820" y="291" text-anchor="middle" font-size="11.5" font-weight="600" fill="#191919">DeepSeek-V3</text>
-  <text x="820" y="306" text-anchor="middle" font-size="9.5" fill="#6B6B6B">sigmoid gating, aux-loss-free, MTP</text>
+  <!-- DeepSeek-V3: the breakout, highlighted larger -->
+  <circle cx="1030" cy="140" r="10" fill="#191919"/>
+  <text x="1030" y="106" text-anchor="middle" font-size="12" font-weight="600" fill="#191919">DeepSeek-V3</text>
+  <text x="1030" y="167" text-anchor="middle" font-size="10" font-weight="600" fill="#191919">late 2024 · the breakout</text>
+  <text x="1030" y="180" text-anchor="middle" font-size="9.5" fill="#6B6B6B">section 3 covers this in depth</text>
 
-  <rect x="920" y="270" width="160" height="50" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
-  <text x="1000" y="291" text-anchor="middle" font-size="11.5" font-weight="600" fill="#191919">LatentMoE</text>
-  <text x="1000" y="306" text-anchor="middle" font-size="9.5" fill="#6B6B6B">NVIDIA, 2026 · latent-space experts</text>
-
-  <!-- long dashed branch from DeepSeekMoE to LongCat's lineage note -->
-  <line x1="865" y1="255" x2="200" y2="255" stroke="#191919" stroke-opacity="0.3" stroke-width="1.2" stroke-dasharray="3 3"/>
-  <line x1="200" y1="255" x2="200" y2="480" stroke="#191919" stroke-opacity="0.3" stroke-width="1.2" stroke-dasharray="3 3"/>
-
-  <!-- connectors row2 -> row3 -->
-  <line x1="820" y1="320" x2="820" y2="345" stroke="#191919" stroke-opacity="0.45" stroke-width="1.4"/>
-  <line x1="820" y1="345" x2="860" y2="345" stroke="#191919" stroke-opacity="0.45" stroke-width="1.4"/>
-  <line x1="860" y1="345" x2="860" y2="480" stroke="#191919" stroke-opacity="0.45" stroke-width="1.4"/>
-
-  <line x1="820" y1="320" x2="820" y2="400" stroke="#191919" stroke-opacity="0.45" stroke-width="1.4"/>
-  <line x1="820" y1="400" x2="1080" y2="400" stroke="#191919" stroke-opacity="0.45" stroke-width="1.4"/>
-  <line x1="1080" y1="400" x2="1080" y2="480" stroke="#191919" stroke-opacity="0.45" stroke-width="1.4"/>
-
-  <line x1="1000" y1="320" x2="1000" y2="360" stroke="#191919" stroke-opacity="0.45" stroke-width="1.4"/>
-  <line x1="1000" y1="360" x2="640" y2="360" stroke="#191919" stroke-opacity="0.45" stroke-width="1.4"/>
-  <line x1="640" y1="360" x2="640" y2="480" stroke="#191919" stroke-opacity="0.45" stroke-width="1.4"/>
-
-  <line x1="1000" y1="320" x2="1000" y2="420" stroke="#191919" stroke-opacity="0.45" stroke-width="1.4"/>
-  <line x1="1000" y1="420" x2="420" y2="420" stroke="#191919" stroke-opacity="0.45" stroke-width="1.4"/>
-  <line x1="420" y1="420" x2="420" y2="480" stroke="#191919" stroke-opacity="0.45" stroke-width="1.4"/>
-
-  <!-- Row 3: five 2026 frontier reports -->
-  <text x="20" y="472" font-size="11" fill="#6B6B6B">five 2026 reports</text>
-
-  <rect x="125" y="480" width="150" height="58" rx="8" fill="#191919"/>
-  <text x="200" y="503" text-anchor="middle" font-size="12" font-weight="600" fill="#F4F3EF">LongCat-2.0</text>
-  <text x="200" y="519" text-anchor="middle" font-size="9" fill="#E6E4DD">zero-computation experts</text>
-  <text x="200" y="531" text-anchor="middle" font-size="9" fill="#E6E4DD">+ task-specialized groups</text>
-
-  <rect x="345" y="480" width="150" height="58" rx="8" fill="#191919"/>
-  <text x="420" y="503" text-anchor="middle" font-size="12" font-weight="600" fill="#F4F3EF">Kimi K3</text>
-  <text x="420" y="519" text-anchor="middle" font-size="9" fill="#E6E4DD">896 experts, top-16</text>
-  <text x="420" y="531" text-anchor="middle" font-size="9" fill="#E6E4DD">Quantile Balancing</text>
-
-  <rect x="565" y="480" width="150" height="58" rx="8" fill="#191919"/>
-  <text x="640" y="503" text-anchor="middle" font-size="12" font-weight="600" fill="#F4F3EF">MAI-Thinking-1</text>
-  <text x="640" y="519" text-anchor="middle" font-size="9" fill="#E6E4DD">512 experts, top-8</text>
-  <text x="640" y="531" text-anchor="middle" font-size="9" fill="#E6E4DD">dropless, no shared expert</text>
-
-  <rect x="785" y="480" width="150" height="58" rx="8" fill="#191919"/>
-  <text x="860" y="503" text-anchor="middle" font-size="12" font-weight="600" fill="#F4F3EF">GLM-5.2</text>
-  <text x="860" y="519" text-anchor="middle" font-size="9" fill="#E6E4DD">256 experts, top-8</text>
-  <text x="860" y="531" text-anchor="middle" font-size="9" fill="#E6E4DD">+1 shared, sigmoid gate</text>
-
-  <rect x="1005" y="480" width="150" height="58" rx="8" fill="#191919"/>
-  <text x="1080" y="503" text-anchor="middle" font-size="12" font-weight="600" fill="#F4F3EF">DeepSeek-V4</text>
-  <text x="1080" y="519" text-anchor="middle" font-size="9" fill="#E6E4DD">Hash routing, Sqrt-Softplus</text>
-  <text x="1080" y="531" text-anchor="middle" font-size="9" fill="#E6E4DD">Anticipatory Routing</text>
-
-  <!-- legend -->
-  <line x1="45" y1="580" x2="75" y2="580" stroke="#191919" stroke-opacity="0.45" stroke-width="1.4"/>
-  <text x="83" y="584" font-size="10" fill="#6B6B6B">direct lineage</text>
-  <line x1="220" y1="580" x2="250" y2="580" stroke="#191919" stroke-opacity="0.3" stroke-width="1.2" stroke-dasharray="3 3"/>
-  <text x="258" y="584" font-size="10" fill="#6B6B6B">shared baseline, independently extended</text>
+  <!-- 2026 bracket pointing forward -->
+  <line x1="1130" y1="140" x2="1170" y2="140" stroke="#191919" stroke-opacity="0.3" stroke-width="1.4" stroke-dasharray="3 3"/>
+  <text x="1150" y="112" text-anchor="middle" font-size="10" fill="#6B6B6B">2026 →</text>
+  <text x="1150" y="200" text-anchor="middle" font-size="9.5" fill="#6B6B6B">six frontier</text>
+  <text x="1150" y="212" text-anchor="middle" font-size="9.5" fill="#6B6B6B">reports</text>
+  <text x="1150" y="224" text-anchor="middle" font-size="9.5" fill="#6B6B6B">(section 11)</text>
 </svg>

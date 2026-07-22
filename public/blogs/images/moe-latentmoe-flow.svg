@@ -1,0 +1,73 @@
+<svg viewBox="0 0 1160 420" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="1160" height="420" fill="#F4F3EF"/>
+  <text x="580" y="34" text-anchor="middle" font-size="20" font-weight="600" fill="#191919">LatentMoE: Compress, Compute, Expand</text>
+  <text x="580" y="55" text-anchor="middle" font-size="12.5" fill="#6B6B6B">shrinking the dimension the expert and the network both have to deal with</text>
+
+  <!-- Panel 1: standard MoE -->
+  <g>
+    <rect x="40" y="80" width="500" height="310" rx="10" fill="#FFFFFF" stroke="#191919" stroke-opacity="0.12" stroke-width="1.2"/>
+    <text x="290" y="108" text-anchor="middle" font-size="13.5" font-weight="600" fill="#191919">Standard MoE</text>
+    <text x="290" y="126" text-anchor="middle" font-size="10" fill="#6B6B6B">expert compute and all-to-all both run at dim d</text>
+
+    <rect x="70" y="160" width="90" height="50" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <text x="115" y="190" text-anchor="middle" font-size="11" fill="#191919">token (d)</text>
+
+    <line x1="160" y1="185" x2="230" y2="185" stroke="#191919" stroke-opacity="0.5" stroke-width="1.4"/>
+    <polygon points="230,185 218,179 218,191" fill="#191919" fill-opacity="0.6"/>
+    <text x="195" y="172" text-anchor="middle" font-size="9" fill="#6B6B6B">all-to-all</text>
+    <text x="195" y="207" text-anchor="middle" font-size="9" fill="#6B6B6B">payload: d</text>
+
+    <rect x="235" y="160" width="90" height="50" rx="8" fill="#D97757" stroke="#191919" stroke-width="1.2"/>
+    <text x="280" y="190" text-anchor="middle" font-size="11" fill="#191919">expert FFN (d)</text>
+
+    <line x1="325" y1="185" x2="395" y2="185" stroke="#191919" stroke-opacity="0.5" stroke-width="1.4"/>
+    <polygon points="395,185 383,179 383,191" fill="#191919" fill-opacity="0.6"/>
+
+    <rect x="400" y="160" width="110" height="50" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <text x="455" y="190" text-anchor="middle" font-size="11" fill="#191919">output (d)</text>
+
+    <text x="290" y="255" text-anchor="middle" font-size="10.5" fill="#191919" font-weight="600">cost of N experts, top-K ∝ N · d, K · d</text>
+    <text x="290" y="273" text-anchor="middle" font-size="9.5" fill="#6B6B6B">bigger N or K costs communication and</text>
+    <text x="290" y="288" text-anchor="middle" font-size="9.5" fill="#6B6B6B">compute linearly — this is what limits pool size</text>
+
+    <text x="290" y="330" text-anchor="middle" font-size="10" fill="#6B6B6B">e.g. DeepSeek-V3: d full width, 256 experts, top-8</text>
+  </g>
+
+  <!-- Panel 2: LatentMoE -->
+  <g>
+    <rect x="580" y="80" width="540" height="310" rx="10" fill="#FFFFFF" stroke="#191919" stroke-opacity="0.12" stroke-width="1.2"/>
+    <text x="850" y="108" text-anchor="middle" font-size="13.5" font-weight="600" fill="#191919">LatentMoE</text>
+    <text x="850" y="126" text-anchor="middle" font-size="10" fill="#6B6B6B">z = W_down · x  (dim l &lt; d)  →  expert(z)  →  W_up · expert(z)</text>
+
+    <rect x="610" y="160" width="80" height="50" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <text x="650" y="190" text-anchor="middle" font-size="10.5" fill="#191919">token (d)</text>
+
+    <line x1="690" y1="185" x2="740" y2="185" stroke="#191919" stroke-opacity="0.5" stroke-width="1.4"/>
+    <polygon points="740,185 728,179 728,191" fill="#191919" fill-opacity="0.6"/>
+    <text x="715" y="172" text-anchor="middle" font-size="8.5" fill="#6B6B6B">down-proj</text>
+
+    <rect x="745" y="168" width="70" height="34" rx="6" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <text x="780" y="189" text-anchor="middle" font-size="10" fill="#191919">z (l)</text>
+
+    <line x1="815" y1="185" x2="855" y2="185" stroke="#191919" stroke-opacity="0.5" stroke-width="1.4"/>
+    <polygon points="855,185 843,179 843,191" fill="#191919" fill-opacity="0.6"/>
+    <text x="835" y="172" text-anchor="middle" font-size="8" fill="#6B6B6B">a2a: l</text>
+
+    <rect x="860" y="168" width="70" height="34" rx="6" fill="#D97757" stroke="#191919" stroke-width="1.2"/>
+    <text x="895" y="189" text-anchor="middle" font-size="10" fill="#191919">FFN (l)</text>
+
+    <line x1="930" y1="185" x2="970" y2="185" stroke="#191919" stroke-opacity="0.5" stroke-width="1.4"/>
+    <polygon points="970,185 958,179 958,191" fill="#191919" fill-opacity="0.6"/>
+    <text x="950" y="172" text-anchor="middle" font-size="8.5" fill="#6B6B6B">up-proj</text>
+
+    <rect x="975" y="160" width="80" height="50" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+    <text x="1015" y="190" text-anchor="middle" font-size="10.5" fill="#191919">output (d)</text>
+
+    <text x="850" y="255" text-anchor="middle" font-size="10.5" fill="#191919" font-weight="600">cost of N experts, top-K ∝ N · l, K · l  (l &lt; d)</text>
+    <text x="850" y="273" text-anchor="middle" font-size="9.5" fill="#6B6B6B">the saved (d − l) budget buys a bigger N and K</text>
+    <text x="850" y="288" text-anchor="middle" font-size="9.5" fill="#6B6B6B">at the same total compute and communication cost</text>
+
+    <text x="850" y="330" text-anchor="middle" font-size="10" fill="#6B6B6B">MAI-Thinking-1: 192→512 experts, top-4→top-8, once affordable</text>
+    <text x="850" y="348" text-anchor="middle" font-size="10" fill="#6B6B6B">Kimi K3's "Stable LatentMoE": same idea, more extreme (896, top-16)</text>
+  </g>
+</svg>

@@ -1261,6 +1261,7 @@ const MOE_PRESETS: MoEPreset[] = [
   { id: 'v4pro', label: 'DeepSeek-V4-Pro', n: 384, k: 6, s: 1 },
   { id: 'mai', label: 'MAI-Thinking-1', n: 512, k: 8, s: 0 },
   { id: 'kimi', label: 'Kimi K3', n: 896, k: 16, s: 1 },
+  { id: 'qwen3', label: 'Qwen3-MoE (235B-A22B)', n: 128, k: 8, s: 0 },
 ];
 
 const STR10 = {
@@ -1454,6 +1455,38 @@ const MOE_MODELS: MoEModelSpec[] = [
     innovation: {
       en: "Established the modern default recipe: fine-grained routed experts plus one isolated shared expert, sigmoid affinity scoring, bias-based aux-loss-free balancing, and multi-token prediction (MTP).",
       zh: '确立了如今的默认范式：细粒度路由专家 + 一个独立共享专家、sigmoid 打分、基于偏置项的免辅助损失负载均衡，以及多 token 预测（MTP）。',
+    },
+  },
+  {
+    id: 'qwen2',
+    name: 'Qwen2-MoE',
+    org: 'Alibaba / Qwen Team',
+    totalB: 57,
+    activeB: 14,
+    routedExperts: '64',
+    sharedExperts: '8',
+    topK: '8',
+    gating: 'Softmax',
+    balancing: 'GShard-style auxiliary loss',
+    innovation: {
+      en: "Followed the Qwen1.5-MoE recipe at larger scale: fine-grained routed experts plus 8 always-on shared experts, justified explicitly as insurance against router collapse — the same diagnosis DeepSeekMoE and DeepSeek-V3 reached independently.",
+      zh: '在更大规模上延续了 Qwen1.5-MoE 的配方：细粒度路由专家加 8 个常驻共享专家，官方说法直接把这个设计归因于防范路由坍缩——和 DeepSeekMoE、DeepSeek-V3 各自独立得出的判断一致。',
+    },
+  },
+  {
+    id: 'qwen3',
+    name: 'Qwen3-MoE',
+    org: 'Alibaba / Qwen Team',
+    totalB: 235,
+    activeB: 22,
+    routedExperts: '128',
+    sharedExperts: '0',
+    topK: '8',
+    gating: 'Softmax',
+    balancing: 'Global-batch load balancing loss',
+    innovation: {
+      en: "Reverses Qwen2's own choice: drops the shared expert entirely, replacing it with a global-batch load balancing loss that synchronizes expert-selection frequency across micro-batches before computing the balance term — letting individual batches stay domain-skewed while the corpus-wide average stays balanced.",
+      zh: '反转了 Qwen2 自己的选择：完全去掉共享专家，换成一个全局批次负载均衡损失——在计算均衡项之前，先把各个 micro-batch 之间的专家选择频率同步起来，让单个批次可以保持领域偏斜，同时整体语料上的平均值依然均衡。',
     },
   },
   {

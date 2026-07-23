@@ -288,7 +288,7 @@ const Blog: React.FC = () => {
                           <img
                             src={src || ''}
                             alt={alt || 'Blog illustration'}
-                            className="mx-auto w-full max-w-2xl h-auto rounded-lg shadow-sm border border-anthropic-text/5 object-cover"
+                            className="mx-auto w-full max-w-4xl h-auto rounded-lg shadow-sm border border-anthropic-text/5 object-cover"
                             loading="lazy"
                           />
                         );

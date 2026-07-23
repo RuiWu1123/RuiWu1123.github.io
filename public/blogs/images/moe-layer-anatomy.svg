@@ -3,6 +3,10 @@
 
   <line x1="600" y1="20" x2="600" y2="480" stroke="#191919" stroke-opacity="0.15" stroke-dasharray="5 5"/>
 
+  <!-- transition arrow: dense FFN becomes an MoE layer -->
+  <line x1="440" y1="255" x2="580" y2="255" stroke="#191919" stroke-width="3.5"/>
+  <polygon points="600,255 578,240 578,270" fill="#191919"/>
+
   <!-- ================= Left panel: Dense FFN ================= -->
   <text x="300" y="24" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">Dense FFN</text>
 

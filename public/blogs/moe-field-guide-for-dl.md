@@ -9,7 +9,7 @@ Mixture-of-Experts (MoE) is the architecture underneath nearly every frontier la
 
 Strip away everything vendor-specific and a 2026-era MoE layer looks like this: a token arrives, a small router network scores every expert's "affinity" for that token, the top-K highest-scoring experts actually run their feed-forward computation, and, in almost every current design, one additional shared expert runs on every token regardless of what the router decided. The outputs get combined into a single vector, weighted by the router's own scores, and that's the layer's output.
 
-![Anatomy of a modern MoE layer](blogs/images/moe-layer-anatomy.svg?v=4)
+![Anatomy of a modern MoE layer](blogs/images/moe-layer-anatomy.svg?v=5)
 
 Written out, one forward pass through a single MoE layer is only a few lines:
 
@@ -32,7 +32,7 @@ The entire appeal of this design is in the gap between two numbers. **Total para
 
 Almost every mechanism discussed in this post is a variation on a much older idea, or a direct continuation of one specific 2024 paper. It's worth walking through that lineage before getting into what's changed recently. The idea is older than the deep-learning era it's usually associated with: **Jacobs et al., 1991** first proposed mixture-of-experts as a way to let different sub-networks specialize on different parts of a task, decades before anything resembling a modern transformer existed. What follows is the lineage that starts once the idea got adapted to large neural sequence models, the part of the history most people actually mean when they say "MoE."
 
-![Nine years of MoE design](blogs/images/moe-lineage-timeline.svg?v=2)
+![Nine years of MoE design](blogs/images/moe-lineage-timeline.svg?v=3)
 ^Most of 2026's frontier MoE designs trace back to one 2024 fork: DeepSeekMoE's fine-grained-experts-plus-shared-expert recipe.
 
 **Shazeer et al., 2017** introduced the modern sparsely-gated MoE layer for deep learning: a noisy top-k softmax router with an auxiliary loss to keep expert usage balanced. This is the ancestor of essentially everything that follows.
@@ -184,7 +184,7 @@ MAI-Thinking-1 arrives at "no shared expert" from a different angle: the team te
 
 ## 8. Compressing the computation itself: LatentMoE
 
-![Standard MoE vs. LatentMoE](blogs/images/moe-latentmoe-compare.svg?v=1)
+![Standard MoE vs. LatentMoE](blogs/images/moe-latentmoe-compare.svg?v=2)
 
 Every idea covered so far leaves the expert computation itself alone and only changes routing or balancing around it. LatentMoE, first proposed by NVIDIA in early 2026 and already shipping in NVIDIA's own Nemotron-3 Super and Ultra models, changes the computation directly: instead of running each expert at the token's full dimension $d$, a learned down-projection first compresses the token into a smaller latent space of dimension $\ell < d$, the expert runs entirely inside that compressed space, and a learned up-projection expands the result back to $d$ before it's combined with the rest of the layer's output. Because both the per-expert compute and the all-to-all communication payload scale with $\ell$ rather than $d$, the gap between $d$ and $\ell$ becomes budget: a larger expert pool or a larger top-K can be paid for out of that gap at no extra total cost.
 

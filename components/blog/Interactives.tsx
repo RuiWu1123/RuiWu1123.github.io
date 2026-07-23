@@ -1863,9 +1863,9 @@ export const MoEGatingExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) =>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {(
           [
-            { label: t.softmax, scores: softmaxScores, color: '#D97757', ceiling: 1, isShare: true },
-            { label: t.sigmoid, scores: sigmoidScores, color: '#8DA399', ceiling: 1, isShare: true },
-            { label: t.sqrtSoftplus, scores: sqrtSoftplusScores, color: '#6B8CAE', ceiling: SQRT_SOFTPLUS_CEILING, isShare: false },
+            { label: t.softmax, scores: softmaxScores, color: '#D97757', ceiling: 1 },
+            { label: t.sigmoid, scores: sigmoidScores, color: '#8DA399', ceiling: 1 },
+            { label: t.sqrtSoftplus, scores: sqrtSoftplusScores, color: '#6B8CAE', ceiling: SQRT_SOFTPLUS_CEILING },
           ] as const
         ).map((panel) => (
           <div key={panel.label}>
@@ -1888,7 +1888,7 @@ export const MoEGatingExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) =>
                         fillOpacity={isTarget ? 1 : 0.45}
                       />
                       <text x={x + barInnerW / 2} y={barGroupH - 20 - h - 6} fontSize={9.5} textAnchor="middle" fill="#191919">
-                        {panel.isShare ? `${(s * 100).toFixed(0)}%` : s.toFixed(2)}
+                        {s.toFixed(2)}
                       </text>
                       <text x={x + barInnerW / 2} y={barGroupH - 6} fontSize={10} textAnchor="middle" fill="#6B6B6B">
                         {t.expertLabel}{i + 1}

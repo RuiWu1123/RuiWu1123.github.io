@@ -9,8 +9,7 @@ Mixture-of-Experts (MoE) is the architecture underneath nearly every frontier la
 
 Strip away everything vendor-specific and a 2026-era MoE layer looks like this: a token arrives, a small router network scores every expert's "affinity" for that token, the top-K highest-scoring experts actually run their feed-forward computation, and, in almost every current design, one additional shared expert runs on every token regardless of what the router decided. The outputs get combined into a single vector, weighted by the router's own scores, and that's the layer's output.
 
-![Anatomy of a modern MoE layer](blogs/images/moe-layer-anatomy.svg?v=3)
-^One token, one layer: every routed expert is a candidate, only a handful actually run. The shared expert is the one exception that always fires.
+![Anatomy of a modern MoE layer](blogs/images/moe-layer-anatomy.svg?v=4)
 
 Written out, one forward pass through a single MoE layer is only a few lines:
 

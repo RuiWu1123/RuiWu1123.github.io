@@ -4,7 +4,7 @@
   <line x1="600" y1="20" x2="600" y2="480" stroke="#191919" stroke-opacity="0.15" stroke-dasharray="5 5"/>
 
   <!-- transition arrow: dense FFN becomes an MoE layer -->
-  <line x1="440" y1="255" x2="580" y2="255" stroke="#191919" stroke-width="3.5"/>
+  <line x1="485" y1="255" x2="580" y2="255" stroke="#191919" stroke-width="3.5"/>
   <polygon points="600,255 578,240 578,270" fill="#191919"/>
 
   <!-- ================= Left panel: Dense FFN ================= -->
@@ -58,14 +58,29 @@
     <rect x="1080" y="204" width="90" height="48" rx="6"/>
     <rect x="1290" y="204" width="90" height="48" rx="6"/>
   </g>
+  <g font-size="12" fill="#6B6B6B" text-anchor="middle">
+    <text x="705" y="232">expert</text>
+    <text x="810" y="232">expert</text>
+    <text x="1020" y="232">expert</text>
+    <text x="1125" y="232">expert</text>
+    <text x="1335" y="232">expert</text>
+  </g>
 
   <!-- selected routed experts, highlighted -->
   <rect x="870" y="204" width="90" height="48" rx="6" fill="#D97757" stroke="#191919" stroke-width="1.6"/>
   <rect x="1185" y="204" width="90" height="48" rx="6" fill="#D97757" stroke="#191919" stroke-width="1.6"/>
+  <g font-size="12.5" font-weight="600" fill="#F4F3EF" text-anchor="middle">
+    <text x="915" y="232">expert</text>
+    <text x="1230" y="232">expert</text>
+  </g>
 
   <!-- shared expert: same row and size, set apart with a gap -->
   <rect x="1440" y="204" width="90" height="48" rx="6" fill="#8DA399" stroke="#191919" stroke-width="1.2"/>
   <text x="1485" y="232" text-anchor="middle" font-size="12.5" font-weight="600" fill="#F4F3EF">shared</text>
+
+  <!-- legend: what the highlight color means -->
+  <rect x="1290" y="474" width="13" height="13" rx="3" fill="#D97757"/>
+  <text x="1310" y="485" font-size="12" fill="#6B6B6B">selected (top-k)</text>
 
   <!-- lines from selected routed experts down to combine -->
   <line x1="915" y1="252" x2="915" y2="300" stroke="#191919" stroke-width="1.6"/>

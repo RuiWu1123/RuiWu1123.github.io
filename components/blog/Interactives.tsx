@@ -1391,7 +1391,7 @@ export const MoESparsityExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) 
           </text>
           <rect x="0" y="18" width={barW} height={barH} rx={5} fill="#FFFFFF" stroke="#191919" strokeOpacity={0.3} />
           <rect x="0" y="18" width={kWidth} height={barH} rx={5} fill="#D97757" />
-          <text x={Math.min(kWidth + 6, barW - 4)} y="36" fontSize={9.5} fill="#191919">
+          <text x={kWidth / 2} y="64" textAnchor="middle" fontSize={9.5} fill="#191919">
             {t.activeLabel}
           </text>
 

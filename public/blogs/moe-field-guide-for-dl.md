@@ -12,6 +12,21 @@ Strip away everything vendor-specific and a 2026-era MoE layer looks like this: 
 ![Anatomy of a modern MoE layer](blogs/images/moe-layer-anatomy.svg?v=3)
 ^One token, one layer: every routed expert is a candidate, only a handful actually run. The shared expert is the one exception that always fires.
 
+Written out, one forward pass through a single MoE layer is only a few lines:
+
+```python
+def moe_layer(x, router, experts, shared_expert, top_k):
+    scores = gate(router(x))              # affinity score per expert (sections 4-5 open this up)
+    selected = top_k(scores, k=top_k)     # indices of the k highest-scoring experts
+
+    routed_out = sum(scores[i] * experts[i](x) for i in selected)
+    shared_out = shared_expert(x)         # unconditional: runs on every token, no routing involved
+
+    return routed_out + shared_out
+```
+
+`router(x)` is a black box for now, it produces one raw logit per expert; `gate` is whatever turns those logits into the scores `scores[i]` (softmax, sigmoid, or a variant); and `top_k` picks which experts actually run. Sections 4 and 5 open up exactly what's inside `router` and `gate`. `routed_out` is the weighted sum over just the selected experts; `shared_out` comes from the one expert that ignores routing entirely and runs on every token regardless. The layer's output is just the two added together.
+
 The entire appeal of this design is in the gap between two numbers. **Total parameters** scale with how many experts exist in the pool: this is the number vendors put in a headline ("2.8 trillion parameters"). **Active parameters** scale with how many experts actually run per token, top-K plus the shared expert, and this is the number that actually determines inference cost. A model can have an enormous total parameter count and still be cheap to run per token, provided K stays small relative to the pool. That gap between total and active is the entire reason MoE exists, and every design choice covered below is, one way or another, an attempt to widen that gap without hurting quality.
 
 ## 2. Where this actually comes from: nine years of lineage
@@ -71,11 +86,12 @@ All three methods answer the same question, which expert or experts does a token
 Hash routing is the simplest of the three: it doesn't look at the token's content at all, just its position or id, so no two tokens ever fight over the same expert and no expert is ever starved.
 
 ```python
-def hash_route(token_id, num_experts):
-    return hash(token_id) % num_experts  # deterministic, no learned parameters
+def hash_route(x, num_experts):
+    token_id = x.id                        # the token's position or identifier, nothing else
+    return hash(token_id) % num_experts    # deterministic, no learned parameters
 ```
 
-`hash(token_id)` is any fixed, deterministic function that turns a token's position or identifier into some large integer; it has nothing to do with the expert count and nothing to do with what the token actually is. The single `% num_experts` at the end is the only place the pool size enters, folding that large integer down into a valid expert index. That guarantee is also this method's ceiling: because the assignment carries zero information about the token's content, the router has nothing to exploit, and the measured gain over a compute-matched dense model tops out around 1.5% at 16 experts and barely improves as the expert count grows, since adding more experts doesn't give a content-blind assignment rule any more signal to work with.
+`x` here is the token, and hash routing only ever looks at its `id`, its position or identifier, never its actual content. `hash(token_id)` is any fixed, deterministic function that turns that id into some large integer; it has nothing to do with the expert count. The single `% num_experts` at the end is the only place the pool size enters, folding that large integer down into a valid expert index. That guarantee is also this method's ceiling: because the assignment carries zero information about the token's content, the router has nothing to exploit, and the measured gain over a compute-matched dense model tops out around 1.5% at 16 experts and barely improves as the expert count grows, since adding more experts doesn't give a content-blind assignment rule any more signal to work with.
 
 Learned routing is the opposite trade: because the score is computed from the actual token representation, it can genuinely specialize.
 
@@ -86,20 +102,20 @@ def learned_route(x, expert_keys, k):
     return top_k(scores, k)                    # indices of the k highest-scoring experts
 ```
 
-`expert_keys[i]` is expert $i$'s learned key vector: a vector the model learns for each expert purely to score how well it matches a given token. It is not a bias, and it plays no role in combining outputs afterward. `x @ e_i` is the raw affinity logit between the token and that expert, and `gate` is whichever function turns those logits into scores, which is the actual subject of section 5. This specialization is real (roughly 4% improvement at 16 experts, well over double hash routing's), but nothing in the training objective on its own prevents the router from routing every token to the same handful of experts. That failure mode, routing collapse, tends to hit hardest in a network's first and last few layers, which is exactly the gap a shared expert (section 7) or an explicit balancing loss (section 6) is built to cover.
+Here `x` is the token's hidden representation itself, not just an id, and `expert_keys[i]` is expert $i$'s learned key vector: a vector the model learns for each expert purely to score how well it matches a given token. It is not a bias, and it plays no role in combining outputs afterward. `x @ e_i` is the raw affinity logit, computed directly from `x`, and `gate` is whichever function turns those logits into scores, which is the actual subject of section 5. This specialization is real (roughly 4% improvement at 16 experts, well over double hash routing's), but nothing in the training objective on its own prevents the router from routing every token to the same handful of experts. That failure mode, routing collapse, tends to hit hardest in a network's first and last few layers, which is exactly the gap a shared expert (section 7) or an explicit balancing loss (section 6) is built to cover.
 
 Sinkhorn routing tries to get both properties at once, by alternately normalizing the token-by-expert affinity matrix across its rows and its columns before top-k selection happens.
 
 ```python
-def sinkhorn_route(logits, k, num_rounds):
-    A = logits                                # A[t, i]: raw logit, token t vs. expert i, whole batch
+def sinkhorn_route(x, expert_keys, k, num_rounds):
+    A = x @ expert_keys.T                     # A[t, i]: raw logit, token t vs. expert i, whole batch
     for _ in range(num_rounds):
         A = A / A.sum(axis=1, keepdims=True)  # row-normalize: each token's row now sums to 1
         A = A / A.sum(axis=0, keepdims=True)  # column-normalize: each expert's column now sums to 1
     return top_k(A, k, axis=1)                # selection uses the normalized matrix
 ```
 
-This converges toward a matrix that's simultaneously well-calibrated per token and evenly loaded per expert, achieving hash-level balance across every layer rather than only on average. The catch is that this near-perfect balance constrains how specialized any one expert can become relative to plain learned routing, and there's a specific implementation trap: because the normalization above is a fixed procedure with no gradient of its own, using the normalized `A` directly as the combination weight silently detaches the router from the training signal entirely. The fix used in practice is to use the normalized matrix only to decide which experts get selected, while still computing the actual combination weight from the original, un-normalized `logits`, so the router keeps learning even though selection is balanced by a separate, non-differentiable process.
+Here `x` is the whole batch's hidden representations at once, not a single token, which is the whole reason Sinkhorn needs a separate pass over the batch in the first place: row/column normalization only means something across a group of tokens, never for one token in isolation. `A` starts out as the same kind of raw logit computed by `learned_route`, just for every token against every expert simultaneously. This converges toward a matrix that's simultaneously well-calibrated per token and evenly loaded per expert, achieving hash-level balance across every layer rather than only on average. The catch is that this near-perfect balance constrains how specialized any one expert can become relative to plain learned routing, and there's a specific implementation trap: because the normalization above is a fixed procedure with no gradient of its own, using the normalized `A` directly as the combination weight silently detaches the router from the training signal entirely. The fix used in practice is to use the normalized matrix only to decide which experts get selected, while still computing the actual combination weight from the original, un-normalized `logits`, so the router keeps learning even though selection is balanced by a separate, non-differentiable process.
 
 Learned routing's collapse risk is also where a much smaller, more obscure implementation detail turns out to matter more than it should. With top-1 routing specifically, the standard way of normalizing gate weights (dividing a token's gate value by the sum of gate values across its selected experts) collapses to dividing a number by itself, which always equals one. That silently zeroes out the gradient the router receives from the language-modeling loss, leaving only the load-balancing loss's gradient reaching the router at all: the router can learn to balance load perfectly while learning nothing about which expert actually suits which token. One documented fix is adding a "null expert": a phantom option that never actually computes anything, costs zero extra parameters and zero extra compute, but gives the router something real to contrast its top-1 choice against, restoring a working gradient signal from the main loss. It's a one-line fix for a bug that a router's usage statistics alone will never reveal, since perfectly balanced expert utilization looks identical whether or not the router is actually learning anything.
 

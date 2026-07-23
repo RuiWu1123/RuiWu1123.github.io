@@ -8,7 +8,7 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { ArrowLeft } from 'lucide-react';
 import { BLOG_POSTS, loadBlogContent } from '../constants';
-import { RooflineExplorer, GridBlockSimulator, TritonGridExplorer, AutotuneExplorer, RingAllReduceExplorer, ZeROMemoryCalculator, PipelineBubbleExplorer, AcceleratorTrendExplorer, AcceleratorSpecLookup, MoESparsityExplorer, MoEModelLookup } from '../components/blog/Interactives';
+import { RooflineExplorer, GridBlockSimulator, TritonGridExplorer, AutotuneExplorer, RingAllReduceExplorer, ZeROMemoryCalculator, PipelineBubbleExplorer, AcceleratorTrendExplorer, AcceleratorSpecLookup, MoESparsityExplorer, MoEModelLookup, MoEGatingExplorer } from '../components/blog/Interactives';
 
 const Blog: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -203,6 +203,39 @@ const Blog: React.FC = () => {
                           );
                         }
 
+                        // ```diff fences: lines starting with + / - get a subtle tint,
+                        // so a "just a few added lines" code change reads at a glance.
+                        if (className?.includes('language-diff')) {
+                          const text = String(children).replace(/\n$/, '');
+                          const lines = text.split('\n');
+                          return (
+                            <code className={`${className} block overflow-x-auto whitespace-pre`}>
+                              {lines.map((line, i) => {
+                                const isAdd = line.startsWith('+');
+                                const isDel = line.startsWith('-');
+                                const rest = isAdd || isDel ? line.slice(1) : line;
+                                return (
+                                  <div
+                                    key={i}
+                                    className={
+                                      isAdd
+                                        ? '-mx-4 px-4 bg-anthropic-leaf/15'
+                                        : isDel
+                                        ? '-mx-4 px-4 bg-anthropic-accent/10 opacity-70'
+                                        : ''
+                                    }
+                                  >
+                                    <span className={isAdd ? 'text-anthropic-leaf' : isDel ? 'text-anthropic-accent' : 'opacity-0'}>
+                                      {isAdd ? '+' : isDel ? '-' : ' '}
+                                    </span>{' '}
+                                    {rest}
+                                  </div>
+                                );
+                              })}
+                            </code>
+                          );
+                        }
+
                         return (
                           <code className={`${className} block overflow-x-auto whitespace-pre`}>
                             {children}
@@ -247,6 +280,9 @@ const Blog: React.FC = () => {
                         }
                         if (alt === 'interactive:moe-lookup') {
                           return <MoEModelLookup lang={lang} />;
+                        }
+                        if (alt === 'interactive:moe-gating') {
+                          return <MoEGatingExplorer lang={lang} />;
                         }
                         return (
                           <img

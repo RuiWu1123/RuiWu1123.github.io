@@ -1,0 +1,66 @@
+<svg viewBox="0 0 1100 400" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="1100" height="400" fill="#F4F3EF"/>
+  <text x="550" y="32" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">Standard MoE vs. LatentMoE</text>
+  <text x="550" y="54" text-anchor="middle" font-size="13" fill="#6B6B6B">same token in, same output out — the difference is what dimension the middle stretch runs at</text>
+
+  <!-- ================= Row 1: Standard MoE ================= -->
+  <text x="60" y="92" font-size="16" font-weight="600" fill="#191919">Standard MoE</text>
+  <text x="570" y="110" text-anchor="middle" font-size="11.5" fill="#6B6B6B">all-to-all payload: dim d</text>
+
+  <rect x="60" y="122" width="120" height="48" rx="8" fill="#191919"/>
+  <text x="120" y="142" text-anchor="middle" font-size="13" font-weight="600" fill="#F4F3EF">token x</text>
+  <text x="120" y="158" text-anchor="middle" font-size="10.5" fill="#F4F3EF">dim d</text>
+
+  <rect x="460" y="122" width="220" height="48" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+  <text x="570" y="142" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">expert FFN</text>
+  <text x="570" y="158" text-anchor="middle" font-size="10.5" fill="#6B6B6B">dim d</text>
+
+  <rect x="900" y="122" width="120" height="48" rx="8" fill="#191919"/>
+  <text x="960" y="142" text-anchor="middle" font-size="13" font-weight="600" fill="#F4F3EF">output y</text>
+  <text x="960" y="158" text-anchor="middle" font-size="10.5" fill="#F4F3EF">dim d</text>
+
+  <line x1="180" y1="146" x2="452" y2="146" stroke="#191919" stroke-opacity="0.45" stroke-width="1.6"/>
+  <polygon points="460,146 448,140 448,152" fill="#191919" fill-opacity="0.6"/>
+  <line x1="680" y1="146" x2="892" y2="146" stroke="#191919" stroke-opacity="0.45" stroke-width="1.6"/>
+  <polygon points="900,146 888,140 888,152" fill="#191919" fill-opacity="0.6"/>
+
+  <text x="570" y="200" text-anchor="middle" font-size="13.5" font-weight="600" fill="#191919">cost ∝ N·d (total), K·d (active)</text>
+
+  <!-- ================= Row 2: LatentMoE ================= -->
+  <text x="60" y="240" font-size="16" font-weight="600" fill="#191919">LatentMoE</text>
+  <text x="570" y="254" text-anchor="middle" font-size="11.5" fill="#6B6B6B">all-to-all payload: dim l</text>
+
+  <rect x="270" y="262" width="600" height="72" rx="14" fill="none" stroke="#8DA399" stroke-width="1.4" stroke-dasharray="5 4"/>
+  <text x="570" y="346" text-anchor="middle" font-size="10.5" fill="#8DA399">everything inside this box runs at the compressed dimension l</text>
+
+  <rect x="60" y="274" width="120" height="48" rx="8" fill="#191919"/>
+  <text x="120" y="294" text-anchor="middle" font-size="13" font-weight="600" fill="#F4F3EF">token x</text>
+  <text x="120" y="310" text-anchor="middle" font-size="10.5" fill="#F4F3EF">dim d</text>
+
+  <rect x="280" y="274" width="130" height="48" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+  <text x="345" y="294" text-anchor="middle" font-size="12.5" font-weight="600" fill="#191919">down-project</text>
+  <text x="345" y="310" text-anchor="middle" font-size="10.5" fill="#6B6B6B">d → l</text>
+
+  <rect x="470" y="274" width="200" height="48" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+  <text x="570" y="294" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">expert FFN</text>
+  <text x="570" y="310" text-anchor="middle" font-size="10.5" fill="#6B6B6B">dim l</text>
+
+  <rect x="730" y="274" width="130" height="48" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
+  <text x="795" y="294" text-anchor="middle" font-size="12.5" font-weight="600" fill="#191919">up-project</text>
+  <text x="795" y="310" text-anchor="middle" font-size="10.5" fill="#6B6B6B">l → d</text>
+
+  <rect x="900" y="274" width="120" height="48" rx="8" fill="#191919"/>
+  <text x="960" y="294" text-anchor="middle" font-size="13" font-weight="600" fill="#F4F3EF">output y</text>
+  <text x="960" y="310" text-anchor="middle" font-size="10.5" fill="#F4F3EF">dim d</text>
+
+  <line x1="180" y1="298" x2="272" y2="298" stroke="#191919" stroke-opacity="0.45" stroke-width="1.6"/>
+  <polygon points="280,298 268,292 268,304" fill="#191919" fill-opacity="0.6"/>
+  <line x1="410" y1="298" x2="462" y2="298" stroke="#191919" stroke-opacity="0.45" stroke-width="1.6"/>
+  <polygon points="470,298 458,292 458,304" fill="#191919" fill-opacity="0.6"/>
+  <line x1="670" y1="298" x2="722" y2="298" stroke="#191919" stroke-opacity="0.45" stroke-width="1.6"/>
+  <polygon points="730,298 718,292 718,304" fill="#191919" fill-opacity="0.6"/>
+  <line x1="860" y1="298" x2="892" y2="298" stroke="#191919" stroke-opacity="0.45" stroke-width="1.6"/>
+  <polygon points="900,298 888,292 888,304" fill="#191919" fill-opacity="0.6"/>
+
+  <text x="570" y="380" text-anchor="middle" font-size="13.5" font-weight="600" fill="#191919">cost ∝ N·l (total), K·l (active) — l &lt; d</text>
+</svg>

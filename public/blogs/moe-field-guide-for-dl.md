@@ -104,18 +104,18 @@ def learned_route(x, expert_keys, k):
 
 Here `x` is the token's hidden representation itself, not just an id, and `expert_keys[i]` is expert $i$'s learned key vector: a vector the model learns for each expert purely to score how well it matches a given token. It is not a bias, and it plays no role in combining outputs afterward. `x @ e_i` is the raw affinity logit, computed directly from `x`, and `gate` is whichever function turns those logits into scores, which is the actual subject of section 5. This specialization is real (roughly 4% improvement at 16 experts, well over double hash routing's), but nothing in the training objective on its own prevents the router from routing every token to the same handful of experts. That failure mode, routing collapse, tends to hit hardest in a network's first and last few layers, which is exactly the gap a shared expert (section 7) or an explicit balancing loss (section 6) is built to cover.
 
-Sinkhorn routing tries to get both properties at once, by alternately normalizing the token-by-expert affinity matrix across its rows and its columns before top-k selection happens.
+Sinkhorn routing tries to get both properties at once, by alternately normalizing the token-by-expert affinity matrix across its rows and its columns before top-k selection happens. That's why the function below takes $X$, not $x$: $X$ is the whole batch's hidden representations stacked into a matrix, one row per token, since row/column normalization only means something across a group of tokens, never for one token in isolation.
 
 ```python
-def sinkhorn_route(x, expert_keys, k, num_rounds):
-    A = x @ expert_keys.T                     # A[t, i]: raw logit, token t vs. expert i, whole batch
+def sinkhorn_route(X, expert_keys, k, num_rounds):
+    A = X @ expert_keys.T                     # A[t, i]: raw logit, token t vs. expert i, whole batch
     for _ in range(num_rounds):
         A = A / A.sum(axis=1, keepdims=True)  # row-normalize: each token's row now sums to 1
         A = A / A.sum(axis=0, keepdims=True)  # column-normalize: each expert's column now sums to 1
     return top_k(A, k, axis=1)                # selection uses the normalized matrix
 ```
 
-Here `x` is the whole batch's hidden representations at once, not a single token, which is the whole reason Sinkhorn needs a separate pass over the batch in the first place: row/column normalization only means something across a group of tokens, never for one token in isolation. `A` starts out as the same kind of raw logit computed by `learned_route`, just for every token against every expert simultaneously. This converges toward a matrix that's simultaneously well-calibrated per token and evenly loaded per expert, achieving hash-level balance across every layer rather than only on average. The catch is that this near-perfect balance constrains how specialized any one expert can become relative to plain learned routing, and there's a specific implementation trap: because the normalization above is a fixed procedure with no gradient of its own, using the normalized `A` directly as the combination weight silently detaches the router from the training signal entirely. The fix used in practice is to use the normalized matrix only to decide which experts get selected, while still computing the actual combination weight from the original, un-normalized `logits`, so the router keeps learning even though selection is balanced by a separate, non-differentiable process.
+`A` starts out as the same kind of raw logit computed by `learned_route`, just for every token in $X$ against every expert simultaneously. This converges toward a matrix that's simultaneously well-calibrated per token and evenly loaded per expert, achieving hash-level balance across every layer rather than only on average. The catch is that this near-perfect balance constrains how specialized any one expert can become relative to plain learned routing, and there's a specific implementation trap: because the normalization above is a fixed procedure with no gradient of its own, using the normalized `A` directly as the combination weight silently detaches the router from the training signal entirely. The fix used in practice is to use the normalized matrix only to decide which experts get selected, while still computing the actual combination weight from the original, un-normalized `logits`, so the router keeps learning even though selection is balanced by a separate, non-differentiable process.
 
 Learned routing's collapse risk is also where a much smaller, more obscure implementation detail turns out to matter more than it should. With top-1 routing specifically, the standard way of normalizing gate weights (dividing a token's gate value by the sum of gate values across its selected experts) collapses to dividing a number by itself, which always equals one. That silently zeroes out the gradient the router receives from the language-modeling loss, leaving only the load-balancing loss's gradient reaching the router at all: the router can learn to balance load perfectly while learning nothing about which expert actually suits which token. One documented fix is adding a "null expert": a phantom option that never actually computes anything, costs zero extra parameters and zero extra compute, but gives the router something real to contrast its top-1 choice against, restoring a working gradient signal from the main loss. It's a one-line fix for a bug that a router's usage statistics alone will never reveal, since perfectly balanced expert utilization looks identical whether or not the router is actually learning anything.
 
@@ -136,6 +136,8 @@ $$
 $$
 
 In every case, $x$ is the token's hidden representation and $e_i$ is expert $i$'s learned key vector, so $x\cdot e_i$ is their dot-product similarity, the raw logit. Softmax normalizes these logits across the whole pool of $N$ experts at once, so all $N$ scores are forced to sum to one: raising expert $i$'s logit necessarily lowers every other $g_j$. Sigmoid and Sqrt(Softplus) instead apply an independent function to each logit on its own, with no normalization across experts, so one expert's score moving has no effect on any other expert's score.
+
+![interactive:moe-gating](#)
 
 Early MoE work (Shazeer, GShard, Switch Transformer, Mixtral) used softmax across all candidate experts, forcing every expert to compete for a shared probability budget: raising one expert's score necessarily lowers everyone else's, whether or not that's actually the right call for those other experts. DeepSeek-V3 switched to sigmoid, scoring each expert against a fixed threshold rather than against the rest of the pool. That distinction is largely cosmetic at single-digit expert counts, but it matters more as expert counts climb into the hundreds: with 256 or 896 experts, a single softmax adjustment gets divided across the entire pool, while sigmoid's independence stays constant no matter how large N gets.
 
@@ -183,17 +185,27 @@ MAI-Thinking-1 arrives at "no shared expert" from a different angle: the team te
 
 ## 8. Compressing the computation itself: LatentMoE
 
-$$
-z = W_{\text{down}}\, x, \qquad y_i = \text{expert}_i(z), \qquad \text{out} = W_{\text{up}}\, y_i
-$$
+![Standard MoE vs. LatentMoE](images/moe-latentmoe-compare.svg?v=1)
 
-$$
-\text{cost} \propto N\ell,\ K\ell
-$$
+Every idea covered so far leaves the expert computation itself alone and only changes routing or balancing around it. LatentMoE, first proposed by NVIDIA in early 2026 and already shipping in NVIDIA's own Nemotron-3 Super and Ultra models, changes the computation directly: instead of running each expert at the token's full dimension $d$, a learned down-projection first compresses the token into a smaller latent space of dimension $\ell < d$, the expert runs entirely inside that compressed space, and a learned up-projection expands the result back to $d$ before it's combined with the rest of the layer's output. Because both the per-expert compute and the all-to-all communication payload scale with $\ell$ rather than $d$, the gap between $d$ and $\ell$ becomes budget: a larger expert pool or a larger top-K can be paid for out of that gap at no extra total cost.
 
-Here $x$ is the token's full-dimension representation, with dimension $d$, and $z$ is its projection into a smaller latent space of dimension $\ell < d$ via a learned down-projection matrix $W_{\text{down}}$. The expert computation happens entirely in this compressed space, and a learned up-projection $W_{\text{up}}$ expands the result back to dimension $d$ before it's combined with the rest of the layer's output. Because both the per-expert compute and the all-to-all communication payload scale with $\ell$ rather than $d$, the cost of running $N$ experts at top-$K$ scales as shown above instead of the usual $Nd, Kd$. The gap between $d$ and $\ell$ is exactly the budget that a larger expert pool or a larger top-K can be paid for with, at no extra total cost.
+The change to the `moe_layer` code from section 1 is small — three lines:
 
-Every idea covered so far leaves the expert computation itself alone and only changes routing or balancing around it. LatentMoE, first proposed by NVIDIA in early 2026 and already shipping in NVIDIA's own Nemotron-3 Super and Ultra models, changes the computation directly.
+```diff
+ def moe_layer(x, router, experts, shared_expert, top_k):
+     scores = gate(router(x))              # affinity score per expert (sections 4-5 open this up)
+     selected = top_k(scores, k=top_k)     # indices of the k highest-scoring experts
+
++    z = down_proj(x)                       # compress: dim d -> dim l  (l < d)
+-    routed_out = sum(scores[i] * experts[i](x) for i in selected)
++    routed_out = sum(scores[i] * experts[i](z) for i in selected)  # experts run at dim l, not d
++    routed_out = up_proj(routed_out)       # expand back: dim l -> dim d
+     shared_out = shared_expert(x)         # unconditional: runs on every token, no routing involved
+
+     return routed_out + shared_out
+```
+
+The router, the top-k selection, and the shared expert all stay exactly as they were in section 1; only what happens to the selected experts' input and output changes.
 
 MAI-Thinking-1 adopts this directly, growing from an earlier 192-expert, top-4 configuration to 512 experts at top-8, specifically once LatentMoE made the larger configuration affordable to communicate. It also runs the model fully dropless, with no token-dropping capacity limit at all, a choice the paper says was driven by capacity-related inconsistencies that showed up in balancing ablations once a hard cap was in the picture. Kimi K3's "Stable LatentMoE" appears to be the same latent-compression family applied at a more extreme granularity (896 experts, top-16), though Moonshot's own material doesn't disclose the compression ratio ($\ell$ relative to $d$) or expert-expansion ratio the way MAI-Thinking-1's report does.
 

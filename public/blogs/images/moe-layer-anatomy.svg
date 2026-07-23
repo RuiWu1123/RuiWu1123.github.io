@@ -48,7 +48,10 @@
   <rect x="845" y="132" width="140" height="46" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1.2"/>
   <text x="915" y="159" text-anchor="middle" font-size="15" font-weight="600" fill="#191919">router</text>
 
-  <line x1="915" y1="178" x2="915" y2="204" stroke="#191919" stroke-opacity="0.35" stroke-width="1.2"/>
+  <line x1="915" y1="178" x2="915" y2="190" stroke="#191919" stroke-opacity="0.35" stroke-width="1.2"/>
+  <line x1="915" y1="190" x2="915" y2="204" stroke="#191919" stroke-opacity="0.35" stroke-width="1.2"/>
+  <line x1="915" y1="190" x2="1230" y2="190" stroke="#191919" stroke-opacity="0.35" stroke-width="1.2"/>
+  <line x1="1230" y1="190" x2="1230" y2="204" stroke="#191919" stroke-opacity="0.35" stroke-width="1.2"/>
 
   <!-- expert pool row: 7 routed experts (2 selected), a gap, then the shared expert -->
   <g stroke="#191919" stroke-width="1" fill="#FFFFFF" fill-opacity="0.4">
@@ -77,10 +80,6 @@
   <!-- shared expert: same row and size, set apart with a gap -->
   <rect x="1440" y="204" width="90" height="48" rx="6" fill="#8DA399" stroke="#191919" stroke-width="1.2"/>
   <text x="1485" y="232" text-anchor="middle" font-size="12.5" font-weight="600" fill="#F4F3EF">shared</text>
-
-  <!-- legend: what the highlight color means -->
-  <rect x="1290" y="474" width="13" height="13" rx="3" fill="#D97757"/>
-  <text x="1310" y="485" font-size="12" fill="#6B6B6B">selected (top-k)</text>
 
   <!-- lines from selected routed experts down to combine -->
   <line x1="915" y1="252" x2="915" y2="300" stroke="#191919" stroke-width="1.6"/>

@@ -9,7 +9,7 @@ Mixture-of-Experts (MoE) is the architecture underneath nearly every frontier la
 
 Strip away everything vendor-specific and a 2026-era MoE layer looks like this: a token arrives, a small router network scores every expert's "affinity" for that token, the top-K highest-scoring experts actually run their feed-forward computation, and, in almost every current design, one additional shared expert runs on every token regardless of what the router decided. The outputs get combined into a single vector, weighted by the router's own scores, and that's the layer's output.
 
-![Anatomy of a modern MoE layer](blogs/images/moe-layer-anatomy.svg?v=6)
+![Anatomy of a modern MoE layer](blogs/images/moe-layer-anatomy.svg?v=7)
 
 Written out, one forward pass through a single MoE layer is only a few lines:
 
@@ -77,7 +77,7 @@ None of these four ideas individually reads as a dramatic departure from GShard-
 
 Everything so far has assumed learned routing: a trainable gate scores experts, and gradient descent shapes those scores over time. That's the industry default, but it's a choice, not the only option, and comparing it against the alternatives explains why the field has spent so much engineering effort on load balancing rather than simply picking a routing mechanism that's balanced by construction.
 
-![Three ways to assign tokens to experts](blogs/images/moe-routing-comparison.svg?v=4)
+![Three ways to assign tokens to experts](blogs/images/moe-routing-comparison.svg?v=5)
 ^Same 8 tokens, same 4 experts, three different assignment rules. Only one of the three both balances load and reads the tokens.
 
 All three methods answer the same question, which expert or experts does a token get sent to, and the cleanest way to compare them is by what each one actually computes to get there.

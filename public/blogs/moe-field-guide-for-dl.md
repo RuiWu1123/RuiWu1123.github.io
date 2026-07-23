@@ -185,7 +185,7 @@ MAI-Thinking-1 arrives at "no shared expert" from a different angle: the team te
 
 ## 8. Compressing the computation itself: LatentMoE
 
-![Standard MoE vs. LatentMoE](images/moe-latentmoe-compare.svg?v=1)
+![Standard MoE vs. LatentMoE](blogs/images/moe-latentmoe-compare.svg?v=1)
 
 Every idea covered so far leaves the expert computation itself alone and only changes routing or balancing around it. LatentMoE, first proposed by NVIDIA in early 2026 and already shipping in NVIDIA's own Nemotron-3 Super and Ultra models, changes the computation directly: instead of running each expert at the token's full dimension $d$, a learned down-projection first compresses the token into a smaller latent space of dimension $\ell < d$, the expert runs entirely inside that compressed space, and a learned up-projection expands the result back to $d$ before it's combined with the rest of the layer's output. Because both the per-expert compute and the all-to-all communication payload scale with $\ell$ rather than $d$, the gap between $d$ and $\ell$ becomes budget: a larger expert pool or a larger top-K can be paid for out of that gap at no extra total cost.
 

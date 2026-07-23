@@ -1691,7 +1691,7 @@ const GATE_TARGET_INDEX = 2; // where the dragged expert sits among the 5 bars
 
 const STR12 = {
   en: {
-    title: 'Interactive: softmax vs. sigmoid, with real numbers',
+    title: 'Interactive: softmax vs. sigmoid vs. sqrt(softplus), with real numbers',
     sub: 'Drag expert 3\'s raw logit. The other 4 experts\' logits stay fixed the whole time — watch what that does to everyone else\'s score under each function.',
     dragLabel: "Expert 3's raw logit",
     curveTitle: "Expert 3's own score, as a function of its own logit",
@@ -1700,12 +1700,13 @@ const STR12 = {
     barTitle: 'All 5 experts, at the current logit',
     softmax: 'Softmax',
     sigmoid: 'Sigmoid',
+    sqrtSoftplus: 'Sqrt(Softplus)',
     expertLabel: 'E',
-    note: 'Softmax: every bar shares one probability budget, so pushing expert 3 up visibly pushes the other 4 down. Sigmoid: expert 3 moves, the other 4 don\'t shift at all — each one is scored against a fixed threshold, not against the rest of the pool.',
+    note: 'Softmax: every bar shares one probability budget, so pushing expert 3 up visibly pushes the other 4 down. Sigmoid: expert 3 moves, the other 4 don\'t shift at all — each one is scored against a fixed threshold, not against the rest of the pool. Sqrt(Softplus), used by DeepSeek-V4, behaves like sigmoid in that sense (no shared budget, other experts don\'t move), but it isn\'t a bounded probability: its value keeps growing past 1 as the logit climbs, which is why its bars are plotted on their own scale below rather than as a 0-1 share.',
   },
   zh: {
-    title: '交互演示：softmax 和 sigmoid，真实数字',
-    sub: '拖动 3 号专家的原始 logit。另外 4 个专家的 logit 全程保持不变——看看这对两种函数下其他专家的分数分别有什么影响。',
+    title: '交互演示：softmax、sigmoid 与 sqrt(softplus)，真实数字',
+    sub: '拖动 3 号专家的原始 logit。另外 4 个专家的 logit 全程保持不变——看看这对三种函数下其他专家的分数分别有什么影响。',
     dragLabel: '3 号专家的原始 logit',
     curveTitle: '3 号专家自己的分数，作为它自己 logit 的函数',
     xAxis: '3 号专家的 logit',
@@ -1713,8 +1714,9 @@ const STR12 = {
     barTitle: '当前 logit 下，全部 5 个专家',
     softmax: 'Softmax',
     sigmoid: 'Sigmoid',
+    sqrtSoftplus: 'Sqrt(Softplus)',
     expertLabel: 'E',
-    note: 'Softmax：所有专家共用一份概率预算，抬高 3 号专家会明显压低其他 4 个。Sigmoid：3 号专家在动，另外 4 个纹丝不动——每个专家都是对着一个固定阈值打分，而不是和专家池里的其他专家比较。',
+    note: 'Softmax：所有专家共用一份概率预算，抬高 3 号专家会明显压低其他 4 个。Sigmoid：3 号专家在动，另外 4 个纹丝不动——每个专家都是对着一个固定阈值打分，而不是和专家池里的其他专家比较。DeepSeek-V4 使用的 Sqrt(Softplus) 在这一点上和 sigmoid 类似（没有共享预算，其他专家不会跟着动），但它不是一个有界的概率：数值会随着 logit 升高持续变大，超过 1 也完全正常，所以下面它的柱状图用了自己单独的刻度，而不是 0 到 1 的份额。',
   },
 };
 
@@ -1725,6 +1727,10 @@ function softmaxOwnScore(targetLogit: number, otherLogits: number[]): number {
 
 function sigmoidScore(logit: number): number {
   return 1 / (1 + Math.exp(-logit));
+}
+
+function sqrtSoftplusScore(logit: number): number {
+  return Math.sqrt(Math.log(1 + Math.exp(logit)));
 }
 
 export const MoEGatingExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
@@ -1744,10 +1750,13 @@ export const MoEGatingExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) =>
   }, [allLogits]);
 
   const sigmoidScores = useMemo(() => allLogits.map(sigmoidScore), [allLogits]);
+  const sqrtSoftplusScores = useMemo(() => allLogits.map(sqrtSoftplusScore), [allLogits]);
 
   // --- curve geometry ---
+  // sqrt(softplus(x)) is unbounded above 1 (it reaches ~2.45 at x=6), unlike softmax/sigmoid
+  // which are true 0-1 probabilities, so the y-axis has to cover the largest of the three.
   const W = 640;
-  const H = 260;
+  const H = 280;
   const padL = 40;
   const padR = 16;
   const padT = 16;
@@ -1756,32 +1765,41 @@ export const MoEGatingExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) =>
   const plotH = H - padT - padB;
   const xMin = -6;
   const xMax = 6;
+  const yMax = 2.5;
 
   const xOf = (l: number) => padL + ((l - xMin) / (xMax - xMin)) * plotW;
-  const yOf = (v: number) => padT + plotH - v * plotH;
+  const yOf = (v: number) => padT + plotH - (v / yMax) * plotH;
 
-  const { softmaxPath, sigmoidPath } = useMemo(() => {
+  const { softmaxPath, sigmoidPath, sqrtSoftplusPath } = useMemo(() => {
     const steps = 60;
     const smPts: string[] = [];
     const sgPts: string[] = [];
+    const ssPts: string[] = [];
     for (let i = 0; i <= steps; i++) {
       const l = xMin + (i / steps) * (xMax - xMin);
       const smV = softmaxOwnScore(l, GATE_OTHER_LOGITS);
       const sgV = sigmoidScore(l);
+      const ssV = sqrtSoftplusScore(l);
       smPts.push(`${i === 0 ? 'M' : 'L'} ${xOf(l).toFixed(1)} ${yOf(smV).toFixed(1)}`);
       sgPts.push(`${i === 0 ? 'M' : 'L'} ${xOf(l).toFixed(1)} ${yOf(sgV).toFixed(1)}`);
+      ssPts.push(`${i === 0 ? 'M' : 'L'} ${xOf(l).toFixed(1)} ${yOf(ssV).toFixed(1)}`);
     }
-    return { softmaxPath: smPts.join(' '), sigmoidPath: sgPts.join(' ') };
+    return { softmaxPath: smPts.join(' '), sigmoidPath: sgPts.join(' '), sqrtSoftplusPath: ssPts.join(' ') };
   }, []);
 
   const curX = xOf(targetLogit);
   const curSoftmaxY = yOf(softmaxScores[GATE_TARGET_INDEX]);
   const curSigmoidY = yOf(sigmoidScores[GATE_TARGET_INDEX]);
+  const curSqrtSoftplusY = yOf(sqrtSoftplusScores[GATE_TARGET_INDEX]);
 
   const barW = 560;
-  const barGroupH = 90;
+  const barGroupH = 220;
   const barSlot = barW / 5;
   const barInnerW = barSlot * 0.55;
+  // sqrt(softplus(x)) for x in [-6, 6] tops out around 2.45 — use a fixed reference ceiling
+  // (rather than rescaling to whatever the current 5 bars happen to hit) so bar height changes
+  // meaningfully and consistently as you drag the slider.
+  const SQRT_SOFTPLUS_CEILING = 2.5;
 
   return (
     <Card>
@@ -1811,7 +1829,7 @@ export const MoEGatingExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) =>
           <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke="#191919" strokeOpacity={0.4} />
           <line x1={xOf(0)} y1={padT} x2={xOf(0)} y2={padT + plotH} stroke="#191919" strokeOpacity={0.08} />
 
-          {[0, 0.25, 0.5, 0.75, 1].map((v) => (
+          {[0, 0.5, 1, 1.5, 2, 2.5].map((v) => (
             <text key={v} x={padL - 6} y={yOf(v) + 3} fontSize={9} textAnchor="end" fill="#6B6B6B">
               {v}
             </text>
@@ -1819,10 +1837,12 @@ export const MoEGatingExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) =>
 
           <path d={softmaxPath} stroke="#D97757" strokeWidth={2.5} fill="none" />
           <path d={sigmoidPath} stroke="#8DA399" strokeWidth={2.5} fill="none" />
+          <path d={sqrtSoftplusPath} stroke="#6B8CAE" strokeWidth={2.5} fill="none" />
 
           <line x1={curX} y1={padT} x2={curX} y2={padT + plotH} stroke="#191919" strokeOpacity={0.2} strokeDasharray="3 3" />
           <circle cx={curX} cy={curSoftmaxY} r={4.5} fill="#D97757" stroke="#191919" strokeWidth={1} />
           <circle cx={curX} cy={curSigmoidY} r={4.5} fill="#8DA399" stroke="#191919" strokeWidth={1} />
+          <circle cx={curX} cy={curSqrtSoftplusY} r={4.5} fill="#6B8CAE" stroke="#191919" strokeWidth={1} />
 
           <text x={padL + plotW / 2} y={H - 4} fontSize={10.5} textAnchor="middle" fill="#191919">
             {t.xAxis}
@@ -1833,24 +1853,27 @@ export const MoEGatingExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) =>
             <text x={13} y={8.5} fontSize={10} fill="#191919">{t.softmax}</text>
             <rect x={0} y={16} width={9} height={9} rx={2} fill="#8DA399" />
             <text x={13} y={24.5} fontSize={10} fill="#191919">{t.sigmoid}</text>
+            <rect x={0} y={32} width={9} height={9} rx={2} fill="#6B8CAE" />
+            <text x={13} y={40.5} fontSize={10} fill="#191919">{t.sqrtSoftplus}</text>
           </g>
         </svg>
       </div>
 
       <div className="mb-2 text-xs uppercase tracking-wide text-anthropic-gray/70">{t.barTitle}</div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {(
           [
-            { label: t.softmax, scores: softmaxScores, color: '#D97757' },
-            { label: t.sigmoid, scores: sigmoidScores, color: '#8DA399' },
+            { label: t.softmax, scores: softmaxScores, color: '#D97757', ceiling: 1, isShare: true },
+            { label: t.sigmoid, scores: sigmoidScores, color: '#8DA399', ceiling: 1, isShare: true },
+            { label: t.sqrtSoftplus, scores: sqrtSoftplusScores, color: '#6B8CAE', ceiling: SQRT_SOFTPLUS_CEILING, isShare: false },
           ] as const
         ).map((panel) => (
           <div key={panel.label}>
             <div className="text-xs text-anthropic-gray/70 mb-1">{panel.label}</div>
             <div className="w-full overflow-x-auto">
-              <svg viewBox={`0 0 ${barW} ${barGroupH}`} className="w-full" style={{ minWidth: 260 }}>
+              <svg viewBox={`0 0 ${barW} ${barGroupH}`} className="w-full" style={{ minWidth: 220 }}>
                 {panel.scores.map((s, i) => {
-                  const h = Math.max(s * (barGroupH - 26), 1);
+                  const h = Math.max((s / panel.ceiling) * (barGroupH - 40), 1);
                   const x = i * barSlot + (barSlot - barInnerW) / 2;
                   const isTarget = i === GATE_TARGET_INDEX;
                   return (
@@ -1864,10 +1887,10 @@ export const MoEGatingExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) =>
                         fill={panel.color}
                         fillOpacity={isTarget ? 1 : 0.45}
                       />
-                      <text x={x + barInnerW / 2} y={barGroupH - 20 - h - 4} fontSize={9} textAnchor="middle" fill="#191919">
-                        {(s * 100).toFixed(0)}%
+                      <text x={x + barInnerW / 2} y={barGroupH - 20 - h - 6} fontSize={9.5} textAnchor="middle" fill="#191919">
+                        {panel.isShare ? `${(s * 100).toFixed(0)}%` : s.toFixed(2)}
                       </text>
-                      <text x={x + barInnerW / 2} y={barGroupH - 6} fontSize={9.5} textAnchor="middle" fill="#6B6B6B">
+                      <text x={x + barInnerW / 2} y={barGroupH - 6} fontSize={10} textAnchor="middle" fill="#6B6B6B">
                         {t.expertLabel}{i + 1}
                       </text>
                     </g>

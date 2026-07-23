@@ -185,7 +185,7 @@ MAI-Thinking-1 是从另一个角度走到"不要共享专家"这个结论的：
 
 ## 八、把计算本身压缩掉：LatentMoE
 
-![标准 MoE 与 LatentMoE 对比](images/moe-latentmoe-compare.svg?v=1)
+![标准 MoE 与 LatentMoE 对比](blogs/images/moe-latentmoe-compare.svg?v=1)
 
 到目前为止提到的想法，都没有动专家计算本身，只是在它周围调整路由或均衡方式。LatentMoE 则直接改变了计算本身。它由 NVIDIA 在 2026 年年初率先提出，已经用在自家 Nemotron-3 Super 和 Ultra 模型上：不再让每个专家在 token 的完整维度 $d$ 上运行，而是先用一个可学习的下投影，把 token 压缩进一个更小的潜空间，维度为 $\ell < d$；专家完全在这个压缩后的空间里计算；再用一个可学习的上投影把结果展开回 $d$，才和这一层其余部分的输出合并。由于单个专家的计算量和 all-to-all 通信的数据量，都是按 $\ell$ 而不是 $d$ 来算的，$d$ 和 $\ell$ 之间的差值就变成了一份预算：可以用它来"购买"更大的专家池或更大的 top-K，而总成本并不增加。
 

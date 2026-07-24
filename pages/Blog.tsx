@@ -91,7 +91,7 @@ const Blog: React.FC = () => {
               </div>
             </div>
 
-            <div className={hasToc ? 'lg:grid lg:grid-cols-[1fr_260px] lg:gap-12 lg:items-start' : ''}>
+            <div className={hasToc ? 'lg:grid lg:grid-cols-[1fr_260px] lg:gap-12' : ''}>
             <article className="animate-fade-in min-w-0">
               <div className="flex flex-wrap items-center gap-4 mb-6">
                 <span className="text-anthropic-accent font-mono text-sm tracking-wide">{activePost.date}</span>

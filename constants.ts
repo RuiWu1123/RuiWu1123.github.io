@@ -152,11 +152,6 @@ export const BLOG_POSTS: BlogPost[] = [
     date: "2026/7/19"
   },
   {
-    id: "triton-for-dl",
-    title: "Writing Fast GPU Kernels Without Touching CUDA",
-    date: "2026/7/9"
-  },
-  {
     id: "gpu-field-guide-for-dl",
     title: "Inside the GPU: A Field Guide for Deep Learning Researchers",
     date: "2026/7/2"

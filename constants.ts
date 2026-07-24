@@ -142,11 +142,6 @@ export const BLOG_POSTS: BlogPost[] = [
     date: "2026/7/24"
   },
   {
-    id: "accelerator-hardware-landscape",
-    title: "Training Silicon Across a Decade: NVIDIA, AMD, TPU, and Ascend Compared",
-    date: "2026/7/20"
-  },
-  {
     id: "distributed-training-for-dl",
     title: "Splitting the Model: How Large-Scale Training Actually Works",
     date: "2026/7/19"

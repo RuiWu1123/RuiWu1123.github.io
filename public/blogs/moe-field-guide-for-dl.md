@@ -214,13 +214,7 @@ Everything above still assumes a fixed top-K: every token activates the same num
 
 This is also the one area with a real, unanswered open question. Meituan hasn't published detailed load-balancing mechanics for this design, and the zero-computation-expert mechanism raises an obvious one: what stops the router from routing everything to zero-computation experts to minimize loss on easy tokens during training. The public material doesn't yet say.
 
-## 10. The systems layer: what routing costs in communication
-
-Every routed token has to physically travel, over an interconnect, to whichever accelerator holds its selected expert. This cost only grows more pressing as expert counts climb into the hundreds (the [distributed-training post](#/blog?id=distributed-training-for-dl) covers this all-to-all communication pattern in more depth). Several of the choices above are, from different angles, responses to that same cost. Hash routing's revival in DeepSeek-V4 (deterministic, no learned gate, applied specifically to its first three MoE layers in place of what used to be dense FFN blocks) trades routing quality for guaranteed-even load and zero routing-network communication overhead in those layers. LatentMoE's compressed latent space directly shrinks the payload that has to move in an all-to-all exchange, which is precisely the lever that let MAI-Thinking-1 and Kimi K3 afford larger expert pools in the first place. And DeepSeek-V4's other systems contribution, a pipelined expert-parallelism kernel open-sourced as MegaMoE, overlaps the dispatch, compute, and combine stages of expert-parallel MoE across "waves" of experts rather than running them sequentially, reporting meaningful speedups over a comparable overlap scheme called Comet. LongCat's ScMoE backbone is a similarly systems-driven choice, a shortcut-connected design built specifically to improve expert-parallel throughput. None of these are quality improvements in the way sigmoid gating or fine-grained experts are: they're the engineering that makes the quality improvements affordable to actually run.
-
-Separately, DeepSeek-V4 introduces Anticipatory Routing, a training-stability technique rather than a communication one: when the model detects a loss spike, which the paper ties specifically to outlier activations inside MoE layers, it starts computing routing decisions from a slightly stale copy of the router's own weights rather than the current ones, decoupling how fast the router changes from how fast the rest of the model changes until the instability passes.
-
-## 11. Today's configurations, side by side
+## 10. Today's configurations, side by side
 
 GLM-5.2 and LongCat-2.0's own pages say little about MoE-specific numbers, so the figures below for those two are compiled from third-party technical coverage rather than each model's own release material; everything else is drawn directly from the source reports.
 
@@ -240,7 +234,7 @@ GLM-5.2 and LongCat-2.0's own pages say little about MoE-specific numbers, so th
 
 ![interactive:moe-lookup](#)
 
-## 12. What's converged, and what's still an open argument
+## 11. What's converged, and what's still an open argument
 
 Fine-grained routed experts has stopped being a debated choice within about two years of DeepSeekMoE's publication: it's the substrate nearly everything in this post starts from. Sigmoid-family gating has displaced softmax at most, though notably not all, frontier labs, with MAI-Thinking-1's reversion to softmax being the one clear 2026 exception, and Qwen's entire lineage never having left softmax to begin with.
 

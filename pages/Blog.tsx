@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Link2 } from 'lucide-react';
 import { BLOG_POSTS, loadBlogContent } from '../constants';
 import { RooflineExplorer, GridBlockSimulator, TritonGridExplorer, AutotuneExplorer, RingAllReduceExplorer, ZeROMemoryCalculator, PipelineBubbleExplorer, AcceleratorTrendExplorer, AcceleratorSpecLookup, MoESparsityExplorer, MoEModelLookup, MoEGatingExplorer } from '../components/blog/Interactives';
 import { TableOfContentsSidebar, TableOfContentsMobile, extractHeadings, slugify } from '../components/blog/TableOfContents';
@@ -19,16 +19,55 @@ function flattenToText(node: React.ReactNode): string {
   return '';
 }
 
+const CodeBlock: React.FC<{ raw: string; children: React.ReactNode }> = ({ raw, children }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(raw).then(() => {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    });
+  };
+
+  return (
+    <div className="relative group mb-6">
+      <pre className="overflow-x-auto rounded-lg border border-anthropic-text/10 bg-[#191919] p-4 text-sm leading-relaxed text-[#F4F3EF]">
+        {children}
+      </pre>
+      <button
+        type="button"
+        onClick={handleCopy}
+        aria-label={copied ? 'Copied' : 'Copy code'}
+        title={copied ? 'Copied' : 'Copy code'}
+        className="absolute top-3 right-3 flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-[#F4F3EF]/70 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white/10 hover:text-[#F4F3EF]"
+      >
+        {copied ? <Check size={13} /> : <Copy size={13} />}
+      </button>
+    </div>
+  );
+};
+
 const Blog: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [blogContent, setBlogContent] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [lang, setLang] = useState<'en' | 'zh'>('en');
+  const [copiedSection, setCopiedSection] = useState<string | null>(null);
 
   const postId = searchParams.get('id');
   const activePost = BLOG_POSTS.find(p => p.id === postId);
   const tocItems = useMemo(() => extractHeadings(blogContent), [blogContent]);
   const hasToc = !loading && tocItems.length >= 3;
+
+  const readingMinutes = useMemo(() => {
+    if (!blogContent) return null;
+    if (lang === 'zh') {
+      const cjkCount = (blogContent.match(/[一-鿿]/g) || []).length;
+      return Math.max(1, Math.round(cjkCount / 350));
+    }
+    const words = blogContent.trim().split(/\s+/).filter(Boolean).length;
+    return Math.max(1, Math.round(words / 220));
+  }, [blogContent, lang]);
 
   // Load blog content when activePost or lang changes
   useEffect(() => {
@@ -43,6 +82,23 @@ const Blog: React.FC = () => {
     }
   }, [activePost, lang]);
 
+  // Scroll to a section when its id is present in the URL (shared deep link,
+  // or clicking a heading's anchor button below).
+  useEffect(() => {
+    if (loading || !blogContent) return;
+    const section = searchParams.get('section');
+    if (!section) return;
+    const timer = window.setTimeout(() => {
+      const el = document.getElementById(section);
+      if (el) {
+        const y = el.getBoundingClientRect().top + window.scrollY - 88;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }, 80);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, blogContent, searchParams.get('section')]);
+
   // Function to handle navigation
   const handlePostClick = (id: string) => {
     setSearchParams({ id });
@@ -53,6 +109,31 @@ const Blog: React.FC = () => {
     setSearchParams({});
     window.scrollTo(0, 0);
   };
+
+  // Copies a shareable deep link to a section (HashRouter puts the whole
+  // route in the URL hash, so this rides along as a `section` query param
+  // rather than a native #fragment, which the router would otherwise eat).
+  const handleCopySection = (id: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('section', id);
+    setSearchParams(params);
+    const url = `${window.location.origin}${window.location.pathname}#/blog?${params.toString()}`;
+    navigator.clipboard.writeText(url).catch(() => {});
+    setCopiedSection(id);
+    window.setTimeout(() => setCopiedSection((v) => (v === id ? null : v)), 1500);
+  };
+
+  const renderHeadingAnchor = (id: string) => (
+    <button
+      type="button"
+      onClick={() => handleCopySection(id)}
+      aria-label="Copy link to this section"
+      title="Copy link to this section"
+      className="ml-2 inline-flex align-middle opacity-0 group-hover:opacity-100 text-anthropic-gray/40 hover:text-anthropic-accent transition-opacity"
+    >
+      {copiedSection === id ? <Check size={16} /> : <Link2 size={16} />}
+    </button>
+  );
 
   return (
     <div className="animate-fade-in pt-12 pb-20">
@@ -93,8 +174,16 @@ const Blog: React.FC = () => {
 
             <div className={hasToc ? 'lg:grid lg:grid-cols-[1fr_260px] lg:gap-12' : ''}>
             <article className="animate-fade-in min-w-0">
-              <div className="flex flex-wrap items-center gap-4 mb-6">
+              <div className="flex flex-wrap items-center gap-3 mb-6">
                 <span className="text-anthropic-accent font-mono text-sm tracking-wide">{activePost.date}</span>
+                {readingMinutes && (
+                  <>
+                    <span className="text-anthropic-gray/30">·</span>
+                    <span className="text-anthropic-gray font-mono text-sm">
+                      {lang === 'zh' ? `约 ${readingMinutes} 分钟阅读` : `~${readingMinutes} min read`}
+                    </span>
+                  </>
+                )}
               </div>
 
               <h1 className="text-3xl md:text-5xl font-serif text-anthropic-text mb-10 leading-tight">
@@ -122,16 +211,24 @@ const Blog: React.FC = () => {
                           {children}
                         </h1>
                       ),
-                      h2: ({ children }) => (
-                        <h2 id={slugify(flattenToText(children))} className="text-3xl font-serif text-anthropic-text mb-6 mt-12 leading-tight scroll-mt-24">
-                          {children}
-                        </h2>
-                      ),
-                      h3: ({ children }) => (
-                        <h3 className="text-2xl font-serif text-anthropic-text mb-4 mt-10 leading-tight">
-                          {children}
-                        </h3>
-                      ),
+                      h2: ({ children }) => {
+                        const id = slugify(flattenToText(children));
+                        return (
+                          <h2 id={id} className="group text-3xl font-serif text-anthropic-text mb-6 mt-12 leading-tight scroll-mt-24">
+                            {children}
+                            {renderHeadingAnchor(id)}
+                          </h2>
+                        );
+                      },
+                      h3: ({ children }) => {
+                        const id = slugify(flattenToText(children));
+                        return (
+                          <h3 id={id} className="group text-2xl font-serif text-anthropic-text mb-4 mt-10 leading-tight scroll-mt-24">
+                            {children}
+                            {renderHeadingAnchor(id)}
+                          </h3>
+                        );
+                      },
                       h4: ({ children }) => (
                         <h4 className="text-xl font-serif text-anthropic-text mb-3 mt-8 leading-tight">
                           {children}
@@ -227,7 +324,7 @@ const Blog: React.FC = () => {
                           const text = String(children).replace(/\n$/, '');
                           const lines = text.split('\n');
                           return (
-                            <code className={`${className} block overflow-x-auto whitespace-pre`}>
+                            <code data-raw-text={text} className={`${className} block overflow-x-auto whitespace-pre`}>
                               {lines.map((line, i) => {
                                 const isAdd = line.startsWith('+');
                                 const isDel = line.startsWith('-');
@@ -255,16 +352,19 @@ const Blog: React.FC = () => {
                         }
 
                         return (
-                          <code className={`${className} block overflow-x-auto whitespace-pre`}>
+                          <code data-raw-text={String(children)} className={`${className} block overflow-x-auto whitespace-pre`}>
                             {children}
                           </code>
                         );
                       },
-                      pre: ({ children }) => (
-                        <pre className="mb-6 overflow-x-auto rounded-lg border border-anthropic-text/10 bg-[#191919] p-4 text-sm leading-relaxed text-[#F4F3EF]">
-                          {children}
-                        </pre>
-                      ),
+                      pre: ({ children }) => {
+                        const codeEl = Array.isArray(children) ? children[0] : children;
+                        const raw = React.isValidElement(codeEl)
+                          ? ((codeEl.props as { 'data-raw-text'?: string; children?: React.ReactNode })['data-raw-text'] ??
+                              flattenToText((codeEl.props as { children?: React.ReactNode }).children))
+                          : flattenToText(children);
+                        return <CodeBlock raw={raw}>{children}</CodeBlock>;
+                      },
                       img: ({ src, alt }) => {
                         if (alt === 'interactive:roofline') {
                           return <RooflineExplorer lang={lang} />;

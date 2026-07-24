@@ -1,6 +1,6 @@
 ---
 title: "Sparse by Design: How Mixture-of-Experts Actually Works in 2026"
-date: "2026/7/21"
+date: "2026/7/24"
 ---
 
 Mixture-of-Experts (MoE) is the architecture underneath nearly every frontier language model shipping in 2026, and the term covers a much wider range of real designs than it sounds like it should. "MoE" by itself tells you almost nothing about how a model routes tokens, how it keeps experts balanced, how many experts exist versus how many actually fire, or whether the computation happening inside an "expert" even looks like a normal feed-forward block anymore. This post is about the mechanics underneath that one label: what a modern MoE layer actually does, where each of its moving parts came from historically, and which specific design levers today's frontier labs are actively pulling on to push the architecture further (routing strategy, gating function, load-balancing method, expert granularity, latent compression, adaptive per-token compute).

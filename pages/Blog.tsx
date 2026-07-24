@@ -9,6 +9,15 @@ import 'katex/dist/katex.min.css';
 import { ArrowLeft } from 'lucide-react';
 import { BLOG_POSTS, loadBlogContent } from '../constants';
 import { RooflineExplorer, GridBlockSimulator, TritonGridExplorer, AutotuneExplorer, RingAllReduceExplorer, ZeROMemoryCalculator, PipelineBubbleExplorer, AcceleratorTrendExplorer, AcceleratorSpecLookup, MoESparsityExplorer, MoEModelLookup, MoEGatingExplorer } from '../components/blog/Interactives';
+import { TableOfContents, slugify } from '../components/blog/TableOfContents';
+
+function flattenToText(node: React.ReactNode): string {
+  if (node === null || node === undefined || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(flattenToText).join('');
+  if (React.isValidElement(node)) return flattenToText((node.props as { children?: React.ReactNode }).children);
+  return '';
+}
 
 const Blog: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -88,7 +97,9 @@ const Blog: React.FC = () => {
               <h1 className="text-3xl md:text-5xl font-serif text-anthropic-text mb-10 leading-tight">
                 {activePost.title}
               </h1>
-              
+
+              {!loading && blogContent && <TableOfContents content={blogContent} lang={lang} />}
+
               <div className="max-w-none text-anthropic-text text-lg font-normal leading-relaxed border-t border-anthropic-text/10 pt-10">
                 {loading ? (
                   <div className="text-center py-8">
@@ -105,7 +116,7 @@ const Blog: React.FC = () => {
                         </h1>
                       ),
                       h2: ({ children }) => (
-                        <h2 className="text-3xl font-serif text-anthropic-text mb-6 mt-12 leading-tight">
+                        <h2 id={slugify(flattenToText(children))} className="text-3xl font-serif text-anthropic-text mb-6 mt-12 leading-tight scroll-mt-24">
                           {children}
                         </h2>
                       ),

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -9,7 +9,7 @@ import 'katex/dist/katex.min.css';
 import { ArrowLeft } from 'lucide-react';
 import { BLOG_POSTS, loadBlogContent } from '../constants';
 import { RooflineExplorer, GridBlockSimulator, TritonGridExplorer, AutotuneExplorer, RingAllReduceExplorer, ZeROMemoryCalculator, PipelineBubbleExplorer, AcceleratorTrendExplorer, AcceleratorSpecLookup, MoESparsityExplorer, MoEModelLookup, MoEGatingExplorer } from '../components/blog/Interactives';
-import { TableOfContents, slugify } from '../components/blog/TableOfContents';
+import { TableOfContentsSidebar, TableOfContentsMobile, extractHeadings, slugify } from '../components/blog/TableOfContents';
 
 function flattenToText(node: React.ReactNode): string {
   if (node === null || node === undefined || typeof node === 'boolean') return '';
@@ -27,6 +27,8 @@ const Blog: React.FC = () => {
 
   const postId = searchParams.get('id');
   const activePost = BLOG_POSTS.find(p => p.id === postId);
+  const tocItems = useMemo(() => extractHeadings(blogContent), [blogContent]);
+  const hasToc = !loading && tocItems.length >= 3;
 
   // Load blog content when activePost or lang changes
   useEffect(() => {
@@ -54,8 +56,8 @@ const Blog: React.FC = () => {
 
   return (
     <div className="animate-fade-in pt-12 pb-20">
-      <div className="max-w-4xl mx-auto">
-        
+      <div className={`mx-auto transition-[max-width] ${hasToc ? 'max-w-6xl' : 'max-w-4xl'}`}>
+
         {/* Detail View */}
         {activePost ? (
           <div>
@@ -89,7 +91,8 @@ const Blog: React.FC = () => {
               </div>
             </div>
 
-            <article className="animate-fade-in">
+            <div className={hasToc ? 'lg:grid lg:grid-cols-[1fr_260px] lg:gap-12 lg:items-start' : ''}>
+            <article className="animate-fade-in min-w-0">
               <div className="flex flex-wrap items-center gap-4 mb-6">
                 <span className="text-anthropic-accent font-mono text-sm tracking-wide">{activePost.date}</span>
               </div>
@@ -98,7 +101,11 @@ const Blog: React.FC = () => {
                 {activePost.title}
               </h1>
 
-              {!loading && blogContent && <TableOfContents content={blogContent} lang={lang} />}
+              {hasToc && (
+                <div className="lg:hidden">
+                  <TableOfContentsMobile items={tocItems} lang={lang} />
+                </div>
+              )}
 
               <div className="max-w-none text-anthropic-text text-lg font-normal leading-relaxed border-t border-anthropic-text/10 pt-10">
                 {loading ? (
@@ -331,6 +338,13 @@ const Blog: React.FC = () => {
                 )}
               </div>
             </article>
+
+            {hasToc && (
+              <aside className="hidden lg:block">
+                <TableOfContentsSidebar items={tocItems} lang={lang} />
+              </aside>
+            )}
+            </div>
           </div>
         ) : (
           /* Directory View */

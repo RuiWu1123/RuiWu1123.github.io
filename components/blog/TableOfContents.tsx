@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 type Lang = 'en' | 'zh';
 
@@ -10,12 +10,12 @@ export function slugify(text: string): string {
     .replace(/\s+/g, '-');
 }
 
-interface TocItem {
+export interface TocItem {
   id: string;
   title: string;
 }
 
-function extractHeadings(markdown: string): TocItem[] {
+export function extractHeadings(markdown: string): TocItem[] {
   const lines = markdown.split('\n');
   const items: TocItem[] = [];
   for (const raw of lines) {
@@ -34,11 +34,8 @@ const STR: Record<Lang, { label: string }> = {
   zh: { label: '本页目录' },
 };
 
-export const TableOfContents: React.FC<{ content: string; lang: Lang }> = ({ content, lang }) => {
-  const items = useMemo(() => extractHeadings(content), [content]);
+function useActiveHeading(items: TocItem[]): string | null {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [open, setOpen] = useState(false);
-  const t = STR[lang];
 
   useEffect(() => {
     if (items.length === 0) return;
@@ -61,60 +58,92 @@ export const TableOfContents: React.FC<{ content: string; lang: Lang }> = ({ con
     return () => window.clearTimeout(timer);
   }, [items]);
 
+  return activeId;
+}
+
+function scrollToHeading(id: string) {
+  const el = document.getElementById(id);
+  if (el) {
+    const y = el.getBoundingClientRect().top + window.scrollY - 88;
+    window.scrollTo({ top: y, behavior: 'smooth' });
+  }
+}
+
+const TocList: React.FC<{ items: TocItem[]; activeId: string | null; onNavigate: (id: string) => void }> = ({
+  items,
+  activeId,
+  onNavigate,
+}) => (
+  <ul className="space-y-2">
+    {items.map((item) => (
+      <li key={item.id}>
+        <a
+          href={`#${item.id}`}
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate(item.id);
+          }}
+          className={`block text-sm leading-snug border-l-2 pl-3 -ml-px transition-colors ${
+            activeId === item.id
+              ? 'border-anthropic-accent text-anthropic-accent font-medium'
+              : 'border-anthropic-text/10 text-anthropic-gray hover:text-anthropic-text hover:border-anthropic-text/30'
+          }`}
+        >
+          {item.title}
+        </a>
+      </li>
+    ))}
+  </ul>
+);
+
+/**
+ * Sticky sidebar meant to sit in a grid column next to the article. Stays
+ * pinned near the top of the viewport as the reader scrolls through the
+ * whole post, and highlights whichever section is currently in view.
+ */
+export const TableOfContentsSidebar: React.FC<{ items: TocItem[]; lang: Lang }> = ({ items, lang }) => {
+  const activeId = useActiveHeading(items);
+  const t = STR[lang];
+
   if (items.length < 3) return null;
 
-  const handleClick = (id: string) => (e: React.MouseEvent) => {
-    e.preventDefault();
-    const el = document.getElementById(id);
-    if (el) {
-      const y = el.getBoundingClientRect().top + window.scrollY - 88;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }
-    setOpen(false);
-  };
-
-  const list = (
-    <ul className="space-y-2">
-      {items.map((item) => (
-        <li key={item.id}>
-          <a
-            href={`#${item.id}`}
-            onClick={handleClick(item.id)}
-            className={`block text-sm leading-snug border-l-2 pl-3 -ml-px transition-colors ${
-              activeId === item.id
-                ? 'border-anthropic-accent text-anthropic-accent font-medium'
-                : 'border-anthropic-text/10 text-anthropic-gray hover:text-anthropic-text hover:border-anthropic-text/30'
-            }`}
-          >
-            {item.title}
-          </a>
-        </li>
-      ))}
-    </ul>
+  return (
+    <nav aria-label={t.label} className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2">
+      <div className="text-xs uppercase tracking-wide text-anthropic-gray/60 mb-3 font-sans">{t.label}</div>
+      <TocList items={items} activeId={activeId} onNavigate={scrollToHeading} />
+    </nav>
   );
+};
+
+/** Collapsible "On this page" box for screens too narrow for the sidebar. */
+export const TableOfContentsMobile: React.FC<{ items: TocItem[]; lang: Lang }> = ({ items, lang }) => {
+  const activeId = useActiveHeading(items);
+  const [open, setOpen] = useState(false);
+  const t = STR[lang];
+
+  if (items.length < 3) return null;
 
   return (
-    <>
-      {/* Floating sidebar on wide screens */}
-      <nav
-        aria-label={t.label}
-        className="hidden 2xl:block fixed top-32 right-8 w-64 max-h-[70vh] overflow-y-auto pr-2"
+    <div className="not-prose mb-10 rounded-xl border border-anthropic-text/10 bg-anthropic-stone/20">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-medium text-anthropic-text"
       >
-        <div className="text-xs uppercase tracking-wide text-anthropic-gray/60 mb-3 font-sans">{t.label}</div>
-        {list}
-      </nav>
-
-      {/* Collapsible inline TOC everywhere else */}
-      <div className="2xl:hidden not-prose mb-10 rounded-xl border border-anthropic-text/10 bg-anthropic-stone/20">
-        <button
-          onClick={() => setOpen((v) => !v)}
-          className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-medium text-anthropic-text"
-        >
-          <span>{t.label}</span>
-          <span className={`text-anthropic-gray/60 transition-transform ${open ? 'rotate-180' : ''}`}>⌄</span>
-        </button>
-        {open && <div className="px-5 pb-5">{list}</div>}
-      </div>
-    </>
+        <span>{t.label}</span>
+        <span className={`text-anthropic-gray/60 transition-transform ${open ? 'rotate-180' : ''}`}>⌄</span>
+      </button>
+      {open && (
+        <div className="px-5 pb-5">
+          <TocList
+            items={items}
+            activeId={activeId}
+            onNavigate={(id) => {
+              scrollToHeading(id);
+              setOpen(false);
+            }}
+          />
+        </div>
+      )}
+    </div>
   );
 };

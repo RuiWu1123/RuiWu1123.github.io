@@ -5,7 +5,7 @@ date: "2026/7/19"
 
 [这个系列的第一篇文章](#/blog?id=gpu-field-guide-for-dl) 建立了单张 GPU 的模型：warp、SM、内存层级、roofline 模型。而这一篇要讲的问题，是从"一张 GPU 就够了"这个假设不再成立的那一刻开始的：你的模型、或者你的 batch、或者你的序列长度，已经装不进一张卡了，你必须决定怎么把工作拆到多张卡上去。这个决定有个名字——**并行策略**——而在 DP、DDP、ZeRO、TP、PP、SP、CP 这一堆缩写背后，真正不同的想法其实出奇地少。这篇文章会按照这个领域实际发现它们的顺序，从每一个策略具体要解决的问题出发，把它们一个个搭建起来，最后讲清楚现代训练是怎么把四五个这样的想法同时叠在一起，却不会互相打架的。
 
-这篇文章大量参考了猛猿的《图解大模型训练》系列，那依然是我见过对这部分内容讲得最清楚的中文资料之一；这里的图和讲解方式是我自己在读这个系列以及它背后的原始论文（GPipe、PipeDream、ZeRO、Megatron-LM、DeepSpeed Ulysses、Ring Attention）时重新组织出来的。
+这篇文章大量参考了[猛猿](https://www.zhihu.com/people/lemonround)的《图解大模型训练》系列，那依然是我见过对这部分内容讲得最清楚的中文资料之一；这里的图和讲解方式是我自己在读这个系列以及它背后的原始论文（GPipe、PipeDream、ZeRO、Megatron-LM、DeepSpeed Ulysses、Ring Attention）时重新组织出来的。
 
 ## 1. 装不下的两种东西
 
@@ -21,7 +21,7 @@ date: "2026/7/19"
 
 最朴素版本的数据并行简单到几乎不需要专门起个名字：每张 GPU 持有一份完整的模型副本，在自己的 batch 切片上跑前向和反向，然后所有算出来的梯度需要被平均，才能做优化器更新（否则各个副本会越跑越不一致）。最早的实现是通过 **parameter server（参数服务器）** 来做这件事：一个专门指定的节点（或进程），所有 worker 把自己的梯度发给它，它做平均之后再把结果发回去。
 
-![Naive DP vs Ring-AllReduce](blogs/images/dp-ddp-ring-allreduce.svg?v=1)
+![Naive DP vs Ring-AllReduce](blogs/images/dp-ddp-ring-allreduce.svg?v=2)
 ^Parameter server 的入站带宽是所有 worker 共享的，GPU 越多情况越糟。Ring-AllReduce 把同样的计算重新组织了一遍，使得任何一个节点都不会成为瓶颈。
 
 Parameter server 这个设计有一个明显的缺陷：server 那根网线是所有 worker 共享的，所以它的流量会随着 GPU 数量线性增长，最终会变成整个集群都要等的瓶颈。**DDP**（PyTorch 的 `DistributedDataParallel`，也是今天几乎所有人默认使用的方案）用 **Ring-AllReduce** 取代了这套机制，这个算法有一个相当优雅的性质：每个参与者永远只和逻辑环上的两个邻居通信，而且每张 GPU 需要搬运的数据总量，**和环里有多少张 GPU 无关**。
@@ -42,7 +42,7 @@ Ring-AllReduce 解决了朴素 DP 的**通信**瓶颈，但前面描述的 DDP �
 
 **ZeRO-3** 更进一步，把参数本身也分片了。这是结构上变化最大的一步：GPU 不再持有完整的参数张量，而是要在每一层前向或反向计算**之前**，用 **all-gather** 把自己需要的那个具体分片拼回来，用完之后再释放掉。每张 GPU 的显存降到 **16Φ/N**——几乎是和 GPU 数量成正比的缩减——代价是每一层、每一步都要多付出 ZeRO-1/2 不需要的 all-gather 通信。
 
-![ZeRO memory breakdown](blogs/images/zero-memory-breakdown.svg?v=1)
+![ZeRO memory breakdown](blogs/images/zero-memory-breakdown.svg?v=2)
 ^在 N=64 时，ZeRO-1 已经能把显存降到 DDP 的大约四分之一；ZeRO-3 能降到 16Φ/N——真正和你的 GPU 数量成正比，而不只是一个固定的倍数。
 
 这一切都不是免费的：ZeRO-3 多出来的通信意味着它特别适合"显存不够、但带宽有富余（比如一整个快速的 NVLink 域）"这种情况；而当瓶颈主要是优化器状态本身时，ZeRO-1 往往是更务实的默认选择。下面这个面板可以让你选一个模型大小、一个 GPU 数量和一个 stage，直接看到每张 GPU 上真实的显存数字——包括它什么时候会超出单张 GPU 的 HBM。
@@ -59,7 +59,7 @@ ZeRO 分片的是"同一个模型的冗余副本"；如果一个模型的各层�
 
 **PipeDream**，以及 Megatron-LM 在实践中使用的 **1F1B**（"one-forward-one-backward"）调度，会更激进地交错执行：一旦某个 microbatch 的激活值不再是维持流水线运转所必需的，它对应的反向传播就会立刻被调度执行，而不是等所有其他 microbatch 的前向都跑完再说。这**不会**减少总的 bubble 时间——出于后面会讲到的一个微妙但重要的原因，它其实是完全相同的比例——但它会大幅减少任意一个 stage 在同一时刻需要在显存里保留多少个 microbatch 的激活值，而这在实践中往往才是更紧的约束。
 
-![Three pipeline schedules](blogs/images/pipeline-bubble-schedules.svg?v=1)
+![Three pipeline schedules](blogs/images/pipeline-bubble-schedules.svg?v=2)
 ^朴素的模型并行在任意时刻只有 P 张 GPU 里的 1 张在忙。GPipe 和 1F1B 最终达到的总 bubble 比例完全一样——两者的区别在于峰值激活值显存，而不是墙钟时间。
 
 Bubble 比例有一个很干净的封闭形式：P 个 pipeline stage、M 个 microbatch 时，每张 GPU 空闲的时间比例是 **(P−1) / (P−1+M)**。这一个公式几乎解释了你会读到的所有关于流水线并行的实践建议：microbatch 越多，bubble 永远越小（当 M→∞ 时，bubble 比例趋向于 0）；而更深的 pipeline（更大的 P，通常是模型更大时才需要）需要成比例更多的 microbatch 才能把 bubble 压小——这正是为什么流水线并行通常要搭配一个足够大的 global batch size，而在 P 很深、batch 又很小的时候会很吃亏。
@@ -72,7 +72,7 @@ Bubble 比例有一个很干净的封闭形式：P 个 pipeline stage、M 个 mi
 
 最干净的例子是 transformer 的 MLP block，它是两个线性层中间夹一个非线性：`Y = B(GeLU(A(X)))`。Megatron 把矩阵 A **按列**切分到各张 GPU 上——GPU 0 拿到 A 的第 0..k 列，GPU 1 拿剩下的——这样每张 GPU 都能独立算出自己那一份 `GeLU(A(X))`，**完全不需要通信**（GeLU 是逐元素的，它不在乎每张 GPU 只拿到中间张量的一部分）。矩阵 B 则**按行**切分，这个切法是特意选的，使得每张 GPU 算出来的部分结果，在各 GPU 间求和之后，能重新拼出正确的最终输出——而这恰好只需要在 block 的最末尾做**一次 all-reduce**。
 
-![Megatron tensor parallelism](blogs/images/megatron-tensor-parallel.svg?v=1)
+![Megatron tensor parallelism](blogs/images/megatron-tensor-parallel.svg?v=2)
 ^先列并行、后行并行：中间的 GeLU 完全不需要通信，整个 block 只需要付出一次 all-reduce 的代价。
 
 这种"先列后行"的模式（Megatron 把"前向是恒等、反向是 all-reduce"的算子叫 `f`，把"前向是 all-reduce、反向是恒等"的算子叫 `g`）用同样的方式应用在 attention 上，把整个 head 拆到不同 GPU 上，而不是在一个 head 内部再拆。一个完整的 transformer 层——一个 attention block、一个 MLP block——恰好需要 **前向 2 次 all-reduce、反向 2 次 all-reduce**，不管这个 tensor-parallel 组里有多少张 GPU 都是如此。
@@ -84,9 +84,6 @@ Bubble 比例有一个很干净的封闭形式：P 个 pipeline stage、M 个 mi
 前面描述的张量并行有一个不太起眼的低效之处：LayerNorm、dropout、残差相加这些操作，并不像矩阵乘法那样能沿着 hidden 维度干净地切分——它们需要每个 token **完整**的 hidden 向量才能算对。Megatron 最早的 TP 实现处理这个问题的办法很简单：直接在 tensor-parallel 组里的每张 GPU 上**完整复制**这些操作的激活值，这意味着这部分区域的激活值显存完全没有从张量并行中得到任何好处。
 
 **Sequence parallelism（Megatron SP）** 用一个观察填补了这个空隙：LayerNorm、dropout、残差相加都是**逐 token** 独立运算的，所以与其沿着 hidden 维度切分（这是 TP 在做的，而这些操作又用不上），你完全可以改成沿着**序列**维度切分——每张 GPU 只拥有一部分 token 对应的这些激活值，完全没有冗余。
-
-![Megatron sequence parallelism](blogs/images/megatron-sequence-parallel.svg?v=1)
-^SP 区域（LayerNorm、dropout、残差）按序列位置切分；TP 区域（attention、MLP）按 hidden 维度切分。每个接缝处用一次 all-gather 和一次 reduce-scatter，在两种布局之间切换。
 
 SP 区域和 TP 区域之间的接缝，用的是 **all-gather**（在需要完整序列的 TP block 之前，把序列重新拼起来）和 **reduce-scatter**（在之后把输出重新按序列分片）——而不是 TP 的 all-reduce——这里有必要说清楚一点：这是一次**显存**优化，而不是**带宽**优化：一次 all-gather 加一次 reduce-scatter，搬运的总字节数和一次 all-reduce 完全一样。你消除了一个真实存在的显存冗余（被复制的 LayerNorm/dropout 激活值），而为此付出的通信账单，本质上和你原本为张量并行付的那笔账是一样的。
 
@@ -100,7 +97,7 @@ SP 区域和 TP 区域之间的接缝，用的是 **all-gather**（在需要完�
 
 最直接的想法是：如果序列被切到了多张 GPU 上（每张 GPU 持有全部 attention head，但只有序列的一部分），你没法在本地算 attention，因为每个 query 都需要看到**整条**序列上的所有 key 和 value，而不只是本地这一小段。**DeepSpeed Ulysses** 的技巧，是用一次 **All-to-All** 集合通信，把这个切分方式转置一下：All-to-All 之后，每张 GPU 拿到的是**整条**序列，但只有一部分 attention **head**。由于不同的 head 是完全独立的计算，每张 GPU 现在可以为自己负责的那部分 head 算出完整、正确的 attention，**完全不需要再通信**——attention 算完之后，第二次 All-to-All 会把布局换回去，因为这一层剩下的部分还是期待序列并行的布局。
 
-![DeepSpeed Ulysses All-to-All](blogs/images/deepspeed-ulysses-alltoall.svg?v=1)
+![DeepSpeed Ulysses All-to-All](blogs/images/deepspeed-ulysses-alltoall.svg?v=2)
 ^一次 All-to-All 把"全部 head、部分序列"转置成"部分 head、完整序列"——这正是本地、无需通信的 attention 计算所需要的。
 
 这是一个优雅、通信开销很低的方案，但有一个结构性的限制值得明说：并行度的上限是 attention head 的数量（用了 grouped-query attention 的话，是 KV head 组的数量）——你没法把它切到比你手头 head 数量还多的 GPU 上，这给固定模型架构下 Ulysses 单独能扩展的程度设了一个天花板。
@@ -109,16 +106,13 @@ SP 区域和 TP 区域之间的接缝，用的是 **all-gather**（在需要完�
 
 **Ring Attention** 走了一条完全不同的路，而且没有任何 head 数量上的天花板。回忆一下 FlashAttention 在单张 GPU 上是怎么工作的：单张 GPU 计算 attention 的方式，是让一个 query tile 常驻，把 key/value tile 一块一块地流式送进来，同时维护一个 running max 和 running sum（也就是"online softmax"），这样完整的 attention 矩阵就永远不需要被物化出来。Ring Attention 拿的正是这同一个循环，**把它分布到多张 GPU 上，而不是在一张 GPU 内部循环**：每张 GPU 让自己那一份 Q 保持固定，所有 GPU 排成一个逻辑环，K/V 分片沿着这个环传递。每一步，一张 GPU 对当前刚到达的那个 K/V 分片计算本地 attention，更新自己的 online-softmax 统计量——关键的是，这个计算是在**下一个分片已经在传输路上**的同时发生的，所以只要每一步的算力足够掩盖传输时间，这个环在墙钟时间上根本不需要额外付出任何通信代价。
 
-![Ring Attention](blogs/images/ring-attention.svg?v=1)
-^每张 GPU 上 Q 保持固定；K/V 沿着环旋转。和单张 GPU 的 FlashAttention 循环里同样的 online-softmax 累积方式，只是从"跨越一个 for 循环"变成了"跨越多个设备"。
-
 Ring Attention 没有 Ulysses 那种 head 数量上限——你可以往环里加任意多张 GPU 来切分序列——但它依赖计算和通信的重叠在实践中真的能生效，这需要每个环步骤里有足够多的 FLOPs 相对于互联带宽来说，这一点直接呼应了这个系列第一篇文章里的 roofline 问题。
 
 这里还有一个更具体的问题值得单独说一下：在**因果掩码（causal mask）**下（自回归语言模型的标准情形），序列早期位置的 query 只需要关注很少几个 key，而靠后位置的 query 几乎要关注整条序列。如果朴素地把序列的连续片段分给各张 GPU，持有最早那段的 GPU 每个环步骤要做的工作量，会比持有最后那段的 GPU 少得多——这是一个真实存在的负载不均衡问题，不只是理论上的。
 
 ## 10. Megatron Context Parallel：把环上的负载压平
 
-**Megatron 的 Context Parallelism** 拿 Ring Attention 的机制，用一种 **zigzag（之字形）** 的分片分配方式，恰好解决了这个负载不均衡问题：不再是 GPU 0 拿到第一个连续片段、GPU 3 拿到最后一个，而是给每张 GPU 分配早期和后期片段的一个**混合**——多到足以让每张 GPU 在每个环步骤里，无论位置如何，都承担大致相同的因果掩码工作量（上面那张图里"朴素 vs zigzag"的对比，说的正是这个修正）。
+**Megatron 的 Context Parallelism** 拿 Ring Attention 的机制，用一种 **zigzag（之字形）** 的分片分配方式，恰好解决了这个负载不均衡问题：不再是 GPU 0 拿到第一个连续片段、GPU 3 拿到最后一个，而是给每张 GPU 分配早期和后期片段的一个**混合**——多到足以让每张 GPU 在每个环步骤里，无论位置如何，都承担大致相同的因果掩码工作量。
 
 这是一次真正实用的工程改进，而不是一个全新的算法想法——底层的通信模式依然是 Ring Attention 那种旋转的 K/V——但它是"一个 context-parallel 实现能不能干净地扩展到生产环境的因果语言模型训练"和"悄悄浪费掉环两端一大批 GPU 算力"之间的区别。
 
@@ -127,9 +121,6 @@ Ring Attention 没有 Ulysses 那种 head 数量上限——你可以往环里�
 上面这些策略互不排斥，任何足够大的模型在生产环境的训练，都会把好几个策略嵌套在一起用——而嵌套的顺序，直接由第一篇文章第 7 节讲过的互联拓扑决定。一条经验法则是：**哪个维度通信最频繁、体量最大，就放在最快、最紧密的链路上；哪个维度通信最少，就可以放在最慢、最远的链路上。**
 
 在实践中，这意味着：**tensor parallelism（以及和它放在一起的 context/sequence parallelism）放在最内层**，局限在单个节点内部的 NVLink/NVSwitch 域里，因为它在每一层、每一次前向和反向都要通信。**Pipeline parallelism 放在中间一层**，跨越数量不多的几个节点，因为它只需要在少数几个 stage 边界上交接激活值。**Data parallelism 放在最外层**，可以跨越任意多的节点（甚至跨数据中心），因为对整个模型梯度的 all-reduce 每一步只发生一次，可以容忍最慢的那种链路。
-
-![3D/4D/5D parallelism combined](blogs/images/dist-training-3d-parallelism.svg?v=1)
-^最内层 = 最快、最频繁的链路（TP、CP/SP，NVLink）。中间层 = 中等频率（PP，少数几个节点）。最外层 = 最不频繁，可以容忍任何链路（DP）。
 
 有一个很具体的方式可以看出这个顺序为什么不是随便定的：如果你不小心把张量并行跑到了**跨节点**而不是节点内部，你就是在让整个集群里最慢的那条链路，去承担整个训练任务里频率最高、体量最大的通信——这正是一个"理应线性扩展"的训练任务，一旦跨出单节点吞吐量就断崖式下跌的最常见、也最具体的原因之一。
 

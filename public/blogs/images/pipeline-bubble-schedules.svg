@@ -1,7 +1,6 @@
-<svg viewBox="0 0 900 860" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
-  <rect x="0" y="0" width="900" height="860" fill="#F4F3EF"/>
+<svg viewBox="0 0 900 780" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="900" height="780" fill="#F4F3EF"/>
   <text x="450" y="38" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">Three Ways to Schedule a Pipeline</text>
-  <text x="450" y="60" text-anchor="middle" font-size="13" fill="#6B6B6B">4 stages, 4 microbatches — orange = forward, green = backward, gray = idle</text>
 
   <!-- Panel 1: naive -->
   <text x="150" y="98" font-size="14.5" font-weight="600" fill="#191919">naive model parallel — no microbatching</text>
@@ -139,7 +138,4 @@
     <rect x="481" y="111" width="34" height="34" fill="#D97757" stroke="#191919" stroke-width="0.6"/>
   </g>
   <text x="150" y="742" font-size="12" fill="#6B6B6B">at most ~1 microbatch's activations per stage in flight — same total bubble time as GPipe, far less memory</text>
-
-  <text x="450" y="800" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">bubble fraction, either schedule: (P − 1) / (P − 1 + M) — more microbatches ⇒ smaller bubble</text>
-  <text x="450" y="822" text-anchor="middle" font-size="12" fill="#6B6B6B">schematic timing — real schedules also depend on per-stage compute time and communication latency</text>
 </svg>

@@ -5,7 +5,7 @@ date: "2026/7/19"
 
 The [first post in this series](#/blog?id=gpu-field-guide-for-dl) built a model of one GPU: warps, SMs, the memory hierarchy, the roofline model. This post is about the question that shows up the moment "one GPU" stops being the unit you're working with: your model, or your batch, or your sequence length, no longer fits on a single device, and you have to decide how to split the work across many. That decision has a name — a *parallelism strategy* — and there turn out to be surprisingly few genuinely different ideas underneath the alphabet soup of DP, DDP, ZeRO, TP, PP, SP, and CP. This post builds each of them up from the specific problem it solves, in the order the field actually discovered them, and ends with how modern training runs combine four or five of these ideas at once without contradicting each other.
 
-This post draws heavily on 猛猿's excellent *图解大模型训练* series, which remains one of the clearest treatments of this material anywhere; the diagrams and framing here are my own, built while working through that series and the source papers it's based on (GPipe, PipeDream, ZeRO, Megatron-LM, DeepSpeed Ulysses, Ring Attention).
+This post draws heavily on [an excellent series on large-model training](https://www.zhihu.com/people/lemonround) by the Zhihu writer 猛猿, one of the clearest treatments of this material anywhere; the diagrams and framing here are my own, built while working through that series and the source papers it's based on (GPipe, PipeDream, ZeRO, Megatron-LM, DeepSpeed Ulysses, Ring Attention).
 
 ## 1. Two things that don't fit
 
@@ -21,7 +21,7 @@ Every strategy in this post is an answer to one of these two problems, and the l
 
 The naive version of data parallelism looks almost too simple to need a name: every GPU holds a full copy of the model, runs forward and backward on its own slice of the batch, and then all the resulting gradients need to be averaged before anyone takes an optimizer step (otherwise the copies drift apart). The earliest implementations did this averaging through a **parameter server**: a designated node (or process) that every worker sends its gradients to, which averages them and sends the result back.
 
-![Naive DP vs Ring-AllReduce](blogs/images/dp-ddp-ring-allreduce.svg?v=1)
+![Naive DP vs Ring-AllReduce](blogs/images/dp-ddp-ring-allreduce.svg?v=2)
 ^The parameter server's incoming bandwidth is shared across every worker and gets worse as you add more GPUs. Ring-AllReduce restructures the same computation so that no single node is ever a bottleneck.
 
 The parameter-server design has an obvious flaw: the server's network link is shared across every single worker, so its traffic grows linearly with the number of GPUs, and it eventually becomes the bottleneck the entire cluster waits on. **DDP** (PyTorch's `DistributedDataParallel`, and the standard approach almost everyone uses today) replaces this with **Ring-AllReduce**, an algorithm with a genuinely elegant property: every participant only ever talks to its two neighbors in a logical ring, and the total data moved per GPU is *independent of how many GPUs are in the ring*.
@@ -42,7 +42,7 @@ Ring-AllReduce fixes the *communication* bottleneck of naive DP, but DDP as desc
 
 **ZeRO-3** goes all the way and partitions the parameters themselves. This is the biggest structural change: a GPU no longer holds the full parameter tensor at all, and has to **all-gather** the specific shard it needs, layer by layer, immediately before that layer's forward or backward computation, then release it again afterward. Per-GPU memory drops to **16Φ/N**, an almost-N-fold reduction — at the cost of extra all-gather communication on every layer, every step, that ZeRO-1/2 didn't need.
 
-![ZeRO memory breakdown](blogs/images/zero-memory-breakdown.svg?v=1)
+![ZeRO memory breakdown](blogs/images/zero-memory-breakdown.svg?v=2)
 ^At N=64, ZeRO-1 already gets you to roughly a quarter of DDP's memory; ZeRO-3 gets you to 16Φ/N — genuinely proportional to your GPU count, not just a fixed multiple.
 
 None of this is free: ZeRO-3's extra communication means it's the right choice specifically when you're memory-bound and have bandwidth to spare (a fast NVLink domain), and ZeRO-1 is often the pragmatic default when your optimizer states alone are the problem. The panel below lets you pick a model size, a GPU count, and a stage, and see the actual per-GPU number — including the point where it stops fitting on a single GPU's HBM at all.
@@ -59,7 +59,7 @@ Done naively, this is disastrous: GPU 1 can't do anything until GPU 0 finishes t
 
 **PipeDream**, and the **1F1B** ("one-forward-one-backward") schedule used by Megatron-LM in practice, interleave more aggressively: as soon as a microbatch's activation is no longer needed to keep the pipeline fed, its backward pass is scheduled immediately, rather than waiting for every other microbatch's forward pass to finish first. This does **not** reduce the total bubble time — it turns out to be exactly the same fraction, for a subtle but important reason covered below — but it dramatically reduces how many microbatches' activations any one stage has to hold in memory at once, which is usually the more binding constraint in practice.
 
-![Three pipeline schedules](blogs/images/pipeline-bubble-schedules.svg?v=1)
+![Three pipeline schedules](blogs/images/pipeline-bubble-schedules.svg?v=2)
 ^Naive model parallelism keeps only 1 of P GPUs busy at any moment. GPipe and 1F1B both reach the same total bubble fraction — the difference between them is peak activation memory, not wall-clock time.
 
 The bubble fraction has a clean closed form: with P pipeline stages and M microbatches, the fraction of every GPU's time spent idle is **(P−1) / (P−1+M)**. This single formula explains most of the practical advice you'll ever read about pipeline parallelism: more microbatches always shrinks the bubble (as M→∞, the bubble fraction →0), and a deeper pipeline (larger P, needed when the model is bigger) needs proportionally more microbatches to keep the bubble small — which is exactly why pipeline parallelism is usually paired with a healthy global batch size, and struggles at very deep P with a small batch.
@@ -72,7 +72,7 @@ Pipeline parallelism splits *which layers* live where; it says nothing about wha
 
 The cleanest illustration is a transformer's MLP block, which is two linear layers with a nonlinearity between them: `Y = B(GeLU(A(X)))`. Megatron splits matrix A **by columns** across GPUs — GPU 0 gets columns 0..k of A, GPU 1 gets the rest — so each GPU can independently compute its slice of `GeLU(A(X))` with **no communication at all** (GeLU is elementwise, so it doesn't care that each GPU only has part of the intermediate tensor). Matrix B is then split **by rows**, chosen specifically so that each GPU's partial result, summed across GPUs, reconstructs the correct final output — which needs exactly **one all-reduce**, at the very end of the block.
 
-![Megatron tensor parallelism](blogs/images/megatron-tensor-parallel.svg?v=1)
+![Megatron tensor parallelism](blogs/images/megatron-tensor-parallel.svg?v=2)
 ^Column-parallel first, row-parallel second: the intermediate GeLU never needs communication, and the whole block costs exactly one all-reduce.
 
 This column-then-row pattern (Megatron calls the identity-in-forward/all-reduce-in-backward operator `f`, and the all-reduce-in-forward/identity-in-backward operator `g`) is applied the same way to attention, splitting whole heads across GPUs rather than splitting within a head. A full transformer layer — one attention block, one MLP block — needs exactly **2 all-reduces in the forward pass and 2 in the backward pass**, regardless of how many GPUs the tensor-parallel group spans.
@@ -84,9 +84,6 @@ The catch is that this communication happens on *every single layer, every singl
 Tensor parallelism, as described, has a quiet inefficiency: operations like LayerNorm, dropout, and the residual add don't split cleanly along the hidden dimension the way a matrix multiply does — they need the *entire* hidden vector for each token to compute correctly. Megatron's original TP implementation handles this by simply **replicating** these operations' activations in full on every GPU in the tensor-parallel group, which means the activation memory for these regions gets *zero* benefit from tensor parallelism at all.
 
 **Sequence parallelism** (Megatron SP) closes this gap with an observation: LayerNorm, dropout, and the residual add all operate independently *per token*, so instead of splitting along the hidden dimension (which TP does, and which these ops can't use), you can split along the **sequence** dimension instead — each GPU owns a different subset of tokens' worth of these activations, with zero redundancy at all.
-
-![Megatron sequence parallelism](blogs/images/megatron-sequence-parallel.svg?v=1)
-^SP regions (LayerNorm, dropout, residual) split by sequence position; TP regions (attention, MLP) split by hidden dimension. An all-gather and a reduce-scatter at each seam swap between the two layouts.
 
 The seams between an SP region and a TP region use an **all-gather** (to reassemble the full sequence before a TP block that needs it) and a **reduce-scatter** (to re-shard the output back into per-sequence pieces afterward) instead of TP's all-reduce — and it's worth being precise that this is a *memory* optimization, not a *bandwidth* one: an all-gather plus a reduce-scatter moves exactly as many total bytes as one all-reduce would have. You get rid of a real memory redundancy (the replicated LayerNorm/dropout activations) for essentially the same communication bill you were already paying for tensor parallelism.
 
@@ -100,7 +97,7 @@ Tensor parallelism doesn't help here, because it splits along the hidden dimensi
 
 The most direct idea: if the sequence is split across GPUs (each GPU holding all attention heads, but only a fraction of the sequence positions), you can't compute attention locally, because every query needs to see every key and value across the *entire* sequence, not just the local shard. **DeepSpeed Ulysses**'s trick is to use a single **All-to-All** collective to transpose the split: after the All-to-All, every GPU holds the *entire* sequence, but only a fraction of the attention *heads*. Since different heads are completely independent computations, each GPU can now compute full, correct attention for its own subset of heads with **zero further communication** — and a second All-to-All after attention swaps the layout back for the rest of the layer, which still expects a sequence-parallel layout.
 
-![DeepSpeed Ulysses All-to-All](blogs/images/deepspeed-ulysses-alltoall.svg?v=1)
+![DeepSpeed Ulysses All-to-All](blogs/images/deepspeed-ulysses-alltoall.svg?v=2)
 ^One All-to-All transposes "all heads, partial sequence" into "partial heads, full sequence" — exactly what local, communication-free attention needs.
 
 This is an elegant, low-communication-overhead solution with one structural limitation worth being explicit about: the parallelism degree is capped by the number of attention heads (or, with grouped-query attention, the number of KV head groups) — you cannot usefully split across more GPUs than you have heads to give them, which puts a ceiling on how far Ulysses alone can scale for a fixed model architecture.
@@ -109,16 +106,13 @@ This is an elegant, low-communication-overhead solution with one structural limi
 
 **Ring Attention** takes a different approach that has no head-count ceiling at all. Recall how FlashAttention works on a single GPU: it computes attention by keeping a query tile resident and streaming key/value tiles through it one at a time, maintaining a running max and running sum (the "online softmax") so the full attention matrix is never materialized. Ring Attention takes exactly this loop and **distributes it across GPUs instead of looping within one**: each GPU keeps its own shard of Q fixed, and the GPUs are arranged in a logical ring, passing K/V shards around it. At each step, a GPU computes local attention against whichever K/V shard has currently arrived, updates its running online-softmax statistics, and — critically — this computation happens *while the next shard is already being transferred*, so as long as there's enough arithmetic work per step to hide the transfer time, the ring's communication costs nothing extra in wall-clock time at all.
 
-![Ring Attention](blogs/images/ring-attention.svg?v=1)
-^Q stays fixed per GPU; K/V rotate around the ring. The same online-softmax accumulation from a single GPU's FlashAttention loop, spread across devices instead of across a for-loop.
-
 Ring Attention has no head-count limitation the way Ulysses does — you can add as many GPUs to the ring as you have sequence to split — but it depends on the compute/communication overlap actually working in practice, which needs enough FLOPs per ring step relative to the interconnect's bandwidth, tying this directly back to the roofline questions from the first post in this series.
 
 There's a second, more specific problem worth naming: under a **causal mask** (the standard case for autoregressive language models), a query at an early sequence position only attends to a few keys, while a query at a late position attends to nearly the whole sequence. If you assign contiguous chunks of the sequence to GPUs naively, the GPU holding the earliest chunk does dramatically less work per ring step than the GPU holding the latest chunk — a real load-imbalance problem, not just a theoretical one.
 
 ## 10. Megatron Context Parallel: balancing the ring
 
-**Megatron's Context Parallelism** takes Ring Attention's mechanism and fixes exactly this load-imbalance problem with a **zigzag** (round-robin) chunk assignment: instead of GPU 0 getting the first contiguous chunk and GPU 3 getting the last, each GPU is given a *mix* of early and late chunks — enough that every GPU ends up doing roughly the same amount of causal-masked work per ring step, regardless of position (the naive-vs-zigzag comparison in the diagram above illustrates exactly this fix).
+**Megatron's Context Parallelism** takes Ring Attention's mechanism and fixes exactly this load-imbalance problem with a **zigzag** (round-robin) chunk assignment: instead of GPU 0 getting the first contiguous chunk and GPU 3 getting the last, each GPU is given a *mix* of early and late chunks — enough that every GPU ends up doing roughly the same amount of causal-masked work per ring step, regardless of position.
 
 This is a genuinely practical engineering refinement rather than a new algorithmic idea — the underlying communication pattern is still Ring Attention's rotating K/V — but it's the difference between a context-parallel implementation that scales cleanly to production causal-LM training and one that quietly wastes a large fraction of its GPUs on the early end of every ring.
 
@@ -127,9 +121,6 @@ This is a genuinely practical engineering refinement rather than a new algorithm
 None of the strategies above are mutually exclusive, and production training of any sufficiently large model uses several of them nested inside each other — with the nesting order dictated directly by the interconnect topology from the first post's Section 7. The rule of thumb: **whichever axis communicates most frequently and in the largest volume goes on the fastest, tightest link; whichever axis communicates least tolerates the slowest, most distant link.**
 
 In practice, that means: **tensor parallelism (and context/sequence parallelism alongside it) goes innermost**, confined to the GPUs within a single node's NVLink/NVSwitch domain, because it communicates on every layer of every forward and backward pass. **Pipeline parallelism goes next**, spanning a modest number of nodes, since it only needs to hand off activations at a small number of stage boundaries. **Data parallelism goes outermost**, spanning as many nodes (or even data centers) as you like, since an all-reduce over the full model's gradients happens only once per step, and can tolerate the slowest link available.
-
-![3D/4D/5D parallelism combined](blogs/images/dist-training-3d-parallelism.svg?v=1)
-^Innermost = fastest, most frequent link (TP, CP/SP, NVLink). Middle = moderate frequency (PP, a handful of nodes). Outermost = least frequent, tolerates any link at all (DP).
 
 A concrete way to see why this ordering isn't arbitrary: if you accidentally ran tensor parallelism *across* nodes instead of within one, you'd be asking the slowest link in your entire cluster to carry the highest-frequency, highest-volume traffic in the whole training run — and this single misconfiguration is one of the most common, most concrete reasons a "should scale linearly" training job's throughput falls off a cliff the moment it spans more than one node.
 

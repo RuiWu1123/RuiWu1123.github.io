@@ -3,11 +3,11 @@ title: "Sparse by Design: How Mixture-of-Experts Actually Works in 2026"
 date: "2026/7/24"
 ---
 
-Mixture-of-Experts (MoE) is the architecture underneath nearly every frontier language model shipping in 2026, but the label alone tells you almost nothing about how a model routes tokens, how it keeps experts balanced, how many experts exist versus how many actually fire, or whether the computation happening inside an "expert" even looks like a normal feed-forward block anymore. This post is about the mechanics underneath that one label: what a modern MoE layer actually does, where each of its moving parts came from historically, and which specific design levers today's frontier labs are actively pulling on to push the architecture further (routing strategy, gating function, load-balancing method, expert granularity, latent compression, adaptive per-token compute).
+Mixture-of-Experts (MoE) is the architecture underneath nearly every frontier language model shipping in 2026. How a model routes tokens, how it keeps experts balanced, how many experts exist versus how many actually fire, and whether the computation inside an "expert" still looks like a normal feed-forward block varies enormously from one design to the next. This post is about the mechanics underneath that one label: what a modern MoE layer actually does, where each of its moving parts came from historically, and which specific design levers today's frontier labs are actively pulling on to push the architecture further (routing strategy, gating function, load-balancing method, expert granularity, latent compression, adaptive per-token compute).
 
 ## 1. Anatomy of a modern MoE layer
 
-Strip away everything vendor-specific and a 2026-era MoE layer looks like this: a token arrives, a small router network scores every expert's "affinity" for that token, the top-K highest-scoring experts actually run their feed-forward computation, and, in almost every current design, one additional shared expert runs on every token regardless of what the router decided. The outputs get combined into a single vector, weighted by the router's own scores, and that's the layer's output.
+A 2026-era MoE layer works roughly like this: a token arrives, a small router network scores every expert's "affinity" for that token, the top-K highest-scoring experts actually run their feed-forward computation, and, in almost every current design, one additional shared expert runs on every token regardless of what the router decided. The outputs get combined into a single vector, weighted by the router's own scores, and that's the layer's output.
 
 ![Anatomy of a modern MoE layer](blogs/images/moe-layer-anatomy.svg?v=7)
 

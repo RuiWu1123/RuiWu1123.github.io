@@ -5,8 +5,6 @@ date: "2026/7/19"
 
 [这个系列的第一篇文章](#/blog?id=gpu-field-guide-for-dl) 建立了单张 GPU 的模型：warp、SM、内存层级、roofline 模型。而这一篇要讲的问题，是从"一张 GPU 就够了"这个假设不再成立的那一刻开始的：你的模型、或者你的 batch、或者你的序列长度，已经装不进一张卡了，你必须决定怎么把工作拆到多张卡上去。这个决定有个名字——**并行策略**——而在 DP、DDP、ZeRO、TP、PP、SP、CP 这一堆缩写背后，真正不同的想法其实出奇地少。这篇文章会按照这个领域实际发现它们的顺序，从每一个策略具体要解决的问题出发，把它们一个个搭建起来，最后讲清楚现代训练是怎么把四五个这样的想法同时叠在一起，却不会互相打架的。
 
-这篇文章大量参考了[猛猿](https://www.zhihu.com/people/lemonround)的《图解大模型训练》系列，那依然是我见过对这部分内容讲得最清楚的中文资料之一；这里的图和讲解方式是我自己在读这个系列以及它背后的原始论文（GPipe、PipeDream、ZeRO、Megatron-LM、DeepSpeed Ulysses、Ring Attention）时重新组织出来的。
-
 ## 1. 装不下的两种东西
 
 在给任何策略起名字之前，有必要先精确地说清楚"装不下"这三个字到底指的是什么，因为这一个说法背后其实藏着两个结构完全不同的问题，需要用不同的办法解决。
@@ -42,7 +40,7 @@ Ring-AllReduce 解决了朴素 DP 的**通信**瓶颈，但前面描述的 DDP �
 
 **ZeRO-3** 更进一步，把参数本身也分片了。这是结构上变化最大的一步：GPU 不再持有完整的参数张量，而是要在每一层前向或反向计算**之前**，用 **all-gather** 把自己需要的那个具体分片拼回来，用完之后再释放掉。每张 GPU 的显存降到 **16Φ/N**——几乎是和 GPU 数量成正比的缩减——代价是每一层、每一步都要多付出 ZeRO-1/2 不需要的 all-gather 通信。
 
-![ZeRO memory breakdown](blogs/images/zero-memory-breakdown.svg?v=2)
+![ZeRO memory breakdown](blogs/images/zero-memory-breakdown.svg?v=3)
 ^在 N=64 时，ZeRO-1 已经能把显存降到 DDP 的大约四分之一；ZeRO-3 能降到 16Φ/N——真正和你的 GPU 数量成正比，而不只是一个固定的倍数。
 
 这一切都不是免费的：ZeRO-3 多出来的通信意味着它特别适合"显存不够、但带宽有富余（比如一整个快速的 NVLink 域）"这种情况；而当瓶颈主要是优化器状态本身时，ZeRO-1 往往是更务实的默认选择。下面这个面板可以让你选一个模型大小、一个 GPU 数量和一个 stage，直接看到每张 GPU 上真实的显存数字——包括它什么时候会超出单张 GPU 的 HBM。
@@ -97,7 +95,7 @@ SP 区域和 TP 区域之间的接缝，用的是 **all-gather**（在需要完�
 
 最直接的想法是：如果序列被切到了多张 GPU 上（每张 GPU 持有全部 attention head，但只有序列的一部分），你没法在本地算 attention，因为每个 query 都需要看到**整条**序列上的所有 key 和 value，而不只是本地这一小段。**DeepSpeed Ulysses** 的技巧，是用一次 **All-to-All** 集合通信，把这个切分方式转置一下：All-to-All 之后，每张 GPU 拿到的是**整条**序列，但只有一部分 attention **head**。由于不同的 head 是完全独立的计算，每张 GPU 现在可以为自己负责的那部分 head 算出完整、正确的 attention，**完全不需要再通信**——attention 算完之后，第二次 All-to-All 会把布局换回去，因为这一层剩下的部分还是期待序列并行的布局。
 
-![DeepSpeed Ulysses All-to-All](blogs/images/deepspeed-ulysses-alltoall.svg?v=2)
+![DeepSpeed Ulysses All-to-All](blogs/images/deepspeed-ulysses-alltoall.svg?v=3)
 ^一次 All-to-All 把"全部 head、部分序列"转置成"部分 head、完整序列"——这正是本地、无需通信的 attention 计算所需要的。
 
 这是一个优雅、通信开销很低的方案，但有一个结构性的限制值得明说：并行度的上限是 attention head 的数量（用了 grouped-query attention 的话，是 KV head 组的数量）——你没法把它切到比你手头 head 数量还多的 GPU 上，这给固定模型架构下 Ulysses 单独能扩展的程度设了一个天花板。

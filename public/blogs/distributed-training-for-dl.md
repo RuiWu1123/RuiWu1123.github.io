@@ -5,8 +5,6 @@ date: "2026/7/19"
 
 The [first post in this series](#/blog?id=gpu-field-guide-for-dl) built a model of one GPU: warps, SMs, the memory hierarchy, the roofline model. This post is about the question that shows up the moment "one GPU" stops being the unit you're working with: your model, or your batch, or your sequence length, no longer fits on a single device, and you have to decide how to split the work across many. That decision has a name — a *parallelism strategy* — and there turn out to be surprisingly few genuinely different ideas underneath the alphabet soup of DP, DDP, ZeRO, TP, PP, SP, and CP. This post builds each of them up from the specific problem it solves, in the order the field actually discovered them, and ends with how modern training runs combine four or five of these ideas at once without contradicting each other.
 
-This post draws heavily on [an excellent series on large-model training](https://www.zhihu.com/people/lemonround) by the Zhihu writer 猛猿, one of the clearest treatments of this material anywhere; the diagrams and framing here are my own, built while working through that series and the source papers it's based on (GPipe, PipeDream, ZeRO, Megatron-LM, DeepSpeed Ulysses, Ring Attention).
-
 ## 1. Two things that don't fit
 
 Before naming any strategy, it's worth being precise about what "doesn't fit" actually means, because there are two structurally different problems hiding under that one phrase, and they call for different solutions.
@@ -42,7 +40,7 @@ Ring-AllReduce fixes the *communication* bottleneck of naive DP, but DDP as desc
 
 **ZeRO-3** goes all the way and partitions the parameters themselves. This is the biggest structural change: a GPU no longer holds the full parameter tensor at all, and has to **all-gather** the specific shard it needs, layer by layer, immediately before that layer's forward or backward computation, then release it again afterward. Per-GPU memory drops to **16Φ/N**, an almost-N-fold reduction — at the cost of extra all-gather communication on every layer, every step, that ZeRO-1/2 didn't need.
 
-![ZeRO memory breakdown](blogs/images/zero-memory-breakdown.svg?v=2)
+![ZeRO memory breakdown](blogs/images/zero-memory-breakdown.svg?v=3)
 ^At N=64, ZeRO-1 already gets you to roughly a quarter of DDP's memory; ZeRO-3 gets you to 16Φ/N — genuinely proportional to your GPU count, not just a fixed multiple.
 
 None of this is free: ZeRO-3's extra communication means it's the right choice specifically when you're memory-bound and have bandwidth to spare (a fast NVLink domain), and ZeRO-1 is often the pragmatic default when your optimizer states alone are the problem. The panel below lets you pick a model size, a GPU count, and a stage, and see the actual per-GPU number — including the point where it stops fitting on a single GPU's HBM at all.
@@ -97,7 +95,7 @@ Tensor parallelism doesn't help here, because it splits along the hidden dimensi
 
 The most direct idea: if the sequence is split across GPUs (each GPU holding all attention heads, but only a fraction of the sequence positions), you can't compute attention locally, because every query needs to see every key and value across the *entire* sequence, not just the local shard. **DeepSpeed Ulysses**'s trick is to use a single **All-to-All** collective to transpose the split: after the All-to-All, every GPU holds the *entire* sequence, but only a fraction of the attention *heads*. Since different heads are completely independent computations, each GPU can now compute full, correct attention for its own subset of heads with **zero further communication** — and a second All-to-All after attention swaps the layout back for the rest of the layer, which still expects a sequence-parallel layout.
 
-![DeepSpeed Ulysses All-to-All](blogs/images/deepspeed-ulysses-alltoall.svg?v=2)
+![DeepSpeed Ulysses All-to-All](blogs/images/deepspeed-ulysses-alltoall.svg?v=3)
 ^One All-to-All transposes "all heads, partial sequence" into "partial heads, full sequence" — exactly what local, communication-free attention needs.
 
 This is an elegant, low-communication-overhead solution with one structural limitation worth being explicit about: the parallelism degree is capped by the number of attention heads (or, with grouped-query attention, the number of KV head groups) — you cannot usefully split across more GPUs than you have heads to give them, which puts a ceiling on how far Ulysses alone can scale for a fixed model architecture.

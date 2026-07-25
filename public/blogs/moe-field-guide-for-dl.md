@@ -3,7 +3,7 @@ title: "Sparse by Design: How Mixture-of-Experts Actually Works in 2026"
 date: "2026/7/24"
 ---
 
-Mixture-of-Experts (MoE) is the architecture underneath nearly every frontier language model shipping in 2026, and the term covers a much wider range of real designs than it sounds like it should. "MoE" by itself tells you almost nothing about how a model routes tokens, how it keeps experts balanced, how many experts exist versus how many actually fire, or whether the computation happening inside an "expert" even looks like a normal feed-forward block anymore. This post is about the mechanics underneath that one label: what a modern MoE layer actually does, where each of its moving parts came from historically, and which specific design levers today's frontier labs are actively pulling on to push the architecture further (routing strategy, gating function, load-balancing method, expert granularity, latent compression, adaptive per-token compute).
+Mixture-of-Experts (MoE) is the architecture underneath nearly every frontier language model shipping in 2026, but the label alone tells you almost nothing about how a model routes tokens, how it keeps experts balanced, how many experts exist versus how many actually fire, or whether the computation happening inside an "expert" even looks like a normal feed-forward block anymore. This post is about the mechanics underneath that one label: what a modern MoE layer actually does, where each of its moving parts came from historically, and which specific design levers today's frontier labs are actively pulling on to push the architecture further (routing strategy, gating function, load-balancing method, expert granularity, latent compression, adaptive per-token compute).
 
 ## 1. Anatomy of a modern MoE layer
 
@@ -30,7 +30,7 @@ The entire appeal of this design is in the gap between two numbers. **Total para
 
 ## 2. Where this actually comes from: nine years of lineage
 
-Almost every mechanism discussed in this post is a variation on a much older idea, or a direct continuation of one specific 2024 paper. It's worth walking through that lineage before getting into what's changed recently. The idea is older than the deep-learning era it's usually associated with: **Jacobs et al., 1991** first proposed mixture-of-experts as a way to let different sub-networks specialize on different parts of a task, decades before anything resembling a modern transformer existed. What follows is the lineage that starts once the idea got adapted to large neural sequence models, the part of the history most people actually mean when they say "MoE."
+Almost every mechanism discussed in this post is a variation on a much older idea, or a direct continuation of one specific 2024 paper. The idea is older than the deep-learning era it's usually associated with: **Jacobs et al., 1991** first proposed mixture-of-experts as a way to let different sub-networks specialize on different parts of a task, decades before anything resembling a modern transformer existed. What follows is the lineage that starts once the idea got adapted to large neural sequence models, the part of the history most people actually mean when they say "MoE."
 
 ![Nine years of MoE design](blogs/images/moe-lineage-timeline.svg?v=3)
 ^Most of 2026's frontier MoE designs trace back to one 2024 fork: DeepSeekMoE's fine-grained-experts-plus-shared-expert recipe.
@@ -53,7 +53,7 @@ Two more recent, narrower ideas matter for what follows without being direct anc
 
 ## 3. DeepSeek-V3: MoE's breakout moment
 
-If DeepSeekMoE (2024) is the fork point, DeepSeek-V3 (late 2024) is the release that turned the fork into an industry default. It didn't change the fine-grained-experts-plus-shared-expert substrate at all; that part stayed unchanged. But it shipped three routing and training decisions on top of it that most of the field has since either adopted outright or explicitly defined itself against.
+If DeepSeekMoE (2024) is the fork point, DeepSeek-V3 (late 2024) is the release that turned the fork into an industry default. It left the fine-grained-experts-plus-shared-expert substrate unchanged, but shipped three routing and training decisions on top of it that most of the field has since either adopted outright or explicitly defined itself against.
 
 The headline change was **auxiliary-loss-free load balancing**. Instead of adding a separate loss term that competes with the language-modeling objective for gradient signal, DeepSeek-V3 gives each expert a learned bias term that gets added only to the routing decision (which experts get selected), not to the weight used to combine their outputs:
 

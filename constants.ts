@@ -137,6 +137,11 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: "zero-computation-experts-for-dl",
+    title: "Zero-Computation Experts: How MoE Learned to Skip Work",
+    date: "2026/7/26"
+  },
+  {
     id: "moe-field-guide-for-dl",
     title: "Sparse by Design: How Mixture-of-Experts Actually Works in 2026",
     date: "2026/7/24"

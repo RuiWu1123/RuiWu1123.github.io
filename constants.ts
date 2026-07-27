@@ -137,8 +137,8 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
-    id: "pretraining-lifecycle-for-dl",
-    title: "Disk to Disk: The Full Lifecycle of an LLM Pretraining Run",
+    id: "matmul-eight-layers-for-dl",
+    title: "Eight Layers Down: A Matrix Multiply from Python to the GPU and Back",
     date: "2026/7/27"
   },
   {

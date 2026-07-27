@@ -1,0 +1,67 @@
+<svg viewBox="0 0 780 560" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="780" height="560" fill="#F4F3EF"/>
+  <text x="390" y="34" text-anchor="middle" font-size="21" font-weight="600" fill="#191919">Eight Layers, One Matrix Multiply</text>
+
+  <defs>
+    <marker id="mlarrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#191919"/>
+    </marker>
+  </defs>
+
+  <!-- connecting arrows between rows -->
+  <line x1="390" y1="98" x2="390" y2="108" stroke="#191919" stroke-width="1.3" marker-end="url(#mlarrow)"/>
+  <line x1="390" y1="150" x2="390" y2="160" stroke="#191919" stroke-width="1.3" marker-end="url(#mlarrow)"/>
+  <line x1="390" y1="202" x2="390" y2="212" stroke="#191919" stroke-width="1.3" marker-end="url(#mlarrow)"/>
+  <line x1="390" y1="254" x2="390" y2="264" stroke="#191919" stroke-width="1.3" marker-end="url(#mlarrow)"/>
+  <line x1="390" y1="306" x2="390" y2="316" stroke="#191919" stroke-width="1.3" marker-end="url(#mlarrow)"/>
+  <line x1="390" y1="358" x2="390" y2="368" stroke="#191919" stroke-width="1.3" marker-end="url(#mlarrow)"/>
+  <line x1="390" y1="410" x2="390" y2="420" stroke="#191919" stroke-width="1.3" marker-end="url(#mlarrow)"/>
+
+  <!-- Row 1 -->
+  <rect x="110" y="56" width="560" height="42" rx="6" fill="#F3ECE2" stroke="#191919" stroke-width="1.1"/>
+  <text x="390" y="73" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">1 · Python</text>
+  <text x="390" y="90" text-anchor="middle" font-size="11" fill="#191919">the line itself: C = A @ B</text>
+
+  <!-- Row 2 -->
+  <rect x="110" y="108" width="560" height="42" rx="6" fill="#F3ECE2" stroke="#191919" stroke-width="1.1"/>
+  <text x="390" y="125" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">2 · Framework dispatch</text>
+  <text x="390" y="142" text-anchor="middle" font-size="11" fill="#191919">which implementation family applies</text>
+
+  <!-- Row 3 -->
+  <rect x="110" y="160" width="560" height="42" rx="6" fill="#F3ECE2" stroke="#191919" stroke-width="1.1"/>
+  <text x="390" y="177" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">3 · Kernel selection</text>
+  <text x="390" y="194" text-anchor="middle" font-size="11" fill="#191919">which specific recipe fits this shape</text>
+
+  <!-- Row 4 -->
+  <rect x="110" y="212" width="560" height="42" rx="6" fill="#F3ECE2" stroke="#191919" stroke-width="1.1"/>
+  <text x="390" y="229" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">4 · Launch configuration</text>
+  <text x="390" y="246" text-anchor="middle" font-size="11" fill="#191919">how the work gets divided up</text>
+
+  <!-- Row 5 -->
+  <rect x="110" y="264" width="560" height="42" rx="6" fill="#E6E4DD" stroke="#191919" stroke-width="1.1"/>
+  <text x="390" y="281" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">5 · Driver / queue</text>
+  <text x="390" y="298" text-anchor="middle" font-size="11" fill="#191919">CPU hands off, returns immediately</text>
+
+  <!-- Row 6 -->
+  <rect x="110" y="316" width="560" height="42" rx="6" fill="#E3EBF2" stroke="#191919" stroke-width="1.1"/>
+  <text x="390" y="333" text-anchor="middle" font-size="13" font-weight="600" fill="#191919">6 · GPU scheduling</text>
+  <text x="390" y="350" text-anchor="middle" font-size="11" fill="#191919">work assigned to compute units</text>
+
+  <!-- Row 7 -->
+  <rect x="110" y="368" width="560" height="42" rx="6" fill="#D97757" stroke="#191919" stroke-width="1.1"/>
+  <text x="390" y="385" text-anchor="middle" font-size="13" font-weight="600" fill="#F4F3EF">7 · Compute unit execution</text>
+  <text x="390" y="402" text-anchor="middle" font-size="11" fill="#F4F3EF">threads run independent dot products</text>
+
+  <!-- Row 8 -->
+  <rect x="110" y="420" width="560" height="42" rx="6" fill="#8DA399" stroke="#191919" stroke-width="1.1"/>
+  <text x="390" y="437" text-anchor="middle" font-size="13" font-weight="600" fill="#F4F3EF">8 · Completion</text>
+  <text x="390" y="454" text-anchor="middle" font-size="11" fill="#F4F3EF">result sits in GPU memory</text>
+
+  <!-- side labels -->
+  <text x="72" y="159" text-anchor="middle" font-size="13" font-weight="600" fill="#6B6B6B" transform="rotate(-90 72 159)">CPU</text>
+  <text x="72" y="393" text-anchor="middle" font-size="13" font-weight="600" fill="#6B6B6B" transform="rotate(-90 72 393)">GPU</text>
+
+  <!-- return path -->
+  <polyline points="670,441 712,441 712,77 670,77" fill="none" stroke="#191919" stroke-opacity="0.55" stroke-width="1.3" stroke-dasharray="4 4" marker-end="url(#mlarrow)"/>
+  <text x="735" y="259" text-anchor="middle" font-size="11" fill="#6B6B6B" transform="rotate(-90 735 259)">only if the result is needed</text>
+</svg>

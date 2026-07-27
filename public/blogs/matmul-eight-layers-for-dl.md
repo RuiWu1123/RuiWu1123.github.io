@@ -3,7 +3,7 @@ title: "Eight Layers Down: A Matrix Multiply from Python to the GPU and Back"
 date: "2026/7/27"
 ---
 
-Write a line like `C = A @ B` in ordinary training code, and it looks like a single, instantaneous thing: one statement, one operation, one result. It isn't. Between that line being interpreted and a real number landing in memory as part of `C`, the request passes through a stack of distinct layers, four of them on the CPU, one at the boundary, three on the GPU, each with a specific, narrow job. This post walks down that stack one layer at a time, using one small example with real numbers the whole way through:
+Write a line like `C = A @ B` in ordinary training code, and it looks like a single, instantaneous thing: one statement, one operation, one result. It isn't. Between that line being interpreted and a real number landing in memory as part of `C`, the request passes through a stack of distinct layers, four of them on the CPU, one at the boundary, three on the GPU, each with a specific, narrow job — and, running through all of them, one throughline worth tracking on its own: which of these layers are written in an interpreted, high-level language, and which are written in a compiled one, and why that split exists where it does. This post walks down the stack one layer at a time, using one small example with real numbers the whole way through:
 
 ```python
 A = [[1,  2,  3],
@@ -25,38 +25,40 @@ C = A @ B
 
 ## 1. Python: the line itself
 
-At this layer, `C = A @ B` isn't doing arithmetic yet. `A` and `B` are objects carrying a shape, a numeric type, and a note about which device they live on; the line is a request phrased in those terms, handed to whatever machinery sits underneath the object:
+At this layer, `C = A @ B` hasn't done any arithmetic. `A` and `B` are objects carrying a shape, a numeric type, and a note about which device they live on. The line itself is written in an interpreted, high-level language — the kind of language training code is written in specifically because it's fast to write and easy to read, not because it's fast to run. That tradeoff is fine for this one line, but it stops being fine the moment something needs to happen a huge number of times over the course of a training run, which is exactly the situation starting at the next layer. Every layer from here on is written in a compiled systems language instead, for one concrete reason: the decisions those layers make happen on the order of hundreds of thousands of times over a training run, and if each of those decisions had to be made by an interpreter reading code line by line, that overhead alone would start to compete with the actual computation for time.
+
+## 2. Framework dispatch: a lookup table, not a chain of if-else
+
+The framework has to decide which concrete implementation applies, based on the device `A` and `B` live on and their numeric type. It is tempting to picture this as a long chain of `if device == "gpu" and dtype == "float32": ...`, but that's not how it's actually built, for a good reason: real frameworks support dozens of operations across several device types and several numeric types, and a hand-written if-else chain covering every combination would be both enormous and slow to walk through on every single call.
+
+What real dispatch mechanisms use instead is closer to a lookup table, built once, ahead of time:
 
 ```python
-# what this layer actually does — describe, don't compute
-request = describe_operation("matmul", operands=(A, B))
-# nothing has been read, multiplied, or added yet
+# built once, at framework build/init time — not written by hand per call
+dispatch_table = {
+    ("matmul", "gpu", "float32"): gpu_float32_matmul,
+    ("matmul", "cpu", "float32"): cpu_float32_matmul,
+    ("matmul", "gpu", "float16"): gpu_float16_matmul,
+    # ... one entry generated for every operation × device × dtype combination
+}
+backend = dispatch_table[(request.op, request.device, request.dtype)]
 ```
 
-This layer's entire job is to describe the computation, not perform it.
+A table lookup like this costs roughly the same regardless of how many combinations exist, which is the entire reason it beats a sequential if-else chain at this scale. And this layer, like every layer below it, lives in compiled code: the same per-call-frequency argument from section 1 applies here directly — this lookup happens on every dispatched operation, and an interpreter re-reading dispatch logic that often would be paying real, avoidable overhead.
 
-## 2. Framework dispatch: which implementation family applies
+## 3. Kernel selection: a library, a fallback, and sometimes a compiler
 
-The framework looks at what it was just handed — the device the operands live on, their numeric type, their shapes — and decides which family of implementation is even applicable:
+`backend` doesn't point to one single implementation of matrix multiply — it points to an entire kernel library: several precompiled routines, each tuned for a different range of shapes. Picking the right one for this specific call is not, in general, a runtime bake-off where every candidate kernel actually gets run and timed — for a call this small, that would cost more than the computation itself. What real systems do instead is some mix of three strategies. Most commonly, a fast heuristic — a shallow lookup keyed on shape ranges, tuned ahead of time by the library's own developers through offline profiling — picks a kernel directly. Some systems add a caching layer on top: the first time a particular shape is seen, a handful of candidates actually get benchmarked, and the winner is remembered so later calls with the same shape skip straight to it. And some systems skip the pre-shipped library altogether for a given shape and instead compile a new kernel specialized to it on the spot — paying a one-time compilation cost the first time, then caching the result exactly like the previous strategy would.
+
+What happens if none of that produces a specialized match? Every serious kernel library ships a generic fallback: an implementation correct for any valid shape, tuned for none of them. If nothing more specific is found, execution falls back to it — correctness is never in question, only how efficiently the specific shape gets handled. Our tiny 4×3-by-3×2 example is realistically far below the size most tuning effort targets; it's a completely ordinary thing for a call this small to land on the generic fallback rather than a shape-specialized kernel, and that isn't a failure case, it's this layer working as designed.
 
 ```python
-if request.device == "gpu" and request.dtype == "float32":
-    backend = gpu_float32_matmul
+kernel = kernel_library.lookup(A.shape, B.shape)
+if kernel is None:
+    kernel = kernel_library.generic_fallback   # always correct, not shape-tuned
 ```
 
-A matrix multiply meant to run on this kind of hardware, with this kind of number, is a different piece of code entirely from one meant for different hardware or a different numeric type, even though both are conceptually "matrix multiply." This layer's job is routing, nothing more: send the request toward the right family of implementation.
-
-## 3. Kernel selection: which specific recipe fits this shape
-
-Within `gpu_float32_matmul`, there usually isn't just one implementation of matrix multiply — there are several, each tuned for a different range of shapes:
-
-```python
-kernel = pick_recipe(A.shape, B.shape)
-# recipe_small:  tuned for shapes around 4x3 @ 3x2  <- picked here
-# recipe_large:  tuned for shapes thousands of times bigger
-```
-
-`recipe_large` would produce the exact same correct answer if it were used on our tiny example instead — it just carries setup cost that only pays off on much bigger matrices. This layer's job is picking the specific recipe suited to these exact shapes.
+And the kernel itself — whichever one gets picked — is never written in the interpreted language the training script uses. A GPU's compute units execute their own native instruction set, and kernel code is written in, or compiled down into, a C-like language built specifically for describing what one thread among many should do. Some newer tools let a kernel be written in syntax that reads like the high-level scripting language, but that's a surface convenience: before any of it runs, it's compiled into the GPU's native instructions ahead of time, the same as kernel code written any other way. Nothing about a kernel executes by being interpreted line by line while it runs.
 
 ## 4. Launch configuration: how the work gets divided up
 
@@ -71,30 +73,29 @@ launch_plan = group_for_hardware(work_items)
 
 This layer's job is deciding how to carve those 8 independent pieces of work into groups, and packaging that plan up alongside the kernel chosen in layer 3.
 
-## 5. Driver / queue: the CPU hands off
+## 5. Driver / queue: the launch descriptor, not the kernel
 
-The launch plan and kernel from the layers above get translated into a request the driver places into a queue belonging to the GPU:
+It's easy to picture this step as shipping the whole kernel over to the GPU on every call, but that's not what happens, and the distinction matters. The kernel's compiled code is already resident on the GPU — loaded once, typically the first time it's needed, and kept there — so what actually travels per call is a small launch descriptor: which already-loaded kernel to run, plus this call's specific arguments (where `A`, `B`, and `C` live in GPU memory, and any shape parameters the kernel needs, like the loop bound `3` in our dot-product example).
+
+![The launch descriptor, not the kernel itself](blogs/images/matmul-queue-doorbell.svg?v=1)
+
+How that descriptor physically gets there: driver code — compiled, for the same reason every layer below section 1 is compiled, plus a second reason specific to this layer, that it has to manipulate raw memory addresses and hardware registers directly, which an interpreted language generally isn't built to do safely — writes the descriptor into a queue shared between CPU and GPU, typically implemented as a ring buffer: a fixed block of memory, reused in a loop, that both sides can see. Writing the descriptor into the next open slot isn't enough by itself; the driver also has to tell the GPU a new entry exists, commonly by writing to a specific hardware register that acts as a doorbell — the GPU's own front-end hardware notices that write and knows to go check the queue. Once that happens, the CPU is done. It doesn't wait for the entry to be processed; it returns control immediately.
 
 ```python
-instruction = build_instruction(kernel, launch_plan)
-gpu_queue.enqueue(instruction)
-return   # the CPU does not wait for this to be processed
+launch = {
+    "kernel_id": kernel.id,                       # which already-loaded kernel to run
+    "args": [A.gpu_ptr, B.gpu_ptr, C.gpu_ptr, shape_params],
+}
+command_queue.write(launch)   # into a shared ring buffer
+gpu_doorbell.ring()           # tell the GPU: new work is waiting
+return                        # the CPU does not wait for this to be processed
 ```
 
-This is the boundary the whole stack has been building toward: everything above this layer is software running on the CPU, describing a computation; everything below it is the computation actually happening. The CPU's involvement ends here for now — it returns control immediately, free to dispatch whatever comes next.
+This is the boundary the whole stack has been building toward. Everything above this layer is compiled software running on the CPU, describing a computation; everything below it is the computation actually happening.
 
 ## 6. GPU scheduling: work meets compute units
 
-The GPU has its own scheduling logic, independent of the CPU, that pulls this request off its queue and hands the work items packaged in layer 4 out to its many on-board compute units, based on which of them are currently free:
-
-```python
-# GPU side, running independently of the CPU
-instruction = gpu_queue.pop()
-free_units = available_compute_units()
-assign(instruction.work_items, free_units)   # all 8 (i, j) pairs handed out
-```
-
-For our tiny 8-element example this happens almost instantly. For a matrix multiply with millions of independent elements, this is the layer doing the real work of spreading that flood of independent pieces across all the hardware available to chew on it.
+The GPU's own front-end hardware, having noticed the doorbell, pulls the descriptor off the queue and hands the work items packaged in layer 4 out to its many on-board compute units, based on which of them are currently free. For our tiny 8-element example this happens almost instantly. For a matrix multiply with millions of independent elements, this is the layer doing the real work of spreading that flood of independent pieces across all the hardware available to chew on it.
 
 ## 7. Compute unit execution: threads doing dot products
 
@@ -121,7 +122,7 @@ C[i][j] = acc
 
 ![Inside one thread: the arithmetic trace](blogs/images/matmul-dot-product-trace.svg?v=1)
 
-Every other thread is doing exactly this kind of multiply-and-add sequence, on a different row/column pair, at the same time — one thread for `C[0][0]`, reading row 0 and column 0; one for `C[3][1]`, reading row 3 and column 1; and so on, all 8 running concurrently. This is the reason matrix multiply is such a natural fit for this kind of hardware in the first place: the underlying math doesn't need to be forced into independent pieces through some clever trick. It's already, structurally, a large pile of identical, independent work — one dot product per output element — and that's exactly the shape of workload this hardware exists to run.
+Every other thread is doing exactly this kind of multiply-and-add sequence, on a different row/column pair, at the same time — one thread for `C[0][0]`, reading row 0 and column 0; one for `C[3][1]`, reading row 3 and column 1; and so on, all 8 running concurrently. This is the reason matrix multiply is such a natural fit for this kind of hardware in the first place: the underlying math doesn't need to be forced into independent pieces through some clever trick. It's already, structurally, a large pile of identical, independent work — one dot product per output element.
 
 ## 8. Completion, and the way back
 
@@ -144,4 +145,4 @@ Because the result lives in GPU memory, satisfying that `print` means one more t
 
 ## What the eight layers add up to
 
-Four layers of CPU-side software, one boundary layer, three layers of GPU-side execution, and a return path that only gets walked if something downstream actually asks for the answer. All eight of them are involved in a single `C = A @ B`, even for an example this small, where the real arithmetic is eight dot products of length three — next to nothing. The layers above the boundary cost roughly the same regardless of whether the matrices involved are tiny or enormous, which is a large part of why real training code tries to make each individual dispatched operation cover as much actual computation as possible: the eight-layer trip is worth taking once for a computation that keeps a GPU busy for a long time, and much less worth taking, over and over, for one that doesn't. (The [GPU field guide](#/blog?id=gpu-field-guide-for-dl) goes further into what layers 6 and 7 look like once the workload is not eight elements but many millions.)
+Line them up by language and the split is exactly one boundary wide: layer 1 is interpreted, layers 2 through 7 are compiled — either compiled systems code on the CPU side, or code compiled down to the GPU's own native instructions on the GPU side — and layer 8 only crosses back into interpreted territory if, and exactly when, something downstream actually asks for a real number. That split exists for a single, consistent reason repeated at every layer: interpretation is fine for something that happens once, and increasingly not fine for something that happens hundreds of thousands of times over a training run, which is what everything past layer 1 does. The layers above the boundary in section 5 cost roughly the same regardless of whether the matrices involved are tiny or enormous, which is a large part of why real training code tries to make each individual dispatched operation cover as much actual computation as possible: the eight-layer trip is worth taking once for a computation that keeps a GPU busy for a long time, and much less worth taking, over and over, for one that doesn't. (The [GPU field guide](#/blog?id=gpu-field-guide-for-dl) goes further into what layers 6 and 7 look like once the workload is not eight elements but many millions.)

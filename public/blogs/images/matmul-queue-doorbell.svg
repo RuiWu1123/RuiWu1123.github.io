@@ -1,0 +1,49 @@
+<svg viewBox="0 0 1150 260" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="1150" height="260" fill="#F4F3EF"/>
+  <text x="575" y="34" text-anchor="middle" font-size="21" font-weight="600" fill="#191919">The Launch Descriptor, Not the Kernel Itself</text>
+
+  <defs>
+    <marker id="qdarrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#191919"/>
+    </marker>
+  </defs>
+
+  <rect x="30" y="100" width="170" height="70" rx="7" fill="#191919" stroke="#191919" stroke-width="1.2"/>
+  <text x="115" y="130" text-anchor="middle" font-size="13" font-weight="600" fill="#F4F3EF">Driver</text>
+  <text x="115" y="148" text-anchor="middle" font-size="11" fill="#F4F3EF">compiled, on the CPU</text>
+
+  <!-- slot 1: already executed -->
+  <rect x="240" y="100" width="140" height="70" rx="6" fill="#E6E4DD" fill-opacity="0.55" stroke="#191919" stroke-opacity="0.5" stroke-width="1"/>
+  <text x="310" y="130" text-anchor="middle" font-size="11.5" fill="#6B6B6B">already</text>
+  <text x="310" y="146" text-anchor="middle" font-size="11.5" fill="#6B6B6B">executed</text>
+
+  <!-- slot 2: currently running -->
+  <rect x="392" y="100" width="140" height="70" rx="6" fill="#D97757" stroke="#191919" stroke-width="1.1"/>
+  <text x="462" y="130" text-anchor="middle" font-size="11.5" font-weight="600" fill="#F4F3EF">currently</text>
+  <text x="462" y="146" text-anchor="middle" font-size="11.5" font-weight="600" fill="#F4F3EF">running</text>
+
+  <!-- slot 3: NEW -->
+  <rect x="544" y="100" width="140" height="70" rx="6" fill="#E3EBF2" stroke="#191919" stroke-width="2"/>
+  <text x="614" y="122" text-anchor="middle" font-size="12" font-weight="700" fill="#191919">NEW</text>
+  <text x="614" y="140" text-anchor="middle" font-size="10" fill="#191919">kernel id +</text>
+  <text x="614" y="154" text-anchor="middle" font-size="10" fill="#191919">ptrs(A,B,C) + shape=3</text>
+
+  <!-- slot 4: empty -->
+  <rect x="696" y="100" width="140" height="70" rx="6" fill="#F3ECE2" fill-opacity="0.6" stroke="#191919" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="3 3"/>
+  <text x="766" y="140" text-anchor="middle" font-size="11.5" fill="#6B6B6B">empty</text>
+
+  <rect x="930" y="100" width="180" height="70" rx="7" fill="#191919" stroke="#191919" stroke-width="1.2"/>
+  <text x="1020" y="130" text-anchor="middle" font-size="13" font-weight="600" fill="#F4F3EF">GPU front end</text>
+  <text x="1020" y="148" text-anchor="middle" font-size="11" fill="#F4F3EF">reads the queue</text>
+
+  <line x1="200" y1="135" x2="238" y2="135" stroke="#191919" stroke-width="1.4" marker-end="url(#qdarrow)"/>
+  <line x1="838" y1="135" x2="928" y2="135" stroke="#191919" stroke-width="1.4" marker-end="url(#qdarrow)"/>
+
+  <text x="219" y="195" text-anchor="middle" font-size="11" fill="#6B6B6B">write + ring</text>
+  <text x="219" y="210" text-anchor="middle" font-size="11" fill="#6B6B6B">the doorbell</text>
+
+  <text x="883" y="195" text-anchor="middle" font-size="11" fill="#6B6B6B">next: read +</text>
+  <text x="883" y="210" text-anchor="middle" font-size="11" fill="#6B6B6B">dispatch</text>
+
+  <text x="575" y="235" text-anchor="middle" font-size="11.5" fill="#6B6B6B">the kernel's compiled code is already resident on the GPU — only this small descriptor travels per call</text>
+</svg>

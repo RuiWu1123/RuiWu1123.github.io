@@ -137,11 +137,6 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
-    id: "demystifying-the-kernel-for-dl",
-    title: "Demystifying the Kernel: What It Is, How It's Chosen, and Why Some Are Faster",
-    date: "2026/7/27"
-  },
-  {
     id: "moe-field-guide-for-dl",
     title: "Sparse by Design: How Mixture-of-Experts Actually Works in 2026",
     date: "2026/7/24"

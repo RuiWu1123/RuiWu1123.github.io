@@ -137,8 +137,8 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
-    id: "matmul-eight-layers-for-dl",
-    title: "Eight Layers Down: A Matrix Multiply from Python to the GPU and Back",
+    id: "demystifying-the-kernel-for-dl",
+    title: "Demystifying the Kernel: What It Is, How It's Chosen, and Why Some Are Faster",
     date: "2026/7/27"
   },
   {

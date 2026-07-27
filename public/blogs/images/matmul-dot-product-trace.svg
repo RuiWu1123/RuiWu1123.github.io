@@ -1,0 +1,41 @@
+<svg viewBox="0 0 1150 230" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+  <rect x="0" y="0" width="1150" height="230" fill="#F4F3EF"/>
+  <text x="575" y="38" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">Inside One Thread: Computing C[2][1] = 17</text>
+
+  <defs>
+    <marker id="dtarrow" markerWidth="9" markerHeight="9" refX="4.5" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#191919"/>
+    </marker>
+  </defs>
+
+  <!-- Step k=0 -->
+  <rect x="30" y="80" width="250" height="100" rx="7" fill="#D97757" stroke="#191919" stroke-width="1.2"/>
+  <text x="155" y="103" text-anchor="middle" font-size="12" fill="#F4F3EF">step k=0</text>
+  <text x="155" y="128" text-anchor="middle" font-size="14.5" font-weight="600" fill="#F4F3EF">7 × 0 = 0</text>
+  <text x="155" y="153" text-anchor="middle" font-size="12.5" fill="#F4F3EF">acc = 0</text>
+
+  <!-- Step k=1 -->
+  <rect x="320" y="80" width="250" height="100" rx="7" fill="#D97757" stroke="#191919" stroke-width="1.2"/>
+  <text x="445" y="103" text-anchor="middle" font-size="12" fill="#F4F3EF">step k=1</text>
+  <text x="445" y="128" text-anchor="middle" font-size="14.5" font-weight="600" fill="#F4F3EF">8 × 1 = 8</text>
+  <text x="445" y="153" text-anchor="middle" font-size="12.5" fill="#F4F3EF">acc = 0 + 8 = 8</text>
+
+  <!-- Step k=2 -->
+  <rect x="610" y="80" width="250" height="100" rx="7" fill="#D97757" stroke="#191919" stroke-width="1.2"/>
+  <text x="735" y="103" text-anchor="middle" font-size="12" fill="#F4F3EF">step k=2</text>
+  <text x="735" y="128" text-anchor="middle" font-size="14.5" font-weight="600" fill="#F4F3EF">9 × 1 = 9</text>
+  <text x="735" y="153" text-anchor="middle" font-size="12.5" fill="#F4F3EF">acc = 8 + 9 = 17</text>
+
+  <!-- Write result -->
+  <rect x="900" y="80" width="220" height="100" rx="7" fill="#8DA399" stroke="#191919" stroke-width="1.2"/>
+  <text x="1010" y="110" text-anchor="middle" font-size="12" fill="#F4F3EF">write result</text>
+  <text x="1010" y="140" text-anchor="middle" font-size="15.5" font-weight="600" fill="#F4F3EF">C[2][1] = 17</text>
+
+  <line x1="280" y1="130" x2="320" y2="130" stroke="#191919" stroke-width="1.4" marker-end="url(#dtarrow)"/>
+  <line x1="570" y1="130" x2="610" y2="130" stroke="#191919" stroke-width="1.4" marker-end="url(#dtarrow)"/>
+  <line x1="860" y1="130" x2="900" y2="130" stroke="#191919" stroke-width="1.4" marker-end="url(#dtarrow)"/>
+
+  <text x="300" y="200" text-anchor="middle" font-size="10.5" fill="#6B6B6B">carry acc</text>
+  <text x="590" y="200" text-anchor="middle" font-size="10.5" fill="#6B6B6B">carry acc</text>
+  <text x="880" y="200" text-anchor="middle" font-size="10.5" fill="#6B6B6B">carry acc</text>
+</svg>

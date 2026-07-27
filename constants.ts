@@ -137,6 +137,11 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: "pretraining-lifecycle-for-dl",
+    title: "Disk to Disk: The Full Lifecycle of an LLM Pretraining Run",
+    date: "2026/7/27"
+  },
+  {
     id: "moe-field-guide-for-dl",
     title: "Sparse by Design: How Mixture-of-Experts Actually Works in 2026",
     date: "2026/7/24"

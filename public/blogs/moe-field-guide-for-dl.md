@@ -32,9 +32,6 @@ The entire appeal of this design is in the gap between two numbers. **Total para
 
 Almost every mechanism discussed in this post is a variation on a much older idea, or a direct continuation of one specific 2024 paper. The idea is older than the deep-learning era it's usually associated with: **Jacobs et al., 1991** first proposed mixture-of-experts as a way to let different sub-networks specialize on different parts of a task, decades before anything resembling a modern transformer existed. What follows is the lineage that starts once the idea got adapted to large neural sequence models, the part of the history most people actually mean when they say "MoE."
 
-![Nine years of MoE design](blogs/images/moe-lineage-timeline.svg?v=3)
-^Most of 2026's frontier MoE designs trace back to one 2024 fork: DeepSeekMoE's fine-grained-experts-plus-shared-expert recipe.
-
 **Shazeer et al., 2017** introduced the modern sparsely-gated MoE layer for deep learning: a noisy top-k softmax router with an auxiliary loss to keep expert usage balanced. This is the ancestor of essentially everything that follows.
 
 **GShard (2020)** scaled the idea to a transformer trained with real expert parallelism across hardware: splitting experts across devices and using all-to-all communication to route tokens to whichever device holds their assigned expert. This is also where the standard load-balancing auxiliary loss formula comes from, and where a capacity factor (a hard cap on how many tokens each expert can accept before overflow tokens get dropped) entered the standard toolkit.

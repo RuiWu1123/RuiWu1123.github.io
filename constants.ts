@@ -137,6 +137,11 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: "nano-vllm-inference-engine",
+    title: "Inside vLLM: Learning an Inference Engine Through Nano-vLLM",
+    date: "2026/7/31"
+  },
+  {
     id: "intro-moe-in-2026",
     title: "Sparse by Design: How Mixture-of-Experts Actually Works in 2026",
     date: "2026/7/24"

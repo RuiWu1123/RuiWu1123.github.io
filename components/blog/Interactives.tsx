@@ -1906,3 +1906,234 @@ export const MoEGatingExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) =>
     </Card>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/*  14. Nano-vLLM Architecture Explorer (click a stage, see its code)  */
+/* ------------------------------------------------------------------ */
+
+type NanoVLLMStageId =
+  | 'engine' | 'scheduler' | 'blockmanager' | 'modelrunner' | 'model' | 'attention' | 'sampler';
+
+const NANOVLLM_STAGES: { id: NanoVLLMStageId; file: string; label: { en: string; zh: string }; desc: { en: string; zh: string }; code: string }[] = [
+  {
+    id: 'engine',
+    file: 'engine/llm_engine.py',
+    label: { en: '1. LLMEngine', zh: '1. LLMEngine' },
+    desc: {
+      en: 'The orchestrator. add_request() tokenizes and enqueues a prompt; generate() calls step() in a loop until every sequence is finished.',
+      zh: '总调度者。add_request() 负责分词并把请求入队；generate() 在循环里反复调用 step()，直到所有序列都结束。',
+    },
+    code:
+`class LLMEngine:
+    def step(self):
+        seqs, is_prefill = self.scheduler.schedule()
+        token_ids = self.model_runner.call("run", seqs, is_prefill)
+        self.scheduler.postprocess(seqs, token_ids)
+        outputs = [(seq.seq_id, seq.completion_token_ids)
+                   for seq in seqs if seq.is_finished]
+        return outputs, num_tokens
+
+    def generate(self, prompts, sampling_params):
+        for prompt, sp in zip(prompts, sampling_params):
+            self.add_request(prompt, sp)
+        while not self.is_finished():
+            self.step()`,
+  },
+  {
+    id: 'scheduler',
+    file: 'engine/scheduler.py',
+    label: { en: '2. Scheduler', zh: '2. Scheduler' },
+    desc: {
+      en: 'Decides which sequences run this step. Prefill work is packed in first (continuous batching); a decode step only happens if no prefill was scheduled.',
+      zh: '决定这一步运行哪些序列。优先打包 prefill 任务（continuous batching）；只有没有 prefill 任务时才会跑一步 decode。',
+    },
+    code:
+`def schedule(self) -> tuple[list[Sequence], bool]:
+    # 1. try to schedule prefill work first
+    scheduled_seqs, num_batched_tokens = [], 0
+    while self.waiting and num_batched_tokens < self.max_num_batched_tokens:
+        seq = self.waiting[0]
+        if not self.block_manager.can_allocate(seq):
+            break
+        num_batched_tokens += len(seq) - seq.num_cached_tokens
+        self.block_manager.allocate(seq)
+        self.waiting.popleft()
+        self.running.append(seq)
+        scheduled_seqs.append(seq)
+    if scheduled_seqs:
+        return scheduled_seqs, True
+
+    # 2. otherwise, advance every running sequence by one decode step
+    while self.running:
+        seq = self.running.popleft()
+        while not self.block_manager.can_append(seq):
+            if self.running:
+                self.preempt(self.running.pop())
+            else:
+                self.preempt(seq)
+                break
+        else:
+            self.block_manager.may_append(seq)
+            scheduled_seqs.append(seq)
+    self.running.extend(scheduled_seqs)
+    return scheduled_seqs, False`,
+  },
+  {
+    id: 'blockmanager',
+    file: 'engine/block_manager.py',
+    label: { en: '3. BlockManager', zh: '3. BlockManager' },
+    desc: {
+      en: 'Owns the physical KV-cache block pool. Hashes each full block’s token ids so identical prefixes across requests can share physical blocks.',
+      zh: '管理物理 KV-cache block 池。对每个满 block 的 token id 做哈希，让不同请求里相同的前缀能共用物理 block。',
+    },
+    code:
+`def can_allocate(self, seq: Sequence) -> bool:
+    return len(self.free_block_ids) >= seq.num_blocks
+
+def allocate(self, seq: Sequence):
+    h = -1
+    for i in range(seq.num_blocks):
+        token_ids = seq.block(i)
+        h = self.compute_hash(token_ids, h) if len(token_ids) == self.block_size else -1
+        block_id = self.hash_to_block_id.get(h, -1) if h != -1 else -1
+        if block_id == -1 or self.blocks[block_id].token_ids != token_ids:
+            block_id = self.free_block_ids[0]     # cache miss: take a fresh block
+            block = self._allocate_block(block_id)
+        else:
+            seq.num_cached_tokens += self.block_size
+            block = self.blocks[block_id]
+            block.ref_count += 1                  # cache hit: reuse, bump refcount
+        if h != -1:
+            block.update(h, token_ids)
+            self.hash_to_block_id[h] = block_id
+        seq.block_table.append(block_id)`,
+  },
+  {
+    id: 'modelrunner',
+    file: 'engine/model_runner.py',
+    label: { en: '4. ModelRunner', zh: '4. ModelRunner' },
+    desc: {
+      en: 'Turns each sequence’s block_table into flat GPU tensors: slot_mapping for the cache scatter/gather, cu_seqlens for varlen packing, block_tables for attention.',
+      zh: '把每个序列的 block_table 转成扁平的 GPU 张量：slot_mapping 用于 cache 的 scatter/gather，cu_seqlens 用于变长打包，block_tables 供 attention 使用。',
+    },
+    code:
+`def prepare_prefill(self, seqs: list[Sequence]):
+    input_ids, positions, cu_seqlens_q, cu_seqlens_k = [], [], [0], [0]
+    slot_mapping = []
+    for seq in seqs:
+        input_ids.extend(seq[seq.num_cached_tokens:])
+        positions.extend(range(seq.num_cached_tokens, len(seq)))
+        cu_seqlens_q.append(cu_seqlens_q[-1] + len(seq) - seq.num_cached_tokens)
+        cu_seqlens_k.append(cu_seqlens_k[-1] + len(seq))
+        for i in range(seq.num_cached_blocks, seq.num_blocks):
+            start = seq.block_table[i] * self.block_size
+            end = start + (self.block_size if i != seq.num_blocks - 1
+                            else seq.last_block_num_tokens)
+            slot_mapping.extend(range(start, end))
+    # ... pack into GPU tensors, run one flat forward pass, no padding`,
+  },
+  {
+    id: 'model',
+    file: 'models/qwen3.py',
+    label: { en: '5. Qwen3ForCausalLM', zh: '5. Qwen3ForCausalLM' },
+    desc: {
+      en: 'The actual transformer: embed tokens, run N decoder layers (each with an Attention block), then project to logits.',
+      zh: '真正的 transformer：embedding，跑 N 层 decoder layer（每层都有一个 Attention block），最后投影出 logits。',
+    },
+    code:
+`class Qwen3Model(nn.Module):
+    def forward(self, input_ids, positions):
+        hidden_states = self.embed_tokens(input_ids)
+        residual = None
+        for layer in self.layers:
+            hidden_states, residual = layer(positions, hidden_states, residual)
+        hidden_states, _ = self.norm(hidden_states, residual)
+        return hidden_states`,
+  },
+  {
+    id: 'attention',
+    file: 'layers/attention.py',
+    label: { en: '6. Attention — PagedAttention', zh: '6. Attention — PagedAttention' },
+    desc: {
+      en: 'Scatters fresh K/V into the paged cache via slot_mapping, then reads back through block_tables. This gets its own deep-dive section below.',
+      zh: '通过 slot_mapping 把新算出的 K/V 写入分页缓存，再通过 block_tables 读回来做 attention。下面有专门的深入章节讲这一块。',
+    },
+    code:
+`class Attention(nn.Module):
+    def forward(self, q, k, v):
+        if k_cache.numel() and v_cache.numel():
+            store_kvcache(k, v, k_cache, v_cache, context.slot_mapping)
+        if context.is_prefill:
+            o = flash_attn_varlen_func(q, k, v,
+                    cu_seqlens_q=context.cu_seqlens_q,
+                    cu_seqlens_k=context.cu_seqlens_k,
+                    causal=True, block_table=context.block_tables)
+        else:
+            o = flash_attn_with_kvcache(q, k_cache, v_cache,
+                    cache_seqlens=context.context_lens,
+                    block_table=context.block_tables, causal=True)
+        return o`,
+  },
+  {
+    id: 'sampler',
+    file: 'layers/sampler.py',
+    label: { en: '7. Sampler', zh: '7. Sampler' },
+    desc: {
+      en: 'Temperature-scales the logits and samples with the Gumbel-max trick — a torch.compile-friendly alternative to torch.multinomial.',
+      zh: '对 logits 做温度缩放，然后用 Gumbel-max trick 采样 — 这是一种对 torch.compile 友好、可以替代 torch.multinomial 的写法。',
+    },
+    code:
+`class Sampler(nn.Module):
+    @torch.compile
+    def forward(self, logits: torch.Tensor, temperatures: torch.Tensor):
+        logits = logits.float().div_(temperatures.unsqueeze(dim=1))
+        probs = torch.softmax(logits, dim=-1)
+        sample_tokens = probs.div_(
+            torch.empty_like(probs).exponential_(1).clamp_min_(1e-10)
+        ).argmax(dim=-1)
+        return sample_tokens`,
+  },
+];
+
+const NANOVLLM_STR = {
+  en: {
+    title: 'Interactive: Walk the Architecture Map',
+    sub: 'Click a stage to see the real nano-vllm source behind it.',
+    fileLabel: 'file',
+  },
+  zh: {
+    title: '交互演示：点开架构图里的每一站',
+    sub: '点一个阶段，看看它背后真实的 nano-vllm 源码。',
+    fileLabel: '文件',
+  },
+};
+
+export const NanoVLLMArchitectureExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
+  const t = NANOVLLM_STR[lang];
+  const [activeId, setActiveId] = useState<NanoVLLMStageId>('engine');
+  const active = NANOVLLM_STAGES.find((s) => s.id === activeId)!;
+
+  return (
+    <Card>
+      <h4 className="text-lg font-serif text-anthropic-text mb-1">{t.title}</h4>
+      <p className="text-sm text-anthropic-gray mb-4">{t.sub}</p>
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        {NANOVLLM_STAGES.map((s) => (
+          <Pill key={s.id} active={activeId === s.id} onClick={() => setActiveId(s.id)}>
+            {s.label[lang]}
+          </Pill>
+        ))}
+      </div>
+
+      <div className="text-xs text-anthropic-gray/70 mb-1 font-mono">
+        {t.fileLabel}: {active.file}
+      </div>
+      <p className="text-sm text-anthropic-text leading-relaxed mb-3">{active.desc[lang]}</p>
+
+      <pre className="overflow-x-auto rounded-lg border border-anthropic-text/10 bg-[#191919] p-4 text-xs md:text-sm leading-relaxed text-[#F4F3EF]">
+        <code>{active.code}</code>
+      </pre>
+    </Card>
+  );
+};

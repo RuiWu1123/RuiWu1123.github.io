@@ -8,7 +8,7 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { ArrowLeft, Copy, Check, Link2 } from 'lucide-react';
 import { BLOG_POSTS, loadBlogContent } from '../constants';
-import { RooflineExplorer, GridBlockSimulator, TritonGridExplorer, AutotuneExplorer, RingAllReduceExplorer, ZeROMemoryCalculator, PipelineBubbleExplorer, AcceleratorTrendExplorer, AcceleratorSpecLookup, MoESparsityExplorer, MoEModelLookup, MoEGatingExplorer, NanoVLLMArchitectureExplorer, NanoVLLMSchedulerExplorer, NanoVLLMBlockPoolExplorer } from '../components/blog/Interactives';
+import { RooflineExplorer, GridBlockSimulator, TritonGridExplorer, AutotuneExplorer, RingAllReduceExplorer, ZeROMemoryCalculator, PipelineBubbleExplorer, AcceleratorTrendExplorer, AcceleratorSpecLookup, MoESparsityExplorer, MoEModelLookup, MoEGatingExplorer, NanoVLLMArchitectureExplorer } from '../components/blog/Interactives';
 import { TableOfContentsSidebar, TableOfContentsMobile, extractHeadings, slugify } from '../components/blog/TableOfContents';
 
 function flattenToText(node: React.ReactNode): string {
@@ -410,21 +410,6 @@ const Blog: React.FC = () => {
                               files={['engine/block_manager.py', 'layers/attention.py', 'engine/model_runner.py']}
                             />
                           );
-                        }
-                        if (alt === 'interactive:nanovllm-code-sched') {
-                          return (
-                            <NanoVLLMArchitectureExplorer
-                              lang={lang}
-                              initialFile="engine/scheduler.py"
-                              files={['engine/scheduler.py', 'engine/sequence.py', 'engine/llm_engine.py']}
-                            />
-                          );
-                        }
-                        if (alt === 'interactive:nanovllm-scheduler') {
-                          return <NanoVLLMSchedulerExplorer lang={lang} />;
-                        }
-                        if (alt === 'interactive:nanovllm-blocks') {
-                          return <NanoVLLMBlockPoolExplorer lang={lang} />;
                         }
                         if (alt === 'interactive:moe-gating') {
                           return <MoEGatingExplorer lang={lang} />;

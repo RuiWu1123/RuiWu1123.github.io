@@ -2484,6 +2484,35 @@ export const NanoVLLMArchitectureExplorer: React.FC<{ lang?: Lang }> = ({ lang =
     </>
   );
 
+  const fileButton = (f: NVFile) => {
+    const isActive = f.path === activePath;
+    const isHot = !!f.step;
+    return (
+      <button
+        key={f.path}
+        onClick={() => setActivePath(f.path)}
+        className={`flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-left font-mono text-[11px] leading-tight transition-colors ${
+          isActive
+            ? 'border-anthropic-accent bg-anthropic-accent text-white'
+            : isHot
+            ? 'border-anthropic-accent/40 bg-anthropic-accent/10 text-anthropic-text hover:border-anthropic-accent'
+            : 'border-anthropic-text/15 bg-anthropic-bg/40 text-anthropic-gray hover:border-anthropic-text/40 hover:text-anthropic-text'
+        }`}
+      >
+        {isHot && (
+          <span
+            className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-[9px] font-semibold ${
+              isActive ? 'bg-white text-anthropic-accent' : 'bg-anthropic-accent text-white'
+            }`}
+          >
+            {f.step}
+          </span>
+        )}
+        <span className="truncate">{f.name}</span>
+      </button>
+    );
+  };
+
   return (
     <Card>
       <h4 className="text-lg font-serif text-anthropic-text mb-1">{t.title}</h4>

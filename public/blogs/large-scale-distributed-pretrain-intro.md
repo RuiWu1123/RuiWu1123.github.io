@@ -3,7 +3,7 @@ title: "Splitting the Model: How Large-Scale Training Actually Works"
 date: "2026/7/19"
 ---
 
-The [first post in this series](#/blog?id=gpu-field-guide-for-dl) built a model of one GPU: warps, SMs, the memory hierarchy, the roofline model. This post is about the question that shows up the moment "one GPU" stops being the unit you're working with: your model, or your batch, or your sequence length, no longer fits on a single device, and you have to decide how to split the work across many. That decision has a name — a *parallelism strategy* — and there turn out to be surprisingly few genuinely different ideas underneath the alphabet soup of DP, DDP, ZeRO, TP, PP, SP, and CP. This post builds each of them up from the specific problem it solves, in the order the field actually discovered them, and ends with how modern training runs combine four or five of these ideas at once without contradicting each other.
+The [first post in this series](#/blog?id=gpu-guide-for-dl) built a model of one GPU: warps, SMs, the memory hierarchy, the roofline model. This post is about the question that shows up the moment "one GPU" stops being the unit you're working with: your model, or your batch, or your sequence length, no longer fits on a single device, and you have to decide how to split the work across many. That decision has a name — a *parallelism strategy* — and there turn out to be surprisingly few genuinely different ideas underneath the alphabet soup of DP, DDP, ZeRO, TP, PP, SP, and CP. This post builds each of them up from the specific problem it solves, in the order the field actually discovered them, and ends with how modern training runs combine four or five of these ideas at once without contradicting each other.
 
 ## 1. Two things that don't fit
 

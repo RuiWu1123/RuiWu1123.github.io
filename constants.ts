@@ -137,17 +137,17 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
-    id: "moe-field-guide-for-dl",
+    id: "intro-moe-in-2026",
     title: "Sparse by Design: How Mixture-of-Experts Actually Works in 2026",
     date: "2026/7/24"
   },
   {
-    id: "distributed-training-for-dl",
+    id: "large-scale-distributed-pretrain-intro",
     title: "Splitting the Model: How Large-Scale Training Actually Works",
     date: "2026/7/19"
   },
   {
-    id: "gpu-field-guide-for-dl",
+    id: "gpu-guide-for-dl",
     title: "Inside the GPU: A Field Guide for Deep Learning Researchers",
     date: "2026/7/2"
   }

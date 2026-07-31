@@ -3,54 +3,85 @@ title: "Inside vLLM: Learning an Inference Engine Through Nano-vLLM"
 date: "2026/7/31"
 ---
 
-训练一个模型和把它服务上线，是两个完全不同的工程问题。训练关心的是在提前知道、规模巨大又相对均匀的 batch 上跑出多高的吞吐；服务关心的则是一串到达时间不可预测、生成长度不可预测的请求，怎么样尽快给出响应。为第一个问题设计的框架，拿来解决第二个问题会很吃力，这也是为什么会存在"推理引擎"这样一整类专门软件，专门负责把一个训练好的模型高效地跑在真实流量上。vLLM 就是开源世界里最知名的一个。
+朴素地做模型服务，会在两个很具体的地方出问题。第一是内存：一个序列每生成一个 token，都会留下 key 和 value 向量，而且必须在这个序列存活期间一直待在显存里；最直接的实现是给每个请求预留一段按最坏情况估算的连续 buffer。绝大多数请求只用得上其中一小部分，而这份浪费会在每一个并发序列上重复一遍 —— 朴素服务代码往往撑不了几个并发，原因通常就在这里。第二是调度：如果请求被打包成 batch、步调一致地推进，那整个 batch 的速度就取决于最慢的那个成员，而中途到达的请求得等整个 batch 排空才能进来。
 
-这篇文章用 [nano-vllm](https://github.com/GeeeekExplorer/nano-vllm) 作为理解推理引擎到底在做什么、为什么这么做的载体——这是一个用约 1200 行、可读性很高的 Python 代码，从零重写了 vLLM 核心思想的项目。真正的 vLLM 有几万行代码，涉及各种调度器、自定义 kernel，以及多年积累下来的渐进式优化；nano-vllm 只保留了最核心的机制：一份干净的 continuous batching 实现，一份干净的 paged KV-cache 内存实现，一份干净的 prefix caching 实现，而且吞吐还相当接近 vLLM 本体（按项目自己的 benchmark，在单张 RTX 4070 Laptop 上跑 Qwen3-0.6B、256 并发序列，1434 tokens/s 对 vLLM 的 1362 tokens/s）。这种"小到可以通读、又忠实到能教会你真东西"的组合，正是它值得被这样一篇文章通读一遍的原因。
+vLLM 的两个核心思想，正好一一对应这两个问题。**PagedAttention** 把 KV cache 存成从共享池里取出的、固定大小的小 block，借用的是操作系统做虚拟内存的那套办法，于是不需要连续，也不需要提前预留。**Continuous batching** 让调度器在每一步都能改变 batch 的成员组成，新请求立刻就能开始干活，而不用排队等位置。第三个机制 **prefix caching**，则在共享前缀的请求之间复用已经算好的 block。
 
-## 一、推理引擎到底在解决什么问题
+[nano-vllm](https://github.com/GeeeekExplorer/nano-vllm) 用大约 1200 行 Python 把这三个都实现了，而且在项目自己的 benchmark 上跑到 1434 tokens/s，对比真实 vLLM 的 1362（Qwen3-0.6B，256 并发序列，单张 RTX 4070 Laptop）。这个体量小到可以完整读完，但实现的是真机制而不是玩具。这篇文章跟着一个请求走一遍，走到 PagedAttention 时停下来把它彻底拆开。
 
-想象一种最朴素的模型服务方式：请求到达，逐个 token 跑完模型直到生成结束，再处理下一个请求。在任何真实规模下，这样做马上会出两个问题。
+## 一、仓库结构，以及穿过它的那条路径
 
-第一个是内存。一个序列每生成一个 token，它的 key、value 向量（也就是 KV cache）就必须一直留着，供之后每一步使用，这份 cache 得在这个序列存活期间一直占着 GPU 内存。最朴素的做法是，每个请求提前按"能允许的最长长度"预留一段连续内存。但绝大多数请求根本用不到这么多。预留量和实际用量之间的这个差距，在每一个并发运行的请求上都在被浪费，这也是朴素服务代码往往撑不了几个并发序列就把 GPU 内存耗尽的头号原因。
-
-第二个是调度。如果请求被打包成 batch、步调一致地一起跑，那这个 batch 的前进速度就取决于跑得最慢的那个成员；而一个在 batch 跑到一半时到达的新请求，得等整个 batch 跑完才能加入。静态 batching 会让 GPU 在"排队的活不够多"和"卡在拖后腿的成员上"这两种状态之间来回切换，无论对吞吐还是对单个请求体验到的延迟都不友好。
-
-vLLM 最出名的两项贡献，正好分别对应这两个问题的解法：**PagedAttention** 用小的、固定大小、非连续的 block 来管理 KV cache，而不是给每个序列预留一整块连续大内存——这个思路直接借用了操作系统几十年前就想明白的物理内存分页方案；**continuous batching** 让调度器可以在每一步都往正在运行的 batch 里加入或移出单个序列，而不是等一整个 batch 完全跑完。nano-vllm 把这两个机制都实现了，还额外实现了第三个机制——prefix caching，把已经算过的 KV block 在共享同一个前缀（比如重复出现的 system prompt）的不同请求之间复用。接下来这篇文章会沿着一个 prompt 的生命周期，把这三者背后的真实代码走一遍。
-
-## 二、大地图：一个请求在仓库里的完整路径
-
-在逐行追踪生命周期之前，先看一眼整个系统的形状：七个文件，每个文件里只有几个真正重要的函数，按请求实际流经它们的顺序排列。
-
-![Nano-vLLM: one request's path through the repo](blogs/images/nanovllm-architecture-map.svg?v=1)
+`nanovllm` 这个 package 一共 19 个 Python 文件（仓库根目录另有 `bench.py` 和 `example.py`）。其中七个构成了请求流经的那条流水线，顺序固定 —— 这篇文章跟的就是这七个。剩下的代码一个请求同样会执行，但那些要么是标准的 transformer 组件（RMSNorm、RoPE、SwiGLU、张量并行的线性层），要么是管道工作（权重加载、配置），不属于服务逻辑。
 
 ![interactive:nanovllm-arch](#)
 
-`LLMEngine` 是入口，也是最外层的循环。`Scheduler` 决定某一步到底该跑哪些序列。`BlockManager` 掌管物理 KV-cache 内存，负责发放 block。`ModelRunner` 把调度决策转换成真正的 GPU 张量。`Qwen3ForCausalLM` 是 transformer 本体。`Attention`，也就是图中被高亮的那一块，是 PagedAttention 真正发生的地方，后面会单独开一节深入讲，而不是简单带过。`Sampler` 把模型输出的 logits 转换成下一个 token id。图下方的虚线箭头就是那个循环：`generate()` 会反复调用 `step()`，直到 batch 里的每一个序列都结束。
+开始走之前，这棵树里有两处值得先指出来。`utils/context.py` 是一个模块级全局变量，负责把 `slot_mapping` 和 `block_tables` 从 `ModelRunner` 直接送到 `Attention` —— 它存在的意义就是让分页元数据不必作为参数层层穿过中间每一层。另外 `layers/` 大部分是普通模型代码，但有两个例外会去读这个全局量并因此改变行为：`attention.py`，分页真正发生的地方；以及 `embed_head.py`，它在 prefill 时会跳过输出投影的绝大部分（见第六节）。
 
-## 三、第一、二站：一个 prompt 变成 `Sequence`，然后被调度
+## 二、一个 prompt 变成 `Sequence`
 
-一个请求通过 `LLMEngine.add_request()` 进入系统，这个函数会把 prompt 分词，包成一个 `Sequence` 对象——一小份状态，记录着目前已经生成的 token id、这个序列拥有哪些物理 KV block，以及它的 prompt 里有多少 token 已经被某个缓存前缀覆盖了。这个 `Sequence` 会被塞进 `waiting` 队列，在下一次调度之前不会发生任何事。
+`LLMEngine.add_request()` 把 prompt 分词、包成 `Sequence`，然后交给调度器：
 
-调度正是 continuous batching 真正落地的地方：
+```python
+def add_request(self, prompt: str | list[int], sampling_params: SamplingParams):
+    if isinstance(prompt, str):
+        prompt = self.tokenizer.encode(prompt)
+    seq = Sequence(prompt, sampling_params)
+    self.scheduler.add(seq)
+```
+
+一个 `Sequence` 就是某个请求的完整状态：它的 token id、其中有多少已经被算进 KV cache 了（`num_cached_tokens`）、这一轮正在算多少个（`num_scheduled_tokens`），以及它拥有哪些物理缓存 block（`block_table`）。有两个派生属性后面会用到：
+
+```python
+@property
+def num_blocks(self):
+    return (self.num_tokens + self.block_size - 1) // self.block_size
+
+def block(self, i):
+    assert 0 <= i < self.num_blocks
+    return self.token_ids[i*self.block_size: (i+1)*self.block_size]
+```
+
+`block(i)` 把序列的 token 按 block 大小切片。正是这个切片让 prefix caching 成为可能，因为它给每个 block 一份定义明确、可以拿去哈希的内容。
+
+## 三、调度器，以及 continuous batching 到底是什么
+
+引擎的每一步都从"问调度器该跑什么"开始。答案永远是"prefill 工作"或者"给所有 running 序列各解一个 token"二选一 —— 绝不会同时：
 
 ```python
 def schedule(self) -> tuple[list[Sequence], bool]:
-    # 1. try to schedule prefill work first
-    scheduled_seqs, num_batched_tokens = [], 0
-    while self.waiting and num_batched_tokens < self.max_num_batched_tokens:
+    scheduled_seqs = []
+    num_batched_tokens = 0
+
+    # prefill
+    while self.waiting and len(scheduled_seqs) < self.max_num_seqs:
         seq = self.waiting[0]
-        if not self.block_manager.can_allocate(seq):
+        remaining = self.max_num_batched_tokens - num_batched_tokens
+        if remaining == 0:
             break
-        num_batched_tokens += len(seq) - seq.num_cached_tokens
-        self.block_manager.allocate(seq)
-        self.waiting.popleft()
-        self.running.append(seq)
+        if not seq.block_table:
+            num_cached_blocks = self.block_manager.can_allocate(seq)
+            if num_cached_blocks == -1:
+                break
+            num_tokens = seq.num_tokens - num_cached_blocks * self.block_size
+        else:
+            num_tokens = seq.num_tokens - seq.num_cached_tokens
+        if remaining < num_tokens and scheduled_seqs:  # only allow chunked prefill for the first seq
+            break
+        if not seq.block_table:
+            self.block_manager.allocate(seq, num_cached_blocks)
+        seq.num_scheduled_tokens = min(num_tokens, remaining)
+        num_batched_tokens += seq.num_scheduled_tokens
+        if seq.num_cached_tokens + seq.num_scheduled_tokens == seq.num_tokens:
+            seq.status = SequenceStatus.RUNNING
+            self.waiting.popleft()
+            self.running.append(seq)
         scheduled_seqs.append(seq)
+
     if scheduled_seqs:
         return scheduled_seqs, True
 
-    # 2. otherwise, advance every running sequence by one decode step
-    while self.running:
+    # decode
+    while self.running and len(scheduled_seqs) < self.max_num_seqs:
         seq = self.running.popleft()
         while not self.block_manager.can_append(seq):
             if self.running:
@@ -59,141 +90,277 @@ def schedule(self) -> tuple[list[Sequence], bool]:
                 self.preempt(seq)
                 break
         else:
+            seq.num_scheduled_tokens = 1
+            seq.is_prefill = False
             self.block_manager.may_append(seq)
             scheduled_seqs.append(seq)
-    self.running.extend(scheduled_seqs)
+    assert scheduled_seqs
+    self.running.extendleft(reversed(scheduled_seqs))
     return scheduled_seqs, False
 ```
 
-每次调用 `schedule()`，都会优先处理 **prefill** 工作——也就是新请求或还没处理完 prompt 的序列——而不是 **decode** 工作——给已经在跑的序列多生成一个 token。只有当这一步已经没有 prefill 工作可以打包了，调度器才会退而求其次，让正在运行的序列各推进一个 decode 步。正是这种优先级顺序，让每一步的 batch 组成都是流动的：一个全新到达的请求可以在下一次 `schedule()` 调用里立刻开始 prefill，完全不用等任何一个正在跑的序列结束。这就是 continuous batching，用九行 Python 就写完了。
+prefill 循环在两个预算下排空 `waiting` 队列：`max_num_seqs` 个序列和 `max_num_batched_tokens` 个 token。如果单个 prompt 比剩余 token 预算还大，它会被**分块**（chunked）—— 分几轮 prefill 完 —— 但 `and scheduled_seqs` 这个守卫意味着一轮里只有第一个序列可以被分块，所以 nano-vllm 绝不会在同一轮里劈开两个 prompt。被分块的序列会留在 `waiting` 里（状态变更只在 `num_cached_tokens + num_scheduled_tokens == num_tokens` 时才触发），下一轮就是这样被再次捡起来的。
 
-`while ... else` 那段处理的是一种情况：某个正在运行的序列拿不到它下一步需要的 KV block（`can_append` 失败了，具体原因第六节会讲）。这时调度器会把最近才加入 running 的那个序列通过 `preempt()` 驱逐回 `waiting`，从而腾出空间；`preempt()` 会释放它占用的 block，让它之后可以重新 prefill。这就是当并发需求超过可用缓存内存时的泄压阀。
-
-## 四、第三、四站：先占内存，再搭 GPU 张量
-
-一个序列开始运行之前，`BlockManager.can_allocate()` / `allocate()`（在上面 `schedule()` 内部被调用）得先按它 prompt 需要的量，预留若干个固定大小的 KV-cache block，如果碰巧和某个已有前缀完全一致，还可能直接复用已经缓存好的 block。这个机制是下一节的主题；这里先把它当成一个黑盒，它对每个序列返回一个 `block_table`——一份物理 block id 的列表。
-
-`ModelRunner` 拿到被调度的序列和它们的 block table，把它们变成模型真正会消费的张量。对于 prefill，所有被调度序列里还没缓存的 prompt token 会被拍平成一个一维张量，完全不做 padding，用累积偏移量（`cu_seqlens_q`、`cu_seqlens_k`）标记每个序列的 token 从哪里开始、到哪里结束：
+decode 循环里的 `while ... else` 是 Python 最少人知道的语法：`else` 只在 `while` 条件自然变假、而没有撞上 `break` 时才执行。所以只有 `can_append` 最终成功了，这个序列才会被调度。如果始终不成功，`preempt()` 就会驱逐一个牺牲者 —— 最近才加入 running 的那个，或者在没有别的序列可选时驱逐它自己 —— 释放其 block 并把它塞回 `waiting` 队首：
 
 ```python
-def prepare_prefill(self, seqs: list[Sequence]):
-    input_ids, positions, cu_seqlens_q, cu_seqlens_k = [], [], [0], [0]
-    slot_mapping = []
-    for seq in seqs:
-        input_ids.extend(seq[seq.num_cached_tokens:])
-        positions.extend(range(seq.num_cached_tokens, len(seq)))
-        cu_seqlens_q.append(cu_seqlens_q[-1] + len(seq) - seq.num_cached_tokens)
-        cu_seqlens_k.append(cu_seqlens_k[-1] + len(seq))
-        for i in range(seq.num_cached_blocks, seq.num_blocks):
-            start = seq.block_table[i] * self.block_size
-            end = start + (self.block_size if i != seq.num_blocks - 1
-                            else seq.last_block_num_tokens)
-            slot_mapping.extend(range(start, end))
-    # ... packed into GPU tensors, one flat forward pass, zero padding waste
+def preempt(self, seq: Sequence):
+    seq.status = SequenceStatus.WAITING
+    seq.is_prefill = True
+    self.block_manager.deallocate(seq)
+    self.waiting.appendleft(seq)
 ```
 
-这种"变长打包"（varlen）正是 nano-vllm 从不需要把 batch 填充到最长成员长度的原因：五个长度差异很大的序列，直接变成一条长张量，外加几个标记每个序列起止位置的数字。`prepare_decode()` 是 decode 步对应的函数：每个正在运行的序列只贡献一个新 token，而不是整段 prompt，同时还会带上每个序列当前的长度（`context_lens`）和它的 `block_table`——后面的 attention 步骤需要靠它才知道该去读哪些物理缓存 block。这里构造出来的 `slot_mapping` 张量，把每个新 token 精确映射到它该写入的物理缓存槽位，正是连接这一节和接下来 PagedAttention 深入章节的那根线。
+抢占不是错误处理路径。它是针对 KV cache 被填满这件事设计好的应对方式，也是引擎在高负载下会优雅降级而不是直接失败的原因。
 
-## 五、第五站：跑模型
+prefill 优先这个顺序带来的结果是：batch 的成员组成是流动的。此刻到达的请求，下一次 `schedule()` 调用就能开始 prefill，完全不需要任何正在跑的序列先结束。一步步走一遍，和静态 batching 的差别就很具体了：
 
-张量准备好之后，`ModelRunner` 调用真正的 transformer，也就是 `Qwen3ForCausalLM`。这一步本身没有任何推理引擎特有的东西，就是标准的 decoder-only 前向传播：把输入 id 变成 embedding，跑过 N 层 decoder layer，最后做一次归一化：
+![interactive:nanovllm-scheduler](#)
+
+## 四、搭出 GPU 张量
+
+被调度的序列会变成扁平张量。对 prefill，所有序列还没算的 token 被拼接成一条一维张量，用累积偏移量标记边界 —— 任何地方都不 padding：
 
 ```python
-class Qwen3Model(nn.Module):
-    def forward(self, input_ids, positions):
-        hidden_states = self.embed_tokens(input_ids)
-        residual = None
-        for layer in self.layers:
-            hidden_states, residual = layer(positions, hidden_states, residual)
-        hidden_states, _ = self.norm(hidden_states, residual)
-        return hidden_states
+for seq in seqs:
+    start = seq.num_cached_tokens
+    seqlen_q = seq.num_scheduled_tokens
+    end = start + seqlen_q
+    seqlen_k = end
+    input_ids.extend(seq[start:end])
+    positions.extend(range(start, end))
+    cu_seqlens_q.append(cu_seqlens_q[-1] + seqlen_q)
+    cu_seqlens_k.append(cu_seqlens_k[-1] + seqlen_k)
 ```
 
-每个 decoder layer 内部都有一个 `Attention` block，引擎相关的工作正是从这里重新开始。与其把它简单塞进这段流水账，不如单独开一节讲——因为这是"怎么高效服务一个模型"和"transformer 本身怎么运作"这两个话题真正交汇的地方。
+注意 `seqlen_q` 和 `seqlen_k` 在有前缀命中缓存时是不相等的：query 长度只算*新*的 token，而 key 长度要覆盖整个序列、包括那段必须被注意到的缓存前缀。`cu_seqlens_k[-1] > cu_seqlens_q[-1]` 正是 nano-vllm 用来判断"发生了前缀缓存命中、因而需要把 block table 传给 attention kernel"的条件。
 
-## 六、跳出链条：PagedAttention，从 block table 到 kernel
+另一个产物是 `slot_mapping`：为每个新 token 算出它该被写进缓存里的哪个物理槽位，做法是遍历这个序列的 `block_table`。
 
-回到第一节提到的内存问题：给每个序列预留一整块连续、按最坏情况估计大小的内存，绝大部分预留出来的空间都被浪费了。PagedAttention 的解法，和操作系统几十年前对物理内存做的事情一模一样：不再要求连续性。把 KV cache 切成小的、固定大小的 block（nano-vllm 默认配置里是每块 256 个 token），从一个所有序列共享的池子里取用，再给每个序列一张小小的 **block table**——一份把逻辑 block 编号（0、1、2……）映射到某个空闲物理 block 的对照表。
+```python
+start_block = start // self.block_size
+end_block = (end + self.block_size - 1) // self.block_size
+for i in range(start_block, end_block):
+    slot_start = seq.block_table[i] * self.block_size
+    if i == start_block:
+        slot_start += start % self.block_size
+    if i != end_block - 1:
+        slot_end = seq.block_table[i] * self.block_size + self.block_size
+    else:
+        slot_end = seq.block_table[i] * self.block_size + end - i * self.block_size
+    slot_mapping.extend(range(slot_start, slot_end))
+```
+
+decode 是同一个思路，只是每个序列只有一个 token，所以槽位就是最后一个 block 的末尾：
+
+```python
+slot_mapping.append(seq.block_table[-1] * self.block_size + seq.last_block_num_tokens - 1)
+```
+
+## 五、PagedAttention
+
+走到这里先停下来，因为整个引擎的其余部分都是围着这个机制搭起来的。
+
+把问题重新说一遍：一个序列的 KV cache 会不可预测地增长，而你在它开始时并不知道最终会有多大。按最坏情况预留，几乎全是浪费。解法就是操作系统用的那个 —— 不再要求内存连续。把缓存切成固定大小的 block（nano-vllm 默认配置里是 256 个 token），维护一个共享的池子，再给每个序列一张 **block table**，把它的逻辑 block 编号映射到当时恰好空闲的那个物理 block。
 
 ![The block table: logical blocks map to scattered physical slots](blogs/images/nanovllm-block-table.svg?v=1)
 
-一个序列自己看到的 KV cache 依然是完全顺序的：block 0，然后 block 1，然后 block 2。和朴素方案不同的地方在于，这些逻辑 block 可以落在物理池子里的任何位置——就像上图里的物理 block 7、2、15，是散落的而不是连续的。除了每个序列最后一个 block 里没填满的那部分（最多浪费 255 个 token 的空间，无论这个序列最终会长到多长），几乎不存在任何浪费，不再是整块预留却大半用不上的最坏情况缓冲区。
+序列自己看到的视图依然是顺序的 —— block 0、block 1、block 2 —— 而物理 block 爱在哪在哪。剩下的唯一浪费，是序列最后一个 block 里没填满的那部分，无论序列长到多少，这份浪费都被 block 大小卡住了上限。
 
-`BlockManager` 就是掌管这个池子、负责发放 block 的代码，它还顺手做了一件很值得停下来看看的事：基于内容做寻址复用。
+### 分配，以及基于内容寻址的复用
+
+`can_allocate()` 负责探测缓存，遍历序列的满 block 并做链式哈希：
 
 ```python
-def allocate(self, seq: Sequence):
+@classmethod
+def compute_hash(cls, token_ids: list[int], prefix: int = -1):
+    h = xxhash.xxh64()
+    if prefix != -1:
+        h.update(prefix.to_bytes(8, "little"))
+    h.update(np.array(token_ids).tobytes())
+    return h.intdigest()
+
+def can_allocate(self, seq: Sequence) -> int:
     h = -1
-    for i in range(seq.num_blocks):
+    num_cached_blocks = 0
+    num_new_blocks = seq.num_blocks
+    for i in range(seq.num_blocks - 1):
         token_ids = seq.block(i)
-        h = self.compute_hash(token_ids, h) if len(token_ids) == self.block_size else -1
-        block_id = self.hash_to_block_id.get(h, -1) if h != -1 else -1
+        h = self.compute_hash(token_ids, h)
+        block_id = self.hash_to_block_id.get(h, -1)
         if block_id == -1 or self.blocks[block_id].token_ids != token_ids:
-            block_id = self.free_block_ids[0]     # cache miss: take a fresh block
-            block = self._allocate_block(block_id)
-        else:
-            seq.num_cached_tokens += self.block_size
-            block = self.blocks[block_id]
-            block.ref_count += 1                  # cache hit: reuse, bump refcount
-        if h != -1:
-            block.update(h, token_ids)
-            self.hash_to_block_id[h] = block_id
-        seq.block_table.append(block_id)
+            break
+        num_cached_blocks += 1
+        if block_id in self.used_block_ids:
+            num_new_blocks -= 1
+    if len(self.free_block_ids) < num_new_blocks:
+        return -1
+    return num_cached_blocks
 ```
 
-每个填满的 block，它的 token id 都会被哈希，而且这个哈希是链式的，串上了前一个 block 的哈希值，所以哈希捕捉到的不只是"这 256 个 token 是什么"，而是"这 256 个 token，紧跟在这一整段特定的历史后面"。如果一个新序列开头的几个 block，哈希值和池子里已有的 block 对上了，`BlockManager` 就会直接复用同一个物理 block，而不是重新计算、重新写入，只是把引用计数加一。这正是为什么两个共享同一段很长 system prompt 的请求，那段 system prompt 的 KV cache 只需要被真正算过、存过一次：
+这里有三处是承重的。每个哈希都串上了前一个 block 的哈希，所以一个 block 的身份是"这些 token，在这个位置上，跟在这段确切历史之后" —— 两个序列只有从第 0 个 token 就一致才可能匹配上。循环在第一次未命中时就 `break`，因为前缀匹配按定义就是一段开头的连续区间。而那个显式的 `self.blocks[block_id].token_ids != token_ids` 复查，是在防哈希碰撞，而不是无条件信任摘要值。
+
+返回值是被复用的：`-1` 表示"空闲 block 不够，先别调度这个"，其他任何值都是命中缓存的 block 数量。调度器正是拿这个值去减，算出真正需要计算的 token 有多少。
+
+`allocate()` 随后落实这件事 —— 命中的 block 通过增加引用计数来复用，剩下的取新 block：
+
+```python
+def allocate(self, seq: Sequence, num_cached_blocks: int):
+    assert not seq.block_table
+    h = -1
+    for i in range(num_cached_blocks):
+        token_ids = seq.block(i)
+        h = self.compute_hash(token_ids, h)
+        block_id = self.hash_to_block_id[h]
+        block = self.blocks[block_id]
+        if block_id in self.used_block_ids:
+            block.ref_count += 1
+        else:
+            block.ref_count = 1
+            self.free_block_ids.remove(block_id)
+            self.used_block_ids.add(block_id)
+        seq.block_table.append(block_id)
+    for i in range(num_cached_blocks, seq.num_blocks):
+        seq.block_table.append(self._allocate_block())
+    seq.num_cached_tokens = num_cached_blocks * self.block_size
+```
+
+decode 期间的增长被刻意做得很轻：
+
+```python
+def can_append(self, seq: Sequence) -> bool:
+    return len(self.free_block_ids) >= (len(seq) % self.block_size == 1)
+
+def may_append(self, seq: Sequence):
+    if len(seq) % self.block_size == 1:
+        seq.block_table.append(self._allocate_block())
+```
+
+`len(seq) % block_size == 1` 恰好在序列刚刚越过一个 block 边界时为真，所以平均每 256 个 token 才会申请一次新 block。注意 `can_append` 里的比较利用了 Python 中 `bool` 就是 `int` 这一点：在边界 token 上它读作"空闲 block ≥ 1"，其他时候读作"空闲 block ≥ 0"。
+
+释放是按引用计数、而不是按归属进行的，这正是共享前缀能比创造它的那个序列活得更久的原因：
+
+```python
+def deallocate(self, seq: Sequence):
+    for block_id in reversed(seq.block_table):
+        block = self.blocks[block_id]
+        block.ref_count -= 1
+        if block.ref_count == 0:
+            self._deallocate_block(block_id)
+    seq.num_cached_tokens = 0
+    seq.block_table.clear()
+```
+
+看着池子一步步变化，比读代码更容易把共享和引用计数这两件事记住：
+
+![interactive:nanovllm-blocks](#)
 
 ![Prefix caching: identical leading blocks share one physical block](blogs/images/nanovllm-prefix-cache.svg?v=1)
 
-序列 A 和序列 B 在共享的 system prompt 之后开始分叉，但只要前缀还一致，它们的 block table 就都指向同一批物理 block 4 和 9；只有等实际内容真正不一样了（block 7 对 block 12），才会各自分开。
+一个细节：block 是在被*算完之后*才哈希的，不是在分配时。`hash_blocks()` 跑在 `postprocess()` 里，而且只覆盖这一轮里刚刚变满的 block —— 这就是为什么一个序列最后那个没填满的 block 永远不会进缓存：它的内容还没定下来。
 
-还剩两件事：怎么把新算出来的 K/V 向量写进这些散落的物理 block 里，以及 attention 计算时怎么把它们读回来。写入是一个 scatter 操作，`store_kvcache_kernel`，一个 Triton kernel：每个 token 新算出来的 key/value 向量，都会被直接写到 `slot_mapping` 里给出的那个物理缓存槽位——就是第四节 `prepare_prefill` 里构造的那个张量。读取发生在 `Attention.forward()` 内部，也正是在这里，block table 这层间接寻址真正开始发挥作用：`flash_attn_varlen_func` 和 `flash_attn_with_kvcache` 都直接接受一个 `block_table` 参数，所以真正去把每个序列散落的物理 block 收集起来的工作，是 attention kernel 自己做的，外层的 Python 代码完全不需要先把 cache 拼成一整块连续内存：
+### 把 K/V 写进去、读回来
+
+写入是一个 scatter，由一个 Triton kernel 完成 —— 每个 token 一个 program，各自把自己的 key 和 value 拷进 `slot_mapping` 指派的槽位：
 
 ```python
-class Attention(nn.Module):
-    def forward(self, q, k, v):
-        if k_cache.numel() and v_cache.numel():
-            store_kvcache(k, v, k_cache, v_cache, context.slot_mapping)
-        if context.is_prefill:
-            o = flash_attn_varlen_func(q, k, v,
-                    cu_seqlens_q=context.cu_seqlens_q,
-                    cu_seqlens_k=context.cu_seqlens_k,
-                    causal=True, block_table=context.block_tables)
-        else:
-            o = flash_attn_with_kvcache(q, k_cache, v_cache,
-                    cache_seqlens=context.context_lens,
-                    block_table=context.block_tables, causal=True)
-        return o
+@triton.jit
+def store_kvcache_kernel(
+    key_ptr, key_stride, value_ptr, value_stride,
+    k_cache_ptr, v_cache_ptr, slot_mapping_ptr, D: tl.constexpr,
+):
+    idx = tl.program_id(0)
+    slot = tl.load(slot_mapping_ptr + idx)
+    if slot == -1: return
+    key_offsets = idx * key_stride + tl.arange(0, D)
+    value_offsets = idx * value_stride + tl.arange(0, D)
+    key = tl.load(key_ptr + key_offsets)
+    value = tl.load(value_ptr + value_offsets)
+    cache_offsets = slot * D + tl.arange(0, D)
+    tl.store(k_cache_ptr + cache_offsets, key)
+    tl.store(v_cache_ptr + cache_offsets, value)
 ```
 
-底层用到的这个 flash-attention kernel 本身，正是 [GPU field guide 那篇文章](#/blog?id=gpu-guide-for-dl)里 tiling 和内存带宽那部分讨论的对象——如果"为什么不把完整的 attention 矩阵摆出来"这个问题本身让你感兴趣，那篇文章里 roofline 那一节会讲得更深。这里想强调的是更窄的一点：PagedAttention 完全没有改变 attention 的数学本身，缩放点积再 softmax，还是缩放点积再 softmax。它改变的只是 K、V 向量物理上存在哪里，而 block table 加上这层 kernel 级别的收集操作，正是让"非连续存储"这件事对数学计算完全透明的全部机制。
+`slot == -1` 这个提前返回，正是 CUDA graph 重放能安全工作的前提：被捕获的 graph 跑在固定 batch size 上，于是 padding 出来的条目被标成 `-1` 并跳过。
 
-## 七、回到链条：采样
+读取才是这层间接寻址真正兑现价值的地方。`Attention.forward()` 自己从不去收集 block —— 它把 `block_table` 交给 attention kernel，由 kernel 在内部完成收集：
 
-模型的前向传播最终产出 logits——词表里每个 token 一个分数——`Sampler` 把它们变成真正的下一个 token id。nano-vllm 的采样器先做温度缩放，再用 Gumbel-max trick 采样，这是一种和直接调用 `torch.multinomial` 数学上等价、但对 `torch.compile` 更友好的写法：
+```python
+def forward(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor):
+    context = get_context()
+    k_cache, v_cache = self.k_cache, self.v_cache
+    if k_cache.numel() and v_cache.numel():
+        store_kvcache(k, v, k_cache, v_cache, context.slot_mapping)
+    if context.is_prefill:
+        if context.block_tables is not None:    # prefix cache
+            k, v = k_cache, v_cache
+        o = flash_attn_varlen_func(q, k, v,
+                                   max_seqlen_q=context.max_seqlen_q, cu_seqlens_q=context.cu_seqlens_q,
+                                   max_seqlen_k=context.max_seqlen_k, cu_seqlens_k=context.cu_seqlens_k,
+                                   softmax_scale=self.scale, causal=True, block_table=context.block_tables)
+    else:    # decode
+        o = flash_attn_with_kvcache(q.unsqueeze(1), k_cache, v_cache,
+                                    cache_seqlens=context.context_lens, block_table=context.block_tables,
+                                    softmax_scale=self.scale, causal=True)
+    return o
+```
+
+注意那个分支：在前缀缓存命中时，`k` 和 `v` 会被*替换*成完整的 cache，因为刚算出来的 `k`/`v` 只覆盖新 token，而 attention 必须也看到缓存里的前缀。之后 kernel 就通过 `block_table` 把这些全部读出来。
+
+上面这一切完全没有改变 attention 的数学 —— 依然是缩放点积再 softmax，和以前一模一样。分页改变的只是 K 和 V 住在哪里。（flash-attention kernel 内部的 tiling 与带宽推理是 [GPU field guide](#/blog?id=gpu-guide-for-dl) 那篇的主题；这篇文章把那个 kernel 当作既定条件。）
+
+## 六、采样
+
+logits 变成 token id，只用九行：
 
 ```python
 class Sampler(nn.Module):
+
     @torch.compile
     def forward(self, logits: torch.Tensor, temperatures: torch.Tensor):
         logits = logits.float().div_(temperatures.unsqueeze(dim=1))
         probs = torch.softmax(logits, dim=-1)
-        sample_tokens = probs.div_(
-            torch.empty_like(probs).exponential_(1).clamp_min_(1e-10)
-        ).argmax(dim=-1)
+        sample_tokens = probs.div_(torch.empty_like(probs).exponential_(1).clamp_min_(1e-10)).argmax(dim=-1)
         return sample_tokens
 ```
 
-把每个概率除以一个独立的 `Exponential(1)` 采样值，再取 `argmax`，在数学上和直接从分类分布 `probs` 里采样是等价的，但整个过程只由逐元素运算和一次 argmax 组成，没有任何依赖数据的控制流分支——这正是 `torch.compile` 能把它编译成一个高效融合 kernel 所需要的形状。
+把每个概率除以一个独立的 `Exponential(1)` 采样值再取 `argmax`，恰好等价于从分类分布里采样 —— 这就是换了个形式的 Gumbel-max trick，因为除以一个指数分布变量，在对数空间里就是减去一个 Gumbel 变量。不用 `torch.multinomial` 而这样写的理由是：它全部由逐元素算术加一次 argmax 组成，没有依赖数据的控制流，于是 `torch.compile` 能把整段融合成一个 kernel。
 
-## 八、闭合循环：postprocess、抢占，以及 `generate()`
+上面一层还有个相关的小技巧。prefill 期间模型会为每个 prompt token 算出隐状态，但只有每个序列的最后一个 token 才能产出下一个 token，所以 `ParallelLMHead` 在投影之前先切片：
 
-回到 `LLMEngine.step()`：一旦模型产出了这一批新 token id，`Scheduler.postprocess()` 会把每个新 token 追加到对应序列，检查这个序列是不是碰到了结束符或者达到了最大长度，如果是，就标记它结束，并把它占用的 block 归还给空闲池。还没结束的序列则原样留在 `running` 里，等调度器下一次调用时继续被处理。
+```python
+if context.is_prefill:
+    last_indices = context.cu_seqlens_q[1:] - 1
+    x = x[last_indices].contiguous()
+```
 
-`generate()` 是把这一切串起来的最外层循环：先通过 `add_request()` 提交每一个 prompt，然后反复调用 `step()`——每次调用对应一轮调度，可能是 prefill 也可能是 decode——直到所有序列都结束。这个"循环回去"正是第二节架构图底部那根虚线箭头。第三节提到的抢占机制，就是保证这个循环在内存压力下依然正确的关键：如果 block 池子的扩张速度跟不上所有正在运行序列的需求，最近才加入 running 的那个序列会被驱逐回 `waiting`，而不是让整个系统卡死或报错；等腾出空间之后，它会被重新 prefill，而且第六节提到的那套基于内容哈希的机制，还能让它复用那些依然有效的旧 block。一个序列真正结束之后，它积累下来的 token id 会被重新解码回文本，这就是调用方最终拿到的响应。
+对一批长 prompt 来说，这就把"在几千个位置上做词表规模的投影"变成了"只在寥寥几个位置上做"。
 
-## 九、nano-vllm 省掉了什么
+## 七、闭合循环
 
-nano-vllm 对自己范围的诚实，也是它作为教学范例好用的原因之一：上面这三个机制，它都实现得很完整，其他几乎全部省掉了。它确实还顺带实现了两个没有出现在上面这条主线里的功能，因为它们更偏工程而不是核心算法：张量并行（tensor parallelism），把模型本身切分到多张 GPU 上，靠 `torch.multiprocessing` 加一个小型共享内存 RPC 机制来协调，而不是用更重的分布式框架；以及 CUDA graph 捕获，针对几个固定的 batch size 提前录制好 GPU 操作序列，让 decode 步可以直接重放一份 graph，而不用每一步都从 Python 重新派发每个算子，从而削减单步的启动开销。
+`postprocess()` 收尾这一轮：把刚填满的 block 哈希掉、推进已缓存 token 计数、追加新 token、并让结束的序列退场。
 
-它完全没有实现的，是生产级 vLLM 之所以庞大得多的大部分原因：投机解码（speculative decoding）、为不同 SLA 目标调优的多种调度策略、量化支持、把 prefill 和 decode 拆到不同机器上的分离式服务，以及一个通用得多、需要跨各种模型架构工作的模型加载与 kernel 选择层——而 nano-vllm 因为只针对一个模型家族，完全不用考虑这些。这些都不会改变这篇文章走过的核心机制；它们是"用 1200 行代码把核心算法做对"变成"把这套东西真正大规模跑在生产环境里"之后，才会被一层一层叠加上去的东西。
+```python
+def postprocess(self, seqs: list[Sequence], token_ids: list[int], is_prefill: bool):
+    for seq, token_id in zip(seqs, token_ids):
+        self.block_manager.hash_blocks(seq)
+        seq.num_cached_tokens += seq.num_scheduled_tokens
+        seq.num_scheduled_tokens = 0
+        if is_prefill and seq.num_cached_tokens < seq.num_tokens:
+            continue
+        seq.append_token(token_id)
+        if (not seq.ignore_eos and token_id == self.eos) or seq.num_completion_tokens == seq.max_tokens:
+            seq.status = SequenceStatus.FINISHED
+            self.block_manager.deallocate(seq)
+            self.running.remove(seq)
+```
+
+那个 `continue` 对应的是分块 prefill 的情况：prompt 还没处理完的序列会丢弃这次采样出的 token，因为从半截 prompt 预测出来的 token 没有意义。只有等 prompt 被完整消费完，生成才真正开始。
+
+`generate()` 把这一切裹进一个循环，一直跑到两个队列都空为止，然后把每个序列累积的 id 解码回文本。
+
+## 八、和真实 vLLM 比，少了什么
+
+nano-vllm 确实还包含两样这次没细讲的东西，都属于工程而非算法。张量并行为每个 rank 起一个 `ModelRunner` 进程，由 rank 0 通过一块 `SharedMemory` 广播方法调用 —— 大约四十行手写的 RPC。CUDA graph 捕获则为一组固定的 batch size（`[1, 2, 4, 8] + range(16, max_bs+1, 16)`）预先录好 decode 步骤，之后重放"不小于当前 batch size 的最小那份" graph（`next(x for x in self.graph_bs if x >= bs)`），而不是每步都从 Python 重新派发每个算子；这也解释了为什么 `slot_mapping` 需要 `-1` 这个哨兵值，以及为什么只有形状可预测的 decode 才用 graph。
+
+真正缺席的，是让生产级 vLLM 变得庞大的那些东西：投机解码、量化、多种调度策略、把 prefill 和 decode 拆到不同机器上的分离式服务，以及一个通用到能支持 Qwen3 之外各种架构的模型加载层。这些都不会改变上面这些机制 —— 它们是核心正确之后，才一层层堆上去的东西。

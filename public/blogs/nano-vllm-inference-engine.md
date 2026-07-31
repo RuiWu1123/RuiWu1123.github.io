@@ -3,54 +3,85 @@ title: "Inside vLLM: Learning an Inference Engine Through Nano-vLLM"
 date: "2026/7/31"
 ---
 
-Training a model and serving it are different engineering problems. Training cares about throughput on huge, uniform batches known ahead of time. Serving cares about latency on a stream of requests that arrive at unpredictable moments, ask for unpredictable output lengths, and need a response back as fast as possible. A framework built for the first problem is a poor fit for the second, which is why an entire category of software, the inference engine, exists specifically to run a trained model efficiently against live traffic. vLLM is the best-known open-source example of one.
+Serving a language model naively goes wrong in two specific ways. First, memory: every token a sequence generates leaves behind key and value vectors that must stay in GPU memory for as long as the sequence is alive, and the obvious implementation reserves one contiguous worst-case-sized buffer per request. Most requests use a fraction of it, and that waste multiplies across every concurrent sequence — it is usually what caps naive serving code at a handful of them. Second, scheduling: if requests are batched and stepped in lockstep, the batch advances at the speed of its slowest member, and a request arriving mid-batch waits for the whole batch to drain.
 
-This post uses [nano-vllm](https://github.com/GeeeekExplorer/nano-vllm), a from-scratch reimplementation of vLLM's core ideas in about 1,200 lines of readable Python, as the vehicle for actually understanding what an inference engine does and why. Real vLLM is tens of thousands of lines, spread across schedulers, custom kernels, and years of incremental optimization; nano-vllm keeps only the essential mechanisms, one clean implementation of continuous batching, one of paged KV-cache memory, one of prefix caching, and gets remarkably close to vLLM's own throughput doing it (1434 tokens/s vs. vLLM's 1362 tokens/s, Qwen3-0.6B, 256 concurrent sequences, on a single RTX 4070 Laptop GPU, per the project's own benchmark). That combination, small enough to read end to end, faithful enough to teach the real thing, is exactly what makes it worth walking through.
+vLLM's two central ideas answer these one for one. **PagedAttention** stores the KV cache in small fixed-size blocks drawn from a shared pool, borrowing the trick operating systems use for virtual memory, so nothing has to be contiguous and nothing has to be reserved up front. **Continuous batching** lets the scheduler change the batch's membership at every single step, so a new request starts work immediately instead of waiting for a slot. A third mechanism, **prefix caching**, reuses already-computed blocks across requests that share a prefix.
 
-## 1. The problem an inference engine actually solves
+[nano-vllm](https://github.com/GeeeekExplorer/nano-vllm) implements all three in about 1,200 lines of Python, and reaches 1434 tokens/s against real vLLM's 1362 on the project's own benchmark (Qwen3-0.6B, 256 concurrent sequences, one RTX 4070 Laptop GPU). That makes it small enough to read completely while still being the real mechanism rather than a toy. This post follows one request through it, stopping to open up PagedAttention properly when we reach it.
 
-Picture the simplest possible way to serve a language model: a request arrives, you run it through the model one token at a time until it's done, then you move to the next request. Two things go wrong immediately at any real scale.
+## 1. The repo, and the path through it
 
-The first is memory. Every token a sequence generates needs its key and value vectors kept around for every future step, the KV cache, and that cache has to live somewhere in GPU memory for as long as the sequence is active. The naive fix is to reserve a contiguous buffer sized for the longest sequence you'll ever allow, per request, up front. Most requests don't come close to using it. That gap between reserved and actually-used memory is wasted on every single request running concurrently, and it's the single biggest reason naive serving code can only fit a handful of concurrent sequences before running out of GPU memory.
-
-The second is scheduling. If requests are batched together and run in lockstep, a batch can only move forward as fast as its slowest member, and a new request that arrives mid-batch has to wait for the whole batch to finish before it can join. Static batching leaves the GPU alternating between "not enough work queued" and "blocked on stragglers," neither of which is good for throughput or for the latency any individual request experiences.
-
-vLLM's two headline contributions are a direct answer to each problem: **PagedAttention** manages the KV cache in small, fixed-size, non-contiguous blocks instead of one large reserved buffer per sequence, borrowing the idea directly from how operating systems page virtual memory; and **continuous batching** lets the scheduler add and remove individual sequences from the running batch at every step, rather than waiting for a batch to fully drain. Nano-vllm implements both, plus a third mechanism, prefix caching, that reuses already-computed KV blocks across requests that happen to share a prefix (a repeated system prompt, for instance). The rest of this post follows one prompt through the code that implements all three.
-
-## 2. The map: one request's path through the repo
-
-Before tracing the lifecycle line by line, here's the shape of the whole system: seven files, each with a small number of functions that matter, called in the order a request actually flows through them.
-
-![Nano-vLLM: one request's path through the repo](blogs/images/nanovllm-architecture-map.svg?v=1)
+The `nanovllm` package is 19 Python files (plus `bench.py` and `example.py` at the repo root). Seven of them form the pipeline a request moves through, in a fixed order — those are the ones this post follows. A request executes plenty of the rest too, but that code is either standard transformer machinery (RMSNorm, RoPE, SwiGLU, tensor-parallel linear layers) or plumbing (weight loading, config), not serving logic.
 
 ![interactive:nanovllm-arch](#)
 
-`LLMEngine` is the entry point and the outer loop. `Scheduler` decides which sequences run on a given step. `BlockManager` owns the physical KV-cache memory and hands out blocks. `ModelRunner` turns scheduling decisions into actual GPU tensors. `Qwen3ForCausalLM` is the transformer itself. `Attention`, highlighted in the diagram, is where PagedAttention actually happens, and gets its own dedicated section below rather than a quick pass-through. `Sampler` turns the model's output logits into the next token id. The dashed arrow at the bottom is the loop: `generate()` calls `step()` repeatedly until every sequence in the batch has finished.
+Two details in that tree are worth flagging before we start walking it. `utils/context.py` is a module-level global that carries `slot_mapping` and `block_tables` from `ModelRunner` directly down to `Attention` — it exists so the paging metadata doesn't have to be threaded as an argument through every intervening layer. And most of `layers/` is ordinary model code, with two exceptions that read that global and change behaviour because of it: `attention.py`, which is where paging actually happens, and `embed_head.py`, which skips most of the output projection during prefill (section 6).
 
-## 3. Stage 1-2: a prompt becomes a `Sequence`, and gets scheduled
+## 2. A prompt becomes a `Sequence`
 
-A request enters through `LLMEngine.add_request()`, which tokenizes the prompt and wraps it in a `Sequence` object, a small piece of state tracking the token ids generated so far, which physical KV blocks belong to it, and how many of its prompt tokens are already covered by a cached prefix. That `Sequence` gets appended to a `waiting` queue and nothing else happens until the next scheduling step.
+`LLMEngine.add_request()` tokenizes the prompt and wraps it in a `Sequence`, then hands it to the scheduler:
 
-Scheduling is where continuous batching actually lives:
+```python
+def add_request(self, prompt: str | list[int], sampling_params: SamplingParams):
+    if isinstance(prompt, str):
+        prompt = self.tokenizer.encode(prompt)
+    seq = Sequence(prompt, sampling_params)
+    self.scheduler.add(seq)
+```
+
+A `Sequence` is the complete state of one request: its token ids, how many of them have already been computed into the KV cache (`num_cached_tokens`), how many are being computed this round (`num_scheduled_tokens`), and which physical cache blocks it owns (`block_table`). Two derived properties matter later:
+
+```python
+@property
+def num_blocks(self):
+    return (self.num_tokens + self.block_size - 1) // self.block_size
+
+def block(self, i):
+    assert 0 <= i < self.num_blocks
+    return self.token_ids[i*self.block_size: (i+1)*self.block_size]
+```
+
+`block(i)` slices the sequence's tokens into block-sized chunks. That slicing is what makes prefix caching possible, because it gives every block a well-defined content to hash.
+
+## 3. The scheduler, and what continuous batching actually is
+
+Each engine step begins by asking the scheduler what to run. The answer is always either "prefill work" or "one decode token for everything running" — never both:
 
 ```python
 def schedule(self) -> tuple[list[Sequence], bool]:
-    # 1. try to schedule prefill work first
-    scheduled_seqs, num_batched_tokens = [], 0
-    while self.waiting and num_batched_tokens < self.max_num_batched_tokens:
+    scheduled_seqs = []
+    num_batched_tokens = 0
+
+    # prefill
+    while self.waiting and len(scheduled_seqs) < self.max_num_seqs:
         seq = self.waiting[0]
-        if not self.block_manager.can_allocate(seq):
+        remaining = self.max_num_batched_tokens - num_batched_tokens
+        if remaining == 0:
             break
-        num_batched_tokens += len(seq) - seq.num_cached_tokens
-        self.block_manager.allocate(seq)
-        self.waiting.popleft()
-        self.running.append(seq)
+        if not seq.block_table:
+            num_cached_blocks = self.block_manager.can_allocate(seq)
+            if num_cached_blocks == -1:
+                break
+            num_tokens = seq.num_tokens - num_cached_blocks * self.block_size
+        else:
+            num_tokens = seq.num_tokens - seq.num_cached_tokens
+        if remaining < num_tokens and scheduled_seqs:  # only allow chunked prefill for the first seq
+            break
+        if not seq.block_table:
+            self.block_manager.allocate(seq, num_cached_blocks)
+        seq.num_scheduled_tokens = min(num_tokens, remaining)
+        num_batched_tokens += seq.num_scheduled_tokens
+        if seq.num_cached_tokens + seq.num_scheduled_tokens == seq.num_tokens:
+            seq.status = SequenceStatus.RUNNING
+            self.waiting.popleft()
+            self.running.append(seq)
         scheduled_seqs.append(seq)
+
     if scheduled_seqs:
         return scheduled_seqs, True
 
-    # 2. otherwise, advance every running sequence by one decode step
-    while self.running:
+    # decode
+    while self.running and len(scheduled_seqs) < self.max_num_seqs:
         seq = self.running.popleft()
         while not self.block_manager.can_append(seq):
             if self.running:
@@ -59,141 +90,277 @@ def schedule(self) -> tuple[list[Sequence], bool]:
                 self.preempt(seq)
                 break
         else:
+            seq.num_scheduled_tokens = 1
+            seq.is_prefill = False
             self.block_manager.may_append(seq)
             scheduled_seqs.append(seq)
-    self.running.extend(scheduled_seqs)
+    assert scheduled_seqs
+    self.running.extendleft(reversed(scheduled_seqs))
     return scheduled_seqs, False
 ```
 
-Every call to `schedule()` prefers **prefill** work, processing the prompt tokens of new or partially-processed sequences, over **decode** work, generating one more token for sequences already running. Only when there is no prefill work left to pack into this step does the scheduler fall through to advancing the running sequences by a single decode step. This ordering is what makes the batch composition fluid step to step: a brand-new request can start prefilling on the very next call to `schedule()`, without waiting for any currently-running sequence to finish. That is continuous batching, in nine lines of Python.
+The prefill loop drains the `waiting` queue under two budgets: `max_num_seqs` sequences and `max_num_batched_tokens` tokens. If a single prompt is larger than the remaining token budget, it gets **chunked** — prefilled across several rounds — but the `and scheduled_seqs` guard means only the first sequence in a round may be chunked, so nano-vllm never splits two prompts in the same round. A chunked sequence stays in `waiting` (the status change only fires once `num_cached_tokens + num_scheduled_tokens == num_tokens`), which is how it gets picked up again next round.
 
-The `while ... else` block handles the case where a running sequence can't get the next KV block it needs (`can_append` fails, more on why in section 6): the scheduler frees up room by evicting the most recently added running sequence back to `waiting` via `preempt()`, which deallocates its blocks so it can be re-prefilled later. That's the pressure valve for when concurrent demand exceeds available cache memory.
-
-## 4. Stage 3-4: reserving cache space, then building GPU tensors
-
-Before a sequence can run, `BlockManager.can_allocate()` / `allocate()` (called inside `schedule()` above) have to reserve however many fixed-size KV-cache blocks its prompt needs, possibly reusing already-cached blocks from an identical prefix. That mechanism is the subject of the next section; for now, treat it as a black box that returns a `block_table`, a list of physical block ids, for each sequence.
-
-`ModelRunner` takes the scheduled sequences and their block tables and turns them into the actual tensors the model will consume. For prefill, every scheduled sequence's uncached prompt tokens get flattened into one 1-D tensor, no padding at all, with cumulative offsets (`cu_seqlens_q`, `cu_seqlens_k`) marking where each sequence's tokens start and end:
+The `while ... else` in the decode loop is Python's least-known construct: the `else` runs only if the `while` condition went false without hitting `break`. So a sequence is scheduled only if `can_append` eventually succeeded. If it never does, `preempt()` evicts a victim — the most recently added running sequence, or the sequence itself if nothing else is running — freeing its blocks and pushing it back to the front of `waiting`:
 
 ```python
-def prepare_prefill(self, seqs: list[Sequence]):
-    input_ids, positions, cu_seqlens_q, cu_seqlens_k = [], [], [0], [0]
-    slot_mapping = []
-    for seq in seqs:
-        input_ids.extend(seq[seq.num_cached_tokens:])
-        positions.extend(range(seq.num_cached_tokens, len(seq)))
-        cu_seqlens_q.append(cu_seqlens_q[-1] + len(seq) - seq.num_cached_tokens)
-        cu_seqlens_k.append(cu_seqlens_k[-1] + len(seq))
-        for i in range(seq.num_cached_blocks, seq.num_blocks):
-            start = seq.block_table[i] * self.block_size
-            end = start + (self.block_size if i != seq.num_blocks - 1
-                            else seq.last_block_num_tokens)
-            slot_mapping.extend(range(start, end))
-    # ... packed into GPU tensors, one flat forward pass, zero padding waste
+def preempt(self, seq: Sequence):
+    seq.status = SequenceStatus.WAITING
+    seq.is_prefill = True
+    self.block_manager.deallocate(seq)
+    self.waiting.appendleft(seq)
 ```
 
-This "varlen" (variable-length) packing is why nano-vllm never pads a batch to its longest member: five sequences of very different lengths just become one long tensor with markers for where each one begins. `prepare_decode()` is the equivalent function for a decode step, one new token per running sequence instead of a whole prompt, along with each sequence's current length (`context_lens`) and its `block_table`, needed so the attention step below knows exactly which physical cache blocks to read from. The `slot_mapping` tensor built here, mapping every new token to the exact physical cache slot it should be written into, is the thread that connects this section to the PagedAttention deep-dive next.
+Preemption is not an error path. It is the designed response to the KV cache filling up, and the reason the engine degrades gracefully under load instead of failing.
 
-## 5. Stage 5: running the model
+The consequence of prefill-first ordering is that batch membership is fluid: a request that arrives now can start prefilling on the very next `schedule()` call, without any currently-running sequence finishing. Stepping through it makes the difference from static batching concrete:
 
-With tensors prepared, `ModelRunner` calls the actual transformer, `Qwen3ForCausalLM`. Nothing about this stage is inference-engine-specific, it's a standard decoder-only forward pass, embedding the input ids, running them through N decoder layers, and normalizing the result:
+![interactive:nanovllm-scheduler](#)
+
+## 4. Building the GPU tensors
+
+Scheduled sequences become flat tensors. For prefill, every sequence's uncomputed tokens are concatenated into one 1-D tensor with cumulative offsets marking the boundaries — no padding anywhere:
 
 ```python
-class Qwen3Model(nn.Module):
-    def forward(self, input_ids, positions):
-        hidden_states = self.embed_tokens(input_ids)
-        residual = None
-        for layer in self.layers:
-            hidden_states, residual = layer(positions, hidden_states, residual)
-        hidden_states, _ = self.norm(hidden_states, residual)
-        return hidden_states
+for seq in seqs:
+    start = seq.num_cached_tokens
+    seqlen_q = seq.num_scheduled_tokens
+    end = start + seqlen_q
+    seqlen_k = end
+    input_ids.extend(seq[start:end])
+    positions.extend(range(start, end))
+    cu_seqlens_q.append(cu_seqlens_q[-1] + seqlen_q)
+    cu_seqlens_k.append(cu_seqlens_k[-1] + seqlen_k)
 ```
 
-Each decoder layer contains one `Attention` block, and that block is where the engine-specific work resumes. Rather than fold it into this pass-through, it gets its own section, because this is the one place where "how do you serve a model efficiently" and "how does a transformer work" genuinely intersect.
+Note `seqlen_q` and `seqlen_k` differ whenever a prefix was cached: the query length is only the *new* tokens, while the key length spans the whole sequence including the cached prefix it must attend to. `cu_seqlens_k[-1] > cu_seqlens_q[-1]` is precisely the test nano-vllm uses to detect that a prefix cache hit occurred and that block tables therefore need to be passed to the attention kernel.
 
-## 6. Breaking the chain: PagedAttention, from block table to kernel
+The other output is `slot_mapping`: for every new token, the exact physical slot in the cache it should be written to, computed by walking the sequence's `block_table`.
 
-Go back to the memory problem from section 1: reserving one contiguous, worst-case-sized buffer per sequence wastes most of what it reserves. PagedAttention's fix is the same one operating systems settled on decades ago for physical memory: stop requiring contiguity. Divide the KV cache into small fixed-size blocks (256 tokens each, in nano-vllm's default config), draw them from one shared pool across every sequence in the system, and give each sequence a small **block table**, a list mapping its logical block index (0, 1, 2, ...) to whichever physical block happens to be free.
+```python
+start_block = start // self.block_size
+end_block = (end + self.block_size - 1) // self.block_size
+for i in range(start_block, end_block):
+    slot_start = seq.block_table[i] * self.block_size
+    if i == start_block:
+        slot_start += start % self.block_size
+    if i != end_block - 1:
+        slot_end = seq.block_table[i] * self.block_size + self.block_size
+    else:
+        slot_end = seq.block_table[i] * self.block_size + end - i * self.block_size
+    slot_mapping.extend(range(slot_start, slot_end))
+```
+
+Decode is the same idea with one token per sequence, so the slot is just the tail of the last block:
+
+```python
+slot_mapping.append(seq.block_table[-1] * self.block_size + seq.last_block_num_tokens - 1)
+```
+
+## 5. PagedAttention
+
+Here the walkthrough stops, because this is the mechanism the rest of the engine is built around.
+
+The problem, restated: a sequence's KV cache grows unpredictably, and you don't know its final size when it starts. Reserving for the worst case wastes almost everything. The fix is the one operating systems use — stop requiring the memory to be contiguous. Carve the cache into fixed-size blocks (256 tokens in nano-vllm's default config), keep one shared pool of them, and give each sequence a **block table** mapping its logical block index to whatever physical block was free.
 
 ![The block table: logical blocks map to scattered physical slots](blogs/images/nanovllm-block-table.svg?v=1)
 
-A sequence's own view of its KV cache still looks perfectly sequential, block 0, then block 1, then block 2. What differs from the naive approach is that those logical blocks can land anywhere in the physical pool, blocks 7, 2, and 15 in the diagram above, scattered rather than contiguous. Nothing is wasted except the partial fill inside the very last block of a sequence, at most 255 tokens' worth regardless of how long the sequence eventually grows, instead of an entire reserved-but-unused worst-case buffer.
+The sequence's own view stays sequential — block 0, block 1, block 2 — while the physical blocks sit wherever. The only waste left is the unfilled remainder of a sequence's last block, bounded by the block size no matter how long the sequence grows.
 
-`BlockManager` is the code that owns this pool and hands out blocks, and it does one more thing worth pausing on: content-addressed reuse.
+### Allocation, and content-addressed reuse
+
+`can_allocate()` does the cache probing, walking the sequence's full blocks and chain-hashing them:
 
 ```python
-def allocate(self, seq: Sequence):
+@classmethod
+def compute_hash(cls, token_ids: list[int], prefix: int = -1):
+    h = xxhash.xxh64()
+    if prefix != -1:
+        h.update(prefix.to_bytes(8, "little"))
+    h.update(np.array(token_ids).tobytes())
+    return h.intdigest()
+
+def can_allocate(self, seq: Sequence) -> int:
     h = -1
-    for i in range(seq.num_blocks):
+    num_cached_blocks = 0
+    num_new_blocks = seq.num_blocks
+    for i in range(seq.num_blocks - 1):
         token_ids = seq.block(i)
-        h = self.compute_hash(token_ids, h) if len(token_ids) == self.block_size else -1
-        block_id = self.hash_to_block_id.get(h, -1) if h != -1 else -1
+        h = self.compute_hash(token_ids, h)
+        block_id = self.hash_to_block_id.get(h, -1)
         if block_id == -1 or self.blocks[block_id].token_ids != token_ids:
-            block_id = self.free_block_ids[0]     # cache miss: take a fresh block
-            block = self._allocate_block(block_id)
-        else:
-            seq.num_cached_tokens += self.block_size
-            block = self.blocks[block_id]
-            block.ref_count += 1                  # cache hit: reuse, bump refcount
-        if h != -1:
-            block.update(h, token_ids)
-            self.hash_to_block_id[h] = block_id
-        seq.block_table.append(block_id)
+            break
+        num_cached_blocks += 1
+        if block_id in self.used_block_ids:
+            num_new_blocks -= 1
+    if len(self.free_block_ids) < num_new_blocks:
+        return -1
+    return num_cached_blocks
 ```
 
-Every full block's token ids get hashed, chained with the hash of the block before it, so the hash captures not just "these 256 tokens" but "these 256 tokens, occurring right after this specific history." If a new sequence's leading blocks hash-match blocks that already exist in the pool, `BlockManager` reuses the same physical block instead of recomputing and rewriting it, incrementing a reference count instead. This is exactly why two requests sharing a long system prompt only pay for that prompt's KV cache once:
+Three things are load-bearing. Each hash is chained with the previous block's hash, so a block's identity is "these tokens, in this position, after this exact history" — two sequences can only match if they agree from token zero. The loop `break`s at the first miss, because a prefix match is by definition a leading run. And the explicit `self.blocks[block_id].token_ids != token_ids` re-check guards against hash collisions rather than trusting the digest.
+
+The return value is overloaded: `-1` means "not enough free blocks, don't schedule this yet," any other value is the count of blocks that came back as cache hits. That's the value the scheduler subtracts to work out how many tokens actually need computing.
+
+`allocate()` then commits it — reusing cached blocks by bumping their reference count, and taking fresh blocks for the rest:
+
+```python
+def allocate(self, seq: Sequence, num_cached_blocks: int):
+    assert not seq.block_table
+    h = -1
+    for i in range(num_cached_blocks):
+        token_ids = seq.block(i)
+        h = self.compute_hash(token_ids, h)
+        block_id = self.hash_to_block_id[h]
+        block = self.blocks[block_id]
+        if block_id in self.used_block_ids:
+            block.ref_count += 1
+        else:
+            block.ref_count = 1
+            self.free_block_ids.remove(block_id)
+            self.used_block_ids.add(block_id)
+        seq.block_table.append(block_id)
+    for i in range(num_cached_blocks, seq.num_blocks):
+        seq.block_table.append(self._allocate_block())
+    seq.num_cached_tokens = num_cached_blocks * self.block_size
+```
+
+Growth during decode is deliberately cheap:
+
+```python
+def can_append(self, seq: Sequence) -> bool:
+    return len(self.free_block_ids) >= (len(seq) % self.block_size == 1)
+
+def may_append(self, seq: Sequence):
+    if len(seq) % self.block_size == 1:
+        seq.block_table.append(self._allocate_block())
+```
+
+`len(seq) % block_size == 1` is true exactly when the sequence has just spilled past a block boundary, so a new block is requested on exactly one token in every 256. Note the comparison in `can_append` relies on Python's `bool` being an `int`: it reads as "free blocks ≥ 1" on a boundary token and "free blocks ≥ 0" otherwise.
+
+Freeing is by reference count, not by owner, which is what lets a shared prefix outlive the sequence that created it:
+
+```python
+def deallocate(self, seq: Sequence):
+    for block_id in reversed(seq.block_table):
+        block = self.blocks[block_id]
+        block.ref_count -= 1
+        if block.ref_count == 0:
+            self._deallocate_block(block_id)
+    seq.num_cached_tokens = 0
+    seq.block_table.clear()
+```
+
+Watching the pool evolve makes the sharing and the reference counting easier to hold onto than the code does:
+
+![interactive:nanovllm-blocks](#)
 
 ![Prefix caching: identical leading blocks share one physical block](blogs/images/nanovllm-prefix-cache.svg?v=1)
 
-Sequence A and Sequence B diverge after their shared system prompt, but their block tables point at the same physical blocks 4 and 9 for as long as their prefixes match, only splitting apart, block 7 versus block 12, once their actual content differs.
+One subtlety: blocks are hashed *after* they are computed, not when allocated. `hash_blocks()` runs in `postprocess()` and only covers blocks that became full during the round, which is why a sequence's final partial block never enters the cache — its contents aren't settled yet.
 
-Two things remain: getting new K/V vectors into these scattered physical blocks, and reading them back out during attention. Writing is a scatter operation, `store_kvcache_kernel`, a Triton kernel: every newly computed key/value vector for a token gets written directly to the physical cache slot given by that token's entry in `slot_mapping`, the same tensor built back in section 4's `prepare_prefill`. Reading happens inside `Attention.forward()`, and it's here that the block-table indirection actually pays off, `flash_attn_varlen_func` and `flash_attn_with_kvcache` both accept a `block_table` argument directly, so the attention kernel itself gathers the right scattered physical blocks per sequence without the surrounding Python code ever needing to materialize a contiguous cache:
+### Getting K/V in and out
+
+Writing is a scatter, done by a Triton kernel — one program per token, each copying that token's key and value into the slot `slot_mapping` assigns it:
 
 ```python
-class Attention(nn.Module):
-    def forward(self, q, k, v):
-        if k_cache.numel() and v_cache.numel():
-            store_kvcache(k, v, k_cache, v_cache, context.slot_mapping)
-        if context.is_prefill:
-            o = flash_attn_varlen_func(q, k, v,
-                    cu_seqlens_q=context.cu_seqlens_q,
-                    cu_seqlens_k=context.cu_seqlens_k,
-                    causal=True, block_table=context.block_tables)
-        else:
-            o = flash_attn_with_kvcache(q, k_cache, v_cache,
-                    cache_seqlens=context.context_lens,
-                    block_table=context.block_tables, causal=True)
-        return o
+@triton.jit
+def store_kvcache_kernel(
+    key_ptr, key_stride, value_ptr, value_stride,
+    k_cache_ptr, v_cache_ptr, slot_mapping_ptr, D: tl.constexpr,
+):
+    idx = tl.program_id(0)
+    slot = tl.load(slot_mapping_ptr + idx)
+    if slot == -1: return
+    key_offsets = idx * key_stride + tl.arange(0, D)
+    value_offsets = idx * value_stride + tl.arange(0, D)
+    key = tl.load(key_ptr + key_offsets)
+    value = tl.load(value_ptr + value_offsets)
+    cache_offsets = slot * D + tl.arange(0, D)
+    tl.store(k_cache_ptr + cache_offsets, key)
+    tl.store(v_cache_ptr + cache_offsets, value)
 ```
 
-That flash-attention kernel underneath is itself the subject of the tiling and memory-bandwidth discussion in the [GPU field guide post](#/blog?id=gpu-guide-for-dl), if the "why does avoiding a materialized attention matrix matter" question is interesting on its own, that post's roofline section is the deeper dive. What matters here is narrower: PagedAttention doesn't change the attention math at all, softmax over scaled dot products is still softmax over scaled dot products. It changes only where the K and V vectors physically live, and the block table plus this kernel-level gather is the entire mechanism that makes non-contiguous storage invisible to the math.
+The `slot == -1` early return is what makes CUDA graph replay safe: captured graphs run at a fixed batch size, so padding entries are marked `-1` and skipped.
 
-## 7. Back to the chain: sampling
+Reading is where the indirection pays off. `Attention.forward()` never gathers blocks itself — it hands `block_table` to the attention kernel, which does the gather internally:
 
-The model's forward pass ends in logits, one score per vocabulary token, and `Sampler` turns those into an actual next token id. Nano-vllm's sampler applies temperature scaling and then samples using the Gumbel-max trick, an equivalent but `torch.compile`-friendly alternative to `torch.multinomial`:
+```python
+def forward(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor):
+    context = get_context()
+    k_cache, v_cache = self.k_cache, self.v_cache
+    if k_cache.numel() and v_cache.numel():
+        store_kvcache(k, v, k_cache, v_cache, context.slot_mapping)
+    if context.is_prefill:
+        if context.block_tables is not None:    # prefix cache
+            k, v = k_cache, v_cache
+        o = flash_attn_varlen_func(q, k, v,
+                                   max_seqlen_q=context.max_seqlen_q, cu_seqlens_q=context.cu_seqlens_q,
+                                   max_seqlen_k=context.max_seqlen_k, cu_seqlens_k=context.cu_seqlens_k,
+                                   softmax_scale=self.scale, causal=True, block_table=context.block_tables)
+    else:    # decode
+        o = flash_attn_with_kvcache(q.unsqueeze(1), k_cache, v_cache,
+                                    cache_seqlens=context.context_lens, block_table=context.block_tables,
+                                    softmax_scale=self.scale, causal=True)
+    return o
+```
+
+Note the branch: on a prefix cache hit, `k` and `v` are *replaced* by the full caches, because the freshly computed `k`/`v` only cover the new tokens while attention must see the cached prefix too. The kernel then reads everything through `block_table`.
+
+The attention math is completely unchanged by any of this — softmax over scaled dot products, exactly as always. Paging changes only where K and V live. (The tiling and bandwidth reasoning inside the flash-attention kernel itself is the subject of the [GPU field guide](#/blog?id=gpu-guide-for-dl); this post treats that kernel as given.)
+
+## 6. Sampling
+
+Logits become a token id in nine lines:
 
 ```python
 class Sampler(nn.Module):
+
     @torch.compile
     def forward(self, logits: torch.Tensor, temperatures: torch.Tensor):
         logits = logits.float().div_(temperatures.unsqueeze(dim=1))
         probs = torch.softmax(logits, dim=-1)
-        sample_tokens = probs.div_(
-            torch.empty_like(probs).exponential_(1).clamp_min_(1e-10)
-        ).argmax(dim=-1)
+        sample_tokens = probs.div_(torch.empty_like(probs).exponential_(1).clamp_min_(1e-10)).argmax(dim=-1)
         return sample_tokens
 ```
 
-Dividing each probability by an independent `Exponential(1)` draw and taking the `argmax` is mathematically equivalent to sampling directly from the categorical distribution `probs`, but it's built entirely out of elementwise ops and an argmax, no data-dependent control flow, which is exactly the shape `torch.compile` can turn into one efficient fused kernel.
+Dividing each probability by an independent `Exponential(1)` draw and taking the `argmax` samples from the categorical distribution exactly — it's the Gumbel-max trick in disguise, since dividing by an exponential is the same as subtracting a Gumbel in log space. The reason to write it this way rather than call `torch.multinomial` is that it is pure elementwise arithmetic plus an argmax, with no data-dependent control flow, so `torch.compile` can fuse the whole thing into one kernel.
 
-## 8. Closing the loop: postprocess, preemption, and `generate()`
+There is a related trick one layer up. During prefill the model computes hidden states for every prompt token, but only the last token of each sequence can produce a next token, so `ParallelLMHead` slices before projecting:
 
-Back in `LLMEngine.step()`, once the model has produced a batch of next-token ids, `Scheduler.postprocess()` appends each new token to its sequence, checks whether that sequence hit an end-of-sequence token or its maximum length, and if so marks it finished and returns its blocks to the free pool. Sequences that aren't finished simply stay in `running` and get picked up again on the scheduler's next call.
+```python
+if context.is_prefill:
+    last_indices = context.cu_seqlens_q[1:] - 1
+    x = x[last_indices].contiguous()
+```
 
-`generate()` is the outer loop tying all of this together: submit every prompt via `add_request()`, then call `step()` repeatedly, one call per scheduling round, prefill or decode, until every sequence has finished. That loop-back is the dashed arrow at the bottom of the architecture diagram in section 2. Preemption, from section 3, is the mechanism that keeps this loop correct even under memory pressure: if the block pool can't grow fast enough to keep every running sequence supplied, the least-recently-added running sequence gets evicted back to `waiting` rather than the whole system stalling or erroring out, and it simply gets re-prefilled, with whatever blocks are still valid reused via the same content-hash mechanism from section 6, once room frees up. Once a sequence is finished, its accumulated token ids get detokenized back into text, and that's the response the caller receives.
+For a batch of long prompts this turns a vocab-sized projection over thousands of positions into one over a handful.
 
-## 9. What nano-vllm leaves out
+## 7. Closing the loop
 
-Nano-vllm's honesty about its own scope is part of what makes it a good teaching example: it implements the three mechanisms above thoroughly and cuts almost everything else. It does include, briefly, a couple of features not covered in the walkthrough above because they're closer to engineering than to core algorithm: tensor parallelism, splitting the model itself across multiple GPUs, coordinated through `torch.multiprocessing` and a small shared-memory RPC mechanism rather than a heavier distributed framework; and CUDA graph capture, pre-recording the sequence of GPU operations for a handful of fixed batch sizes so that decode steps can replay a graph instead of re-dispatching each op from Python, cutting per-step launch overhead.
+`postprocess()` finishes the round: hash any blocks that filled up, advance the cached-token count, append the new token, and retire finished sequences.
 
-What it leaves out entirely is most of what makes production vLLM larger: speculative decoding, multiple scheduling policies tuned for different SLA targets, quantization support, disaggregated prefill/decode serving across separate machines, and a much more general model-loading and kernel-selection layer that has to work across architectures nano-vllm never has to consider, since it targets exactly one model family. None of that changes the core mechanics this post walked through; it's what gets layered on top once "get the core algorithm right in 1,200 lines" turns into "run this in production at scale."
+```python
+def postprocess(self, seqs: list[Sequence], token_ids: list[int], is_prefill: bool):
+    for seq, token_id in zip(seqs, token_ids):
+        self.block_manager.hash_blocks(seq)
+        seq.num_cached_tokens += seq.num_scheduled_tokens
+        seq.num_scheduled_tokens = 0
+        if is_prefill and seq.num_cached_tokens < seq.num_tokens:
+            continue
+        seq.append_token(token_id)
+        if (not seq.ignore_eos and token_id == self.eos) or seq.num_completion_tokens == seq.max_tokens:
+            seq.status = SequenceStatus.FINISHED
+            self.block_manager.deallocate(seq)
+            self.running.remove(seq)
+```
+
+The `continue` is the chunked-prefill case: a sequence still mid-prompt discards the sampled token, because a token predicted from a partial prompt is meaningless. Only once the prompt is fully consumed does generation actually begin.
+
+`generate()` wraps it all in a loop that runs until both queues are empty, then detokenizes each sequence's accumulated ids back into text.
+
+## 8. What's missing compared to real vLLM
+
+nano-vllm does include two things this walkthrough skipped, both engineering rather than algorithm. Tensor parallelism spawns one `ModelRunner` process per rank and has rank 0 broadcast method calls over a `SharedMemory` buffer — a hand-rolled RPC in about forty lines. And CUDA graph capture pre-records the decode step for a fixed set of batch sizes (`[1, 2, 4, 8] + range(16, max_bs+1, 16)`), replaying the smallest captured graph at or above the current batch size (`next(x for x in self.graph_bs if x >= bs)`) instead of re-dispatching every op from Python; this is why `slot_mapping` needs its `-1` sentinel and why graphs are only used for decode, where shapes are predictable.
+
+What's genuinely absent is most of what makes production vLLM large: speculative decoding, quantization, multiple scheduling policies, disaggregated prefill/decode across machines, and a model-loading layer general enough for architectures beyond the single Qwen3 family this targets. None of that changes the mechanics above — it's what accumulates on top once the core is correct.

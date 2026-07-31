@@ -1908,63 +1908,146 @@ export const MoEGatingExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) =>
 };
 
 /* ------------------------------------------------------------------ */
-/*  14. Nano-vLLM Architecture Explorer (click a stage, see its code)  */
+/*  14. Nano-vLLM repo explorer (the map IS the code browser)          */
 /* ------------------------------------------------------------------ */
 
-type NanoVLLMStageId =
-  | 'engine' | 'scheduler' | 'blockmanager' | 'modelrunner' | 'model' | 'attention' | 'sampler';
+type NVFile = {
+  path: string;
+  name: string;
+  folder: string;
+  step?: number;
+  role: { en: string; zh: string };
+  code: string;
+};
 
-const NANOVLLM_STAGES: { id: NanoVLLMStageId; file: string; label: { en: string; zh: string }; desc: { en: string; zh: string }; code: string }[] = [
+const NV_FOLDERS: { key: string; label: string }[] = [
+  { key: '', label: 'nanovllm/' },
+  { key: 'engine', label: 'nanovllm/engine/' },
+  { key: 'models', label: 'nanovllm/models/' },
+  { key: 'layers', label: 'nanovllm/layers/' },
+  { key: 'utils', label: 'nanovllm/utils/' },
+];
+
+const NV_FILES: NVFile[] = [
   {
-    id: 'engine',
-    file: 'engine/llm_engine.py',
-    label: { en: '1. LLMEngine', zh: '1. LLMEngine' },
-    desc: {
-      en: 'The orchestrator. add_request() tokenizes and enqueues a prompt; generate() calls step() in a loop until every sequence is finished.',
-      zh: '总调度者。add_request() 负责分词并把请求入队；generate() 在循环里反复调用 step()，直到所有序列都结束。',
-    },
-    code:
-`class LLMEngine:
-    def step(self):
-        seqs, is_prefill = self.scheduler.schedule()
-        token_ids = self.model_runner.call("run", seqs, is_prefill)
-        self.scheduler.postprocess(seqs, token_ids)
-        outputs = [(seq.seq_id, seq.completion_token_ids)
-                   for seq in seqs if seq.is_finished]
-        return outputs, num_tokens
-
-    def generate(self, prompts, sampling_params):
-        for prompt, sp in zip(prompts, sampling_params):
-            self.add_request(prompt, sp)
-        while not self.is_finished():
-            self.step()`,
+    path: '__init__.py',
+    name: '__init__.py',
+    folder: '',
+    role: { en: 'The whole public API: two names.', zh: '整个公开 API：就两个名字。' },
+    code: `from nanovllm.llm import LLM
+from nanovllm.sampling_params import SamplingParams`,
   },
   {
-    id: 'scheduler',
-    file: 'engine/scheduler.py',
-    label: { en: '2. Scheduler', zh: '2. Scheduler' },
-    desc: {
-      en: 'Decides which sequences run this step. Prefill work is packed in first (continuous batching); a decode step only happens if no prefill was scheduled.',
-      zh: '决定这一步运行哪些序列。优先打包 prefill 任务（continuous batching）；只有没有 prefill 任务时才会跑一步 decode。',
-    },
-    code:
-`def schedule(self) -> tuple[list[Sequence], bool]:
-    # 1. try to schedule prefill work first
-    scheduled_seqs, num_batched_tokens = [], 0
-    while self.waiting and num_batched_tokens < self.max_num_batched_tokens:
+    path: 'llm.py',
+    name: 'llm.py',
+    folder: '',
+    role: { en: 'LLM is literally just LLMEngine under another name.', zh: 'LLM 就是 LLMEngine 换了个名字，没别的。' },
+    code: `from nanovllm.engine.llm_engine import LLMEngine
+
+
+class LLM(LLMEngine):
+    pass`,
+  },
+  {
+    path: 'config.py',
+    name: 'config.py',
+    folder: '',
+    role: { en: 'Every knob in the engine, including block size (256) and how much GPU memory the KV cache may take.', zh: '引擎的所有旋钮，包括 block 大小（256）和 KV cache 能占多少显存。' },
+    code: `@dataclass(slots=True)
+class Config:
+    model: str
+    max_num_batched_tokens: int = 16384
+    max_num_seqs: int = 512
+    max_model_len: int = 4096
+    gpu_memory_utilization: float = 0.9
+    tensor_parallel_size: int = 1
+    enforce_eager: bool = False
+    hf_config: AutoConfig | None = None
+    eos: int = -1
+    kvcache_block_size: int = 256
+    num_kvcache_blocks: int = -1`,
+  },
+  {
+    path: 'sampling_params.py',
+    name: 'sampling_params.py',
+    folder: '',
+    role: { en: 'Per-request generation settings. Note greedy decoding is explicitly disallowed.', zh: '每个请求的生成设置。注意贪心解码被显式禁掉了。' },
+    code: `@dataclass(slots=True)
+class SamplingParams:
+    temperature: float = 1.0
+    max_tokens: int = 64
+    ignore_eos: bool = False
+
+    def __post_init__(self):
+        assert self.temperature > 1e-10, "greedy sampling is not permitted"`,
+  },
+
+  {
+    path: 'engine/llm_engine.py',
+    name: 'llm_engine.py',
+    folder: 'engine',
+    step: 1,
+    role: { en: 'Tokenizes a prompt into a Sequence, then drives the step() loop until everything finishes.', zh: '把 prompt 分词成 Sequence，然后驱动 step() 循环直到全部结束。' },
+    code: `def add_request(self, prompt: str | list[int], sampling_params: SamplingParams):
+    if isinstance(prompt, str):
+        prompt = self.tokenizer.encode(prompt)
+    seq = Sequence(prompt, sampling_params)
+    self.scheduler.add(seq)
+
+def step(self):
+    seqs, is_prefill = self.scheduler.schedule()
+    num_tokens = sum(seq.num_scheduled_tokens for seq in seqs) if is_prefill else -len(seqs)
+    token_ids = self.model_runner.call("run", seqs, is_prefill)
+    self.scheduler.postprocess(seqs, token_ids, is_prefill)
+    outputs = [(seq.seq_id, seq.completion_token_ids) for seq in seqs if seq.is_finished]
+    return outputs, num_tokens
+
+# inside generate():
+#     for prompt, sp in zip(prompts, sampling_params):
+#         self.add_request(prompt, sp)
+#     while not self.is_finished():
+#         output, num_tokens = self.step()`,
+  },
+  {
+    path: 'engine/scheduler.py',
+    name: 'scheduler.py',
+    folder: 'engine',
+    step: 2,
+    role: { en: 'Continuous batching lives here: pack prefill work first, otherwise decode one token for everything running.', zh: 'continuous batching 就在这里：优先打包 prefill，否则给所有 running 序列各解一个 token。' },
+    code: `def schedule(self) -> tuple[list[Sequence], bool]:
+    scheduled_seqs = []
+    num_batched_tokens = 0
+
+    # prefill
+    while self.waiting and len(scheduled_seqs) < self.max_num_seqs:
         seq = self.waiting[0]
-        if not self.block_manager.can_allocate(seq):
+        remaining = self.max_num_batched_tokens - num_batched_tokens
+        if remaining == 0:
             break
-        num_batched_tokens += len(seq) - seq.num_cached_tokens
-        self.block_manager.allocate(seq)
-        self.waiting.popleft()
-        self.running.append(seq)
+        if not seq.block_table:
+            num_cached_blocks = self.block_manager.can_allocate(seq)
+            if num_cached_blocks == -1:
+                break
+            num_tokens = seq.num_tokens - num_cached_blocks * self.block_size
+        else:
+            num_tokens = seq.num_tokens - seq.num_cached_tokens
+        if remaining < num_tokens and scheduled_seqs:  # only allow chunked prefill for the first seq
+            break
+        if not seq.block_table:
+            self.block_manager.allocate(seq, num_cached_blocks)
+        seq.num_scheduled_tokens = min(num_tokens, remaining)
+        num_batched_tokens += seq.num_scheduled_tokens
+        if seq.num_cached_tokens + seq.num_scheduled_tokens == seq.num_tokens:
+            seq.status = SequenceStatus.RUNNING
+            self.waiting.popleft()
+            self.running.append(seq)
         scheduled_seqs.append(seq)
+
     if scheduled_seqs:
         return scheduled_seqs, True
 
-    # 2. otherwise, advance every running sequence by one decode step
-    while self.running:
+    # decode
+    while self.running and len(scheduled_seqs) < self.max_num_seqs:
         seq = self.running.popleft()
         while not self.block_manager.can_append(seq):
             if self.running:
@@ -1973,167 +2056,1189 @@ const NANOVLLM_STAGES: { id: NanoVLLMStageId; file: string; label: { en: string;
                 self.preempt(seq)
                 break
         else:
+            seq.num_scheduled_tokens = 1
+            seq.is_prefill = False
             self.block_manager.may_append(seq)
             scheduled_seqs.append(seq)
-    self.running.extend(scheduled_seqs)
+    assert scheduled_seqs
+    self.running.extendleft(reversed(scheduled_seqs))
     return scheduled_seqs, False`,
   },
   {
-    id: 'blockmanager',
-    file: 'engine/block_manager.py',
-    label: { en: '3. BlockManager', zh: '3. BlockManager' },
-    desc: {
-      en: 'Owns the physical KV-cache block pool. Hashes each full block’s token ids so identical prefixes across requests can share physical blocks.',
-      zh: '管理物理 KV-cache block 池。对每个满 block 的 token id 做哈希，让不同请求里相同的前缀能共用物理 block。',
-    },
-    code:
-`def can_allocate(self, seq: Sequence) -> bool:
-    return len(self.free_block_ids) >= seq.num_blocks
+    path: 'engine/block_manager.py',
+    name: 'block_manager.py',
+    folder: 'engine',
+    step: 3,
+    role: { en: 'The KV-cache page table. Hands out fixed-size blocks and reuses them across requests via content hashing.', zh: 'KV-cache 的页表。发放固定大小的 block，并通过内容哈希在请求之间复用。' },
+    code: `@classmethod
+def compute_hash(cls, token_ids: list[int], prefix: int = -1):
+    h = xxhash.xxh64()
+    if prefix != -1:
+        h.update(prefix.to_bytes(8, "little"))
+    h.update(np.array(token_ids).tobytes())
+    return h.intdigest()
 
-def allocate(self, seq: Sequence):
+def can_allocate(self, seq: Sequence) -> int:
     h = -1
-    for i in range(seq.num_blocks):
+    num_cached_blocks = 0
+    num_new_blocks = seq.num_blocks
+    for i in range(seq.num_blocks - 1):
         token_ids = seq.block(i)
-        h = self.compute_hash(token_ids, h) if len(token_ids) == self.block_size else -1
-        block_id = self.hash_to_block_id.get(h, -1) if h != -1 else -1
+        h = self.compute_hash(token_ids, h)
+        block_id = self.hash_to_block_id.get(h, -1)
         if block_id == -1 or self.blocks[block_id].token_ids != token_ids:
-            block_id = self.free_block_ids[0]     # cache miss: take a fresh block
-            block = self._allocate_block(block_id)
+            break
+        num_cached_blocks += 1
+        if block_id in self.used_block_ids:
+            num_new_blocks -= 1
+    if len(self.free_block_ids) < num_new_blocks:
+        return -1
+    return num_cached_blocks
+
+def allocate(self, seq: Sequence, num_cached_blocks: int):
+    assert not seq.block_table
+    h = -1
+    for i in range(num_cached_blocks):
+        token_ids = seq.block(i)
+        h = self.compute_hash(token_ids, h)
+        block_id = self.hash_to_block_id[h]
+        block = self.blocks[block_id]
+        if block_id in self.used_block_ids:
+            block.ref_count += 1
         else:
-            seq.num_cached_tokens += self.block_size
-            block = self.blocks[block_id]
-            block.ref_count += 1                  # cache hit: reuse, bump refcount
-        if h != -1:
-            block.update(h, token_ids)
-            self.hash_to_block_id[h] = block_id
-        seq.block_table.append(block_id)`,
+            block.ref_count = 1
+            self.free_block_ids.remove(block_id)
+            self.used_block_ids.add(block_id)
+        seq.block_table.append(block_id)
+    for i in range(num_cached_blocks, seq.num_blocks):
+        seq.block_table.append(self._allocate_block())
+    seq.num_cached_tokens = num_cached_blocks * self.block_size
+
+def can_append(self, seq: Sequence) -> bool:
+    return len(self.free_block_ids) >= (len(seq) % self.block_size == 1)
+
+def may_append(self, seq: Sequence):
+    if len(seq) % self.block_size == 1:
+        seq.block_table.append(self._allocate_block())`,
   },
   {
-    id: 'modelrunner',
-    file: 'engine/model_runner.py',
-    label: { en: '4. ModelRunner', zh: '4. ModelRunner' },
-    desc: {
-      en: 'Turns each sequence’s block_table into flat GPU tensors: slot_mapping for the cache scatter/gather, cu_seqlens for varlen packing, block_tables for attention.',
-      zh: '把每个序列的 block_table 转成扁平的 GPU 张量：slot_mapping 用于 cache 的 scatter/gather，cu_seqlens 用于变长打包，block_tables 供 attention 使用。',
-    },
-    code:
-`def prepare_prefill(self, seqs: list[Sequence]):
-    input_ids, positions, cu_seqlens_q, cu_seqlens_k = [], [], [0], [0]
-    slot_mapping = []
+    path: 'engine/sequence.py',
+    name: 'sequence.py',
+    folder: 'engine',
+    role: { en: 'One request’s entire state. block() slices its tokens into block-sized chunks for hashing.', zh: '一个请求的全部状态。block() 把 token 切成 block 大小的块用于哈希。' },
+    code: `class Sequence:
+    block_size = 256
+    counter = count()
+
+    def __init__(self, token_ids: list[int], sampling_params = SamplingParams()):
+        self.seq_id = next(Sequence.counter)
+        self.status = SequenceStatus.WAITING
+        self.token_ids = copy(token_ids)
+        self.last_token = token_ids[-1]
+        self.num_tokens = len(self.token_ids)
+        self.num_prompt_tokens = len(token_ids)
+        self.num_cached_tokens = 0
+        self.num_scheduled_tokens = 0
+        self.is_prefill = True
+        self.block_table = []
+
+    @property
+    def num_blocks(self):
+        return (self.num_tokens + self.block_size - 1) // self.block_size
+
+    @property
+    def last_block_num_tokens(self):
+        return self.num_tokens - (self.num_blocks - 1) * self.block_size
+
+    def block(self, i):
+        assert 0 <= i < self.num_blocks
+        return self.token_ids[i*self.block_size: (i+1)*self.block_size]`,
+  },
+  {
+    path: 'engine/model_runner.py',
+    name: 'model_runner.py',
+    folder: 'engine',
+    step: 4,
+    role: { en: 'Turns scheduled sequences into flat GPU tensors. Also sizes the KV cache and captures CUDA graphs.', zh: '把被调度的序列变成扁平的 GPU 张量。同时负责测算 KV cache 大小和捕获 CUDA graph。' },
+    code: `def prepare_prefill(self, seqs: list[Sequence]):
+    input_ids, positions = [], []
+    cu_seqlens_q, cu_seqlens_k = [0], [0]
+    max_seqlen_q = max_seqlen_k = 0
+    slot_mapping, block_tables = [], None
     for seq in seqs:
-        input_ids.extend(seq[seq.num_cached_tokens:])
-        positions.extend(range(seq.num_cached_tokens, len(seq)))
-        cu_seqlens_q.append(cu_seqlens_q[-1] + len(seq) - seq.num_cached_tokens)
-        cu_seqlens_k.append(cu_seqlens_k[-1] + len(seq))
-        for i in range(seq.num_cached_blocks, seq.num_blocks):
-            start = seq.block_table[i] * self.block_size
-            end = start + (self.block_size if i != seq.num_blocks - 1
-                            else seq.last_block_num_tokens)
-            slot_mapping.extend(range(start, end))
-    # ... pack into GPU tensors, run one flat forward pass, no padding`,
+        start = seq.num_cached_tokens
+        seqlen_q = seq.num_scheduled_tokens
+        end = start + seqlen_q
+        seqlen_k = end
+        input_ids.extend(seq[start:end])
+        positions.extend(range(start, end))
+        cu_seqlens_q.append(cu_seqlens_q[-1] + seqlen_q)
+        cu_seqlens_k.append(cu_seqlens_k[-1] + seqlen_k)
+        max_seqlen_q = max(seqlen_q, max_seqlen_q)
+        max_seqlen_k = max(seqlen_k, max_seqlen_k)
+        if not seq.block_table:    # warmup
+            continue
+        start_block = start // self.block_size
+        end_block = (end + self.block_size - 1) // self.block_size
+        for i in range(start_block, end_block):
+            slot_start = seq.block_table[i] * self.block_size
+            if i == start_block:
+                slot_start += start % self.block_size
+            if i != end_block - 1:
+                slot_end = seq.block_table[i] * self.block_size + self.block_size
+            else:
+                slot_end = seq.block_table[i] * self.block_size + end - i * self.block_size
+            slot_mapping.extend(range(slot_start, slot_end))
+    if cu_seqlens_k[-1] > cu_seqlens_q[-1]:    # prefix cache
+        block_tables = self.prepare_block_tables(seqs)
+    # ... .cuda(non_blocking=True) on each, then:
+    set_context(True, cu_seqlens_q, cu_seqlens_k, max_seqlen_q, max_seqlen_k,
+                slot_mapping, None, block_tables)
+    return input_ids, positions
+
+def prepare_decode(self, seqs: list[Sequence]):
+    input_ids, positions, slot_mapping, context_lens = [], [], [], []
+    for seq in seqs:
+        input_ids.append(seq.last_token)
+        positions.append(len(seq) - 1)
+        context_lens.append(len(seq))
+        slot_mapping.append(seq.block_table[-1] * self.block_size
+                            + seq.last_block_num_tokens - 1)
+    block_tables = self.prepare_block_tables(seqs)
+    set_context(False, slot_mapping=slot_mapping,
+                context_lens=context_lens, block_tables=block_tables)
+    return input_ids, positions`,
   },
+
   {
-    id: 'model',
-    file: 'models/qwen3.py',
-    label: { en: '5. Qwen3ForCausalLM', zh: '5. Qwen3ForCausalLM' },
-    desc: {
-      en: 'The actual transformer: embed tokens, run N decoder layers (each with an Attention block), then project to logits.',
-      zh: '真正的 transformer：embedding，跑 N 层 decoder layer（每层都有一个 Attention block），最后投影出 logits。',
-    },
-    code:
-`class Qwen3Model(nn.Module):
-    def forward(self, input_ids, positions):
+    path: 'models/qwen3.py',
+    name: 'qwen3.py',
+    folder: 'models',
+    step: 5,
+    role: { en: 'The only model nano-vllm supports. A plain decoder-only stack, nothing engine-specific.', zh: 'nano-vllm 唯一支持的模型。就是普通的 decoder-only 堆叠，没有引擎特有的东西。' },
+    code: `class Qwen3Model(nn.Module):
+
+    def forward(self, input_ids: torch.Tensor, positions: torch.Tensor):
         hidden_states = self.embed_tokens(input_ids)
         residual = None
         for layer in self.layers:
             hidden_states, residual = layer(positions, hidden_states, residual)
         hidden_states, _ = self.norm(hidden_states, residual)
-        return hidden_states`,
+        return hidden_states
+
+
+class Qwen3DecoderLayer(nn.Module):
+
+    def forward(self, positions, hidden_states, residual):
+        if residual is None:
+            hidden_states, residual = self.input_layernorm(hidden_states), hidden_states
+        else:
+            hidden_states, residual = self.input_layernorm(hidden_states, residual)
+        hidden_states = self.self_attn(positions, hidden_states)
+        hidden_states, residual = self.post_attention_layernorm(hidden_states, residual)
+        hidden_states = self.mlp(hidden_states)
+        return hidden_states, residual`,
   },
+
   {
-    id: 'attention',
-    file: 'layers/attention.py',
-    label: { en: '6. Attention — PagedAttention', zh: '6. Attention — PagedAttention' },
-    desc: {
-      en: 'Scatters fresh K/V into the paged cache via slot_mapping, then reads back through block_tables. This gets its own deep-dive section below.',
-      zh: '通过 slot_mapping 把新算出的 K/V 写入分页缓存，再通过 block_tables 读回来做 attention。下面有专门的深入章节讲这一块。',
-    },
-    code:
-`class Attention(nn.Module):
-    def forward(self, q, k, v):
+    path: 'layers/attention.py',
+    name: 'attention.py',
+    folder: 'layers',
+    step: 6,
+    role: { en: 'PagedAttention. A Triton kernel scatters K/V into the paged cache; flash-attn reads it back through block_table.', zh: 'PagedAttention。Triton kernel 把 K/V 散射写入分页缓存；flash-attn 通过 block_table 读回来。' },
+    code: `@triton.jit
+def store_kvcache_kernel(
+    key_ptr, key_stride, value_ptr, value_stride,
+    k_cache_ptr, v_cache_ptr, slot_mapping_ptr, D: tl.constexpr,
+):
+    idx = tl.program_id(0)
+    slot = tl.load(slot_mapping_ptr + idx)
+    if slot == -1: return
+    key_offsets = idx * key_stride + tl.arange(0, D)
+    value_offsets = idx * value_stride + tl.arange(0, D)
+    key = tl.load(key_ptr + key_offsets)
+    value = tl.load(value_ptr + value_offsets)
+    cache_offsets = slot * D + tl.arange(0, D)
+    tl.store(k_cache_ptr + cache_offsets, key)
+    tl.store(v_cache_ptr + cache_offsets, value)
+
+
+class Attention(nn.Module):
+
+    def forward(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor):
+        context = get_context()
+        k_cache, v_cache = self.k_cache, self.v_cache
         if k_cache.numel() and v_cache.numel():
             store_kvcache(k, v, k_cache, v_cache, context.slot_mapping)
         if context.is_prefill:
+            if context.block_tables is not None:    # prefix cache
+                k, v = k_cache, v_cache
             o = flash_attn_varlen_func(q, k, v,
-                    cu_seqlens_q=context.cu_seqlens_q,
-                    cu_seqlens_k=context.cu_seqlens_k,
-                    causal=True, block_table=context.block_tables)
-        else:
-            o = flash_attn_with_kvcache(q, k_cache, v_cache,
-                    cache_seqlens=context.context_lens,
-                    block_table=context.block_tables, causal=True)
+                                       max_seqlen_q=context.max_seqlen_q, cu_seqlens_q=context.cu_seqlens_q,
+                                       max_seqlen_k=context.max_seqlen_k, cu_seqlens_k=context.cu_seqlens_k,
+                                       softmax_scale=self.scale, causal=True, block_table=context.block_tables)
+        else:    # decode
+            o = flash_attn_with_kvcache(q.unsqueeze(1), k_cache, v_cache,
+                                        cache_seqlens=context.context_lens, block_table=context.block_tables,
+                                        softmax_scale=self.scale, causal=True)
         return o`,
   },
   {
-    id: 'sampler',
-    file: 'layers/sampler.py',
-    label: { en: '7. Sampler', zh: '7. Sampler' },
-    desc: {
-      en: 'Temperature-scales the logits and samples with the Gumbel-max trick — a torch.compile-friendly alternative to torch.multinomial.',
-      zh: '对 logits 做温度缩放，然后用 Gumbel-max trick 采样 — 这是一种对 torch.compile 友好、可以替代 torch.multinomial 的写法。',
-    },
-    code:
-`class Sampler(nn.Module):
+    path: 'layers/sampler.py',
+    name: 'sampler.py',
+    folder: 'layers',
+    step: 7,
+    role: { en: 'Temperature scaling plus the Gumbel-max trick. The entire file is nine lines.', zh: '温度缩放加 Gumbel-max trick。整个文件就九行。' },
+    code: `class Sampler(nn.Module):
+
     @torch.compile
     def forward(self, logits: torch.Tensor, temperatures: torch.Tensor):
         logits = logits.float().div_(temperatures.unsqueeze(dim=1))
         probs = torch.softmax(logits, dim=-1)
-        sample_tokens = probs.div_(
-            torch.empty_like(probs).exponential_(1).clamp_min_(1e-10)
-        ).argmax(dim=-1)
+        sample_tokens = probs.div_(torch.empty_like(probs).exponential_(1).clamp_min_(1e-10)).argmax(dim=-1)
         return sample_tokens`,
+  },
+  {
+    path: 'layers/linear.py',
+    name: 'linear.py',
+    folder: 'layers',
+    role: { en: 'Tensor-parallel linear layers. Column-parallel splits outputs; row-parallel splits inputs and all-reduces.', zh: '张量并行的线性层。column-parallel 切输出；row-parallel 切输入并做 all-reduce。' },
+    code: `class ColumnParallelLinear(LinearBase):
+
+    def __init__(self, input_size: int, output_size: int, bias: bool = False):
+        tp_size = dist.get_world_size()
+        super().__init__(input_size, divide(output_size, tp_size), bias, 0)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return F.linear(x, self.weight, self.bias)
+
+
+class RowParallelLinear(LinearBase):
+
+    def __init__(self, input_size: int, output_size: int, bias: bool = False):
+        tp_size = dist.get_world_size()
+        super().__init__(divide(input_size, tp_size), output_size, bias, 1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        y = F.linear(x, self.weight, self.bias if self.tp_rank == 0 else None)
+        if self.tp_size > 1:
+            dist.all_reduce(y)
+        return y`,
+  },
+  {
+    path: 'layers/layernorm.py',
+    name: 'layernorm.py',
+    folder: 'layers',
+    role: { en: 'RMSNorm, with a fused add-then-norm path for the residual stream.', zh: 'RMSNorm，带一条把 residual 加法和归一化融合起来的路径。' },
+    code: `class RMSNorm(nn.Module):
+
+    @torch.compile
+    def add_rms_forward(self, x: torch.Tensor, residual: torch.Tensor):
+        orig_dtype = x.dtype
+        x = x.float().add_(residual.float())
+        residual = x.to(orig_dtype)
+        var = x.pow(2).mean(dim=-1, keepdim=True)
+        x.mul_(torch.rsqrt(var + self.eps))
+        x = x.to(orig_dtype).mul_(self.weight)
+        return x, residual`,
+  },
+  {
+    path: 'layers/rotary_embedding.py',
+    name: 'rotary_embedding.py',
+    folder: 'layers',
+    role: { en: 'RoPE. cos/sin are precomputed once into a cache and indexed by position.', zh: 'RoPE。cos/sin 预先算好放进 cache，按位置索引。' },
+    code: `def apply_rotary_emb(x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor):
+    x1, x2 = torch.chunk(x.float(), 2, dim=-1)
+    y1 = x1 * cos - x2 * sin
+    y2 = x2 * cos + x1 * sin
+    return torch.cat((y1, y2), dim=-1).to(x.dtype)
+
+
+class RotaryEmbedding(nn.Module):
+
+    @torch.compile
+    def forward(self, positions, query, key):
+        cos_sin = self.cos_sin_cache[positions]
+        cos, sin = cos_sin.chunk(2, dim=-1)
+        query = apply_rotary_emb(query, cos, sin)
+        key = apply_rotary_emb(key, cos, sin)
+        return query, key`,
+  },
+  {
+    path: 'layers/embed_head.py',
+    name: 'embed_head.py',
+    folder: 'layers',
+    role: { en: 'Vocab-parallel embedding and LM head. During prefill the head only computes logits for each sequence’s last token.', zh: '词表并行的 embedding 和 LM head。prefill 时 head 只为每个序列的最后一个 token 算 logits。' },
+    code: `class ParallelLMHead(VocabParallelEmbedding):
+
+    def forward(self, x: torch.Tensor):
+        context = get_context()
+        if context.is_prefill:
+            last_indices = context.cu_seqlens_q[1:] - 1
+            x = x[last_indices].contiguous()
+        logits = F.linear(x, self.weight)
+        if self.tp_size > 1:
+            all_logits = [torch.empty_like(logits) for _ in range(self.tp_size)] if self.tp_rank == 0 else None
+            dist.gather(logits, all_logits, 0)
+            logits = torch.cat(all_logits, -1) if self.tp_rank == 0 else None
+        return logits`,
+  },
+  {
+    path: 'layers/activation.py',
+    name: 'activation.py',
+    folder: 'layers',
+    role: { en: 'SwiGLU, in four lines.', zh: 'SwiGLU，四行。' },
+    code: `class SiluAndMul(nn.Module):
+
+    @torch.compile
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x, y = x.chunk(2, -1)
+        return F.silu(x) * y`,
+  },
+
+  {
+    path: 'utils/context.py',
+    name: 'context.py',
+    folder: 'utils',
+    role: { en: 'A module-level global carrying slot_mapping / block_tables from ModelRunner down to Attention, bypassing every layer in between.', zh: '一个模块级全局变量，把 slot_mapping / block_tables 从 ModelRunner 直接带到 Attention，绕过中间所有层。' },
+    code: `@dataclass(slots=True)
+class Context:
+    is_prefill: bool = False
+    cu_seqlens_q: torch.Tensor | None = None
+    cu_seqlens_k: torch.Tensor | None = None
+    max_seqlen_q: int = 0
+    max_seqlen_k: int = 0
+    slot_mapping: torch.Tensor | None = None
+    context_lens: torch.Tensor | None = None
+    block_tables: torch.Tensor | None = None
+
+_CONTEXT = Context()
+
+def get_context():
+    return _CONTEXT`,
+  },
+  {
+    path: 'utils/loader.py',
+    name: 'loader.py',
+    folder: 'utils',
+    role: { en: 'Reads safetensors shards and routes each weight through its layer’s own weight_loader.', zh: '读取 safetensors 分片，把每个权重交给对应层自己的 weight_loader。' },
+    code: `def load_model(model: nn.Module, path: str):
+    packed_modules_mapping = getattr(model, "packed_modules_mapping", {})
+    for file in glob(os.path.join(path, "*.safetensors")):
+        with safe_open(file, "pt", "cpu") as f:
+            for weight_name in f.keys():
+                for k in packed_modules_mapping:
+                    if k in weight_name:
+                        v, shard_id = packed_modules_mapping[k]
+                        param = model.get_parameter(weight_name.replace(k, v))
+                        param.weight_loader(param, f.get_tensor(weight_name), shard_id)
+                        break
+                else:
+                    param = model.get_parameter(weight_name)
+                    weight_loader = getattr(param, "weight_loader", default_weight_loader)
+                    weight_loader(param, f.get_tensor(weight_name))`,
   },
 ];
 
-const NANOVLLM_STR = {
+const NV_ARCH_STR = {
   en: {
-    title: 'Interactive: Walk the Architecture Map',
-    sub: 'Click a stage to see the real nano-vllm source behind it.',
-    fileLabel: 'file',
+    title: 'Interactive: the nano-vllm repo, and one request’s path through it',
+    sub: 'Every .py file in the package. The seven numbered files are the ones a single request actually touches, in order — click any file to read its real source.',
+    pathLabel: 'A request’s path',
+    hot: 'on the request path',
+    cold: 'supporting code',
+    lines: 'lines shown',
   },
   zh: {
-    title: '交互演示：点开架构图里的每一站',
-    sub: '点一个阶段，看看它背后真实的 nano-vllm 源码。',
-    fileLabel: '文件',
+    title: '交互：nano-vllm 的仓库结构，以及一个请求穿过它的路径',
+    sub: '这个 package 里的每一个 .py 文件。带编号的七个是一个请求真正会碰到的，按顺序排列 —— 点任意文件读它的真实源码。',
+    pathLabel: '一个请求的路径',
+    hot: '在请求路径上',
+    cold: '支撑代码',
+    lines: '行',
   },
 };
 
 export const NanoVLLMArchitectureExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
-  const t = NANOVLLM_STR[lang];
-  const [activeId, setActiveId] = useState<NanoVLLMStageId>('engine');
-  const active = NANOVLLM_STAGES.find((s) => s.id === activeId)!;
+  const t = NV_ARCH_STR[lang];
+  const [activePath, setActivePath] = useState('engine/llm_engine.py');
+  const active = NV_FILES.find((f) => f.path === activePath)!;
+  const pathFiles = useMemo(
+    () => NV_FILES.filter((f) => f.step).sort((a, b) => (a.step! - b.step!)),
+    []
+  );
+
+  const fileButton = (f: NVFile) => {
+    const isActive = f.path === activePath;
+    const isHot = !!f.step;
+    return (
+      <button
+        key={f.path}
+        onClick={() => setActivePath(f.path)}
+        className={`flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-left font-mono text-[11px] leading-tight transition-colors ${
+          isActive
+            ? 'border-anthropic-accent bg-anthropic-accent text-white'
+            : isHot
+            ? 'border-anthropic-accent/40 bg-anthropic-accent/10 text-anthropic-text hover:border-anthropic-accent'
+            : 'border-anthropic-text/15 bg-anthropic-bg/40 text-anthropic-gray hover:border-anthropic-text/40 hover:text-anthropic-text'
+        }`}
+      >
+        {isHot && (
+          <span
+            className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-[9px] font-semibold ${
+              isActive ? 'bg-white text-anthropic-accent' : 'bg-anthropic-accent text-white'
+            }`}
+          >
+            {f.step}
+          </span>
+        )}
+        <span className="truncate">{f.name}</span>
+      </button>
+    );
+  };
 
   return (
     <Card>
       <h4 className="text-lg font-serif text-anthropic-text mb-1">{t.title}</h4>
       <p className="text-sm text-anthropic-gray mb-4">{t.sub}</p>
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        {NANOVLLM_STAGES.map((s) => (
-          <Pill key={s.id} active={activeId === s.id} onClick={() => setActiveId(s.id)}>
-            {s.label[lang]}
-          </Pill>
-        ))}
+      {/* request path breadcrumb */}
+      <div className="mb-5">
+        <div className="mb-1.5 text-xs uppercase tracking-wide text-anthropic-gray/70">{t.pathLabel}</div>
+        <div className="flex flex-wrap items-center gap-1">
+          {pathFiles.map((f, i) => (
+            <React.Fragment key={f.path}>
+              {i > 0 && <span className="text-anthropic-gray/40 text-xs">&rarr;</span>}
+              <button
+                onClick={() => setActivePath(f.path)}
+                className={`flex items-center gap-1 rounded-full border px-2 py-1 font-mono text-[10.5px] transition-colors ${
+                  f.path === activePath
+                    ? 'border-anthropic-accent bg-anthropic-accent text-white'
+                    : 'border-anthropic-accent/40 bg-anthropic-accent/10 text-anthropic-text hover:border-anthropic-accent'
+                }`}
+              >
+                <span className="font-semibold">{f.step}</span>
+                {f.name.replace('.py', '')}
+              </button>
+            </React.Fragment>
+          ))}
+        </div>
       </div>
 
-      <div className="text-xs text-anthropic-gray/70 mb-1 font-mono">
-        {t.fileLabel}: {active.file}
+      {/* repo tree */}
+      <div className="mb-5 space-y-2.5">
+        {NV_FOLDERS.map((folder) => {
+          const files = NV_FILES.filter((f) => f.folder === folder.key);
+          if (!files.length) return null;
+          return (
+            <div key={folder.key} className="rounded-lg border border-anthropic-text/10 bg-anthropic-bg/30 p-2.5">
+              <div className="mb-1.5 font-mono text-[11px] text-anthropic-gray/70">{folder.label}</div>
+              <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-4">
+                {files.map(fileButton)}
+              </div>
+            </div>
+          );
+        })}
       </div>
-      <p className="text-sm text-anthropic-text leading-relaxed mb-3">{active.desc[lang]}</p>
 
+      <div className="mb-4 flex flex-wrap items-center gap-4 text-[11px] text-anthropic-gray">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded border border-anthropic-accent/40 bg-anthropic-accent/10" />
+          {t.hot}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded border border-anthropic-text/15 bg-anthropic-bg/40" />
+          {t.cold}
+        </span>
+      </div>
+
+      {/* code panel */}
+      <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="font-mono text-sm text-anthropic-text">
+          {active.step ? `${active.step}. ` : ''}nanovllm/{active.path}
+        </span>
+        <span className="font-mono text-[11px] text-anthropic-gray/60">
+          {active.code.split('\n').length} {t.lines}
+        </span>
+      </div>
+      <p className="mb-3 text-sm leading-relaxed text-anthropic-text">{active.role[lang]}</p>
       <pre className="overflow-x-auto rounded-lg border border-anthropic-text/10 bg-[#191919] p-4 text-xs md:text-sm leading-relaxed text-[#F4F3EF]">
         <code>{active.code}</code>
       </pre>
+    </Card>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/*  15. Nano-vLLM scheduler step-through                               */
+/* ------------------------------------------------------------------ */
+
+const SCHED_BLOCK_SIZE = 4;
+const SCHED_TOTAL_BLOCKS = 6;
+const SCHED_MAX_BATCHED = 8;
+const SCHED_MAX_SEQS = 3;
+
+type SchedSeqDef = { id: string; prompt: number; maxTokens: number; arriveRound: number };
+
+const SCHED_SEQ_DEFS: SchedSeqDef[] = [
+  { id: 'A', prompt: 6, maxTokens: 5, arriveRound: 0 },
+  { id: 'B', prompt: 5, maxTokens: 4, arriveRound: 0 },
+  { id: 'C', prompt: 7, maxTokens: 3, arriveRound: 2 },
+];
+
+type SchedSeqState = {
+  id: string;
+  numPromptTokens: number;
+  maxTokens: number;
+  numTokens: number;
+  numCachedTokens: number;
+  numScheduledTokens: number;
+  numBlocks: number;
+  status: 'pending' | 'waiting' | 'running' | 'finished';
+};
+
+type SchedSnapshot = {
+  round: number;
+  phase: 'prefill' | 'decode';
+  scheduled: string[];
+  seqs: SchedSeqState[];
+  usedBlocks: number;
+  note: { en: string; zh: string };
+};
+
+type SimSeq = {
+  id: string;
+  numPromptTokens: number;
+  maxTokens: number;
+  numTokens: number;
+  numCachedTokens: number;
+  numScheduledTokens: number;
+  blockTable: number[];
+  status: 'pending' | 'waiting' | 'running' | 'finished';
+  arriveRound: number;
+};
+
+function simulateScheduler(continuous: boolean): SchedSnapshot[] {
+  const seqs: SimSeq[] = SCHED_SEQ_DEFS.map((d) => ({
+    id: d.id,
+    numPromptTokens: d.prompt,
+    maxTokens: d.maxTokens,
+    numTokens: d.prompt,
+    numCachedTokens: 0,
+    numScheduledTokens: 0,
+    blockTable: [],
+    status: 'pending',
+    arriveRound: d.arriveRound,
+  }));
+
+  let free = SCHED_TOTAL_BLOCKS;
+  const waiting: SimSeq[] = [];
+  const running: SimSeq[] = [];
+  const snapshots: SchedSnapshot[] = [];
+
+  const numBlocksOf = (s: SimSeq) => Math.ceil(s.numTokens / SCHED_BLOCK_SIZE);
+  const snapshot = (round: number, phase: 'prefill' | 'decode', scheduled: SimSeq[], note: { en: string; zh: string }) => {
+    snapshots.push({
+      round,
+      phase,
+      scheduled: scheduled.map((s) => s.id),
+      usedBlocks: SCHED_TOTAL_BLOCKS - free,
+      note,
+      seqs: seqs.map((s) => ({
+        id: s.id,
+        numPromptTokens: s.numPromptTokens,
+        maxTokens: s.maxTokens,
+        numTokens: s.numTokens,
+        numCachedTokens: s.numCachedTokens,
+        numScheduledTokens: s.numScheduledTokens,
+        numBlocks: s.blockTable.length,
+        status: s.status,
+      })),
+    });
+  };
+
+  for (let round = 0; round < 40; round++) {
+    // arrivals
+    for (const s of seqs) {
+      if (s.status === 'pending' && s.arriveRound <= round) {
+        s.status = 'waiting';
+        waiting.push(s);
+      }
+    }
+    if (!waiting.length && !running.length) break;
+
+    const scheduled: SimSeq[] = [];
+    let numBatched = 0;
+    const notes: string[] = [];
+    const notesZh: string[] = [];
+
+    // --- prefill pass ---
+    const admitAllowed = continuous || running.length === 0;
+    while (admitAllowed && waiting.length && scheduled.length < SCHED_MAX_SEQS) {
+      const seq = waiting[0];
+      const remaining = SCHED_MAX_BATCHED - numBatched;
+      if (remaining === 0) break;
+      let numTokens: number;
+      if (!seq.blockTable.length) {
+        const needed = numBlocksOf(seq);
+        if (free < needed) break; // can_allocate == -1
+        numTokens = seq.numTokens;
+      } else {
+        numTokens = seq.numTokens - seq.numCachedTokens;
+      }
+      if (remaining < numTokens && scheduled.length) break;
+      if (!seq.blockTable.length) {
+        const needed = numBlocksOf(seq);
+        for (let i = 0; i < needed; i++) seq.blockTable.push(0);
+        free -= needed;
+      }
+      seq.numScheduledTokens = Math.min(numTokens, remaining);
+      numBatched += seq.numScheduledTokens;
+      if (seq.numScheduledTokens < numTokens) {
+        notes.push(`${seq.id}’s prompt is longer than the token budget, so it is prefilled in chunks (${seq.numScheduledTokens} of ${numTokens} tokens this round).`);
+        notesZh.push(`${seq.id} 的 prompt 超过了本轮 token 预算，于是被分块 prefill（这轮处理 ${numTokens} 个中的 ${seq.numScheduledTokens} 个）。`);
+      }
+      if (seq.numCachedTokens + seq.numScheduledTokens === seq.numTokens) {
+        seq.status = 'running';
+        waiting.shift();
+        running.push(seq);
+      }
+      scheduled.push(seq);
+    }
+
+    if (scheduled.length) {
+      if (!notes.length) {
+        notes.push(`Prefill round: ${scheduled.map((s) => s.id).join(', ')} process their prompt tokens. Decode never runs in the same round as prefill.`);
+        notesZh.push(`Prefill 轮：${scheduled.map((s) => s.id).join('、')} 处理各自的 prompt token。prefill 和 decode 永远不会在同一轮里同时发生。`);
+      }
+      snapshot(round, 'prefill', scheduled, { en: notes.join(' '), zh: notesZh.join(' ') });
+      // postprocess
+      for (const seq of scheduled) {
+        seq.numCachedTokens += seq.numScheduledTokens;
+        seq.numScheduledTokens = 0;
+      }
+      continue;
+    }
+
+    // --- decode pass ---
+    while (running.length && scheduled.length < SCHED_MAX_SEQS) {
+      const seq = running.shift()!;
+      let preemptedSelf = false;
+      // can_append: needs a block only when the sequence just crossed a block boundary
+      while (free < (seq.numTokens % SCHED_BLOCK_SIZE === 1 ? 1 : 0)) {
+        if (running.length) {
+          const victim = running.pop()!;
+          free += victim.blockTable.length;
+          victim.blockTable = [];
+          victim.numCachedTokens = 0;
+          victim.numTokens = victim.numPromptTokens;
+          victim.status = 'waiting';
+          waiting.unshift(victim);
+          notes.push(`The block pool ran dry, so ${victim.id} was preempted — its blocks are freed and it will be re-prefilled later.`);
+          notesZh.push(`block 池被耗尽，于是 ${victim.id} 被抢占 —— 它的 block 被释放，之后会重新 prefill。`);
+        } else {
+          free += seq.blockTable.length;
+          seq.blockTable = [];
+          seq.numCachedTokens = 0;
+          seq.numTokens = seq.numPromptTokens;
+          seq.status = 'waiting';
+          waiting.unshift(seq);
+          preemptedSelf = true;
+          notes.push(`${seq.id} could not get a block and nothing else was running, so it preempted itself.`);
+          notesZh.push(`${seq.id} 拿不到 block，而且没有别的序列在跑，于是它抢占了自己。`);
+          break;
+        }
+      }
+      if (preemptedSelf) break;
+      seq.numScheduledTokens = 1;
+      if (seq.numTokens % SCHED_BLOCK_SIZE === 1) {
+        seq.blockTable.push(0);
+        free -= 1;
+      }
+      scheduled.push(seq);
+    }
+    for (let i = scheduled.length - 1; i >= 0; i--) running.unshift(scheduled[i]);
+
+    if (!scheduled.length) continue;
+
+    if (!notes.length) {
+      notes.push(`Decode round: every running sequence (${scheduled.map((s) => s.id).join(', ')}) generates exactly one token.`);
+      notesZh.push(`Decode 轮：每个 running 序列（${scheduled.map((s) => s.id).join('、')}）各生成恰好一个 token。`);
+    }
+
+    // postprocess: append one token each
+    for (const seq of scheduled) {
+      seq.numCachedTokens += seq.numScheduledTokens;
+      seq.numScheduledTokens = 0;
+      seq.numTokens += 1;
+      if (seq.numTokens - seq.numPromptTokens >= seq.maxTokens) {
+        seq.status = 'finished';
+        free += seq.blockTable.length;
+        seq.blockTable = [];
+        const idx = running.indexOf(seq);
+        if (idx >= 0) running.splice(idx, 1);
+        notes.push(`${seq.id} hit max_tokens and finished — its blocks go straight back to the free pool.`);
+        notesZh.push(`${seq.id} 达到 max_tokens 结束了 —— 它的 block 立刻回到空闲池。`);
+      }
+    }
+    snapshot(round, 'decode', scheduled, { en: notes.join(' '), zh: notesZh.join(' ') });
+  }
+
+  return snapshots;
+}
+
+const SCHED_STR = {
+  en: {
+    title: 'Interactive: watch the scheduler run',
+    sub: 'A faithful miniature of Scheduler.schedule(). Block size is shrunk to 4 tokens and the pool to 6 blocks so pressure is visible; the policy is the real one.',
+    step: 'Step',
+    mode: 'Batching policy',
+    continuous: 'Continuous (nano-vllm)',
+    static: 'Static batching',
+    prefill: 'PREFILL',
+    decode: 'DECODE',
+    pool: 'KV-cache block pool',
+    blocks: 'blocks',
+    prev: 'Prev',
+    next: 'Next',
+    replay: 'Replay',
+    legendPrompt: 'prompt, not yet computed',
+    legendDone: 'computed (in KV cache)',
+    legendNow: 'being computed this round',
+    legendGen: 'generated',
+    waiting: 'waiting',
+    running: 'running',
+    finished: 'finished',
+    pending: 'not arrived',
+    rounds: 'total rounds',
+    staticNote: 'Static batching: C arrives at round 2 but cannot join until A and B have both finished. Compare the total round count against continuous batching.',
+  },
+  zh: {
+    title: '交互：看调度器跑起来',
+    sub: '一个忠实的 Scheduler.schedule() 微缩版。block 大小被缩到 4 个 token、池子缩到 6 个 block，好让内存压力看得见；调度策略是真的。',
+    step: '第',
+    mode: '批处理策略',
+    continuous: 'Continuous（nano-vllm）',
+    static: '静态 batching',
+    prefill: 'PREFILL',
+    decode: 'DECODE',
+    pool: 'KV-cache block 池',
+    blocks: '个 block',
+    prev: '上一步',
+    next: '下一步',
+    replay: '重播',
+    legendPrompt: 'prompt，还没算',
+    legendDone: '已算完（在 KV cache 里）',
+    legendNow: '本轮正在算',
+    legendGen: '已生成',
+    waiting: '等待中',
+    running: '运行中',
+    finished: '已完成',
+    pending: '还没到达',
+    rounds: '总轮数',
+    staticNote: '静态 batching：C 在第 2 轮就到了，但必须等 A 和 B 都跑完才能加入。对比一下两种策略的总轮数。',
+  },
+};
+
+export const NanoVLLMSchedulerExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
+  const t = SCHED_STR[lang];
+  const [continuous, setContinuous] = useState(true);
+  const [idx, setIdx] = useState(0);
+
+  const snapshots = useMemo(() => simulateScheduler(continuous), [continuous]);
+  const safeIdx = Math.min(idx, snapshots.length - 1);
+  const snap = snapshots[safeIdx];
+
+  const setMode = (c: boolean) => {
+    setContinuous(c);
+    setIdx(0);
+  };
+
+  const statusLabel = (s: string) =>
+    s === 'waiting' ? t.waiting : s === 'running' ? t.running : s === 'finished' ? t.finished : t.pending;
+
+  return (
+    <Card>
+      <h4 className="text-lg font-serif text-anthropic-text mb-1">{t.title}</h4>
+      <p className="text-sm text-anthropic-gray mb-4">{t.sub}</p>
+
+      <div className="mb-4">
+        <div className="mb-1.5 text-xs uppercase tracking-wide text-anthropic-gray/70">{t.mode}</div>
+        <div className="flex flex-wrap gap-2">
+          <Pill active={continuous} onClick={() => setMode(true)}>{t.continuous}</Pill>
+          <Pill active={!continuous} onClick={() => setMode(false)}>{t.static}</Pill>
+        </div>
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <button
+          onClick={() => setIdx(Math.max(0, safeIdx - 1))}
+          disabled={safeIdx === 0}
+          className="rounded-md border border-anthropic-text/20 px-3 py-1.5 text-xs disabled:opacity-30 hover:border-anthropic-accent hover:text-anthropic-accent"
+        >
+          {t.prev}
+        </button>
+        <button
+          onClick={() => setIdx(Math.min(snapshots.length - 1, safeIdx + 1))}
+          disabled={safeIdx >= snapshots.length - 1}
+          className="rounded-md border border-anthropic-text/20 px-3 py-1.5 text-xs disabled:opacity-30 hover:border-anthropic-accent hover:text-anthropic-accent"
+        >
+          {t.next}
+        </button>
+        <button
+          onClick={() => setIdx(0)}
+          className="rounded-md border border-anthropic-text/20 px-3 py-1.5 text-xs hover:border-anthropic-accent hover:text-anthropic-accent"
+        >
+          {t.replay}
+        </button>
+        <span className="font-mono text-xs text-anthropic-gray">
+          {t.step} {safeIdx + 1} / {snapshots.length}
+        </span>
+        <span
+          className={`rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${
+            snap.phase === 'prefill' ? 'bg-anthropic-accent text-white' : 'bg-anthropic-leaf/70 text-anthropic-text'
+          }`}
+        >
+          {snap.phase === 'prefill' ? t.prefill : t.decode}
+        </span>
+      </div>
+
+      <input
+        type="range"
+        min={0}
+        max={snapshots.length - 1}
+        value={safeIdx}
+        onChange={(e) => setIdx(parseInt(e.target.value, 10))}
+        className="mb-5 w-full accent-anthropic-accent"
+      />
+
+      {/* sequences */}
+      <div className="mb-5 space-y-2.5">
+        {snap.seqs.map((s) => {
+          const cells = [];
+          const total = Math.max(s.numTokens, s.numPromptTokens);
+          for (let i = 0; i < total; i++) {
+            const isPrompt = i < s.numPromptTokens;
+            const computed = i < s.numCachedTokens;
+            const inFlight =
+              snap.scheduled.includes(s.id) &&
+              i >= s.numCachedTokens &&
+              i < s.numCachedTokens + s.numScheduledTokens;
+            let cls = 'bg-anthropic-stone/40 border-anthropic-text/15 border-dashed';
+            if (inFlight) cls = 'bg-anthropic-accent border-anthropic-accent';
+            else if (computed && isPrompt) cls = 'bg-anthropic-leaf/70 border-anthropic-text/20';
+            else if (computed && !isPrompt) cls = 'bg-[#6B8CAE] border-anthropic-text/20';
+            cells.push(<div key={i} className={`h-3.5 w-3.5 rounded-sm border ${cls}`} />);
+          }
+          return (
+            <div key={s.id} className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="w-6 font-mono font-semibold text-anthropic-text">{s.id}</span>
+              <span
+                className={`w-20 flex-shrink-0 rounded-full px-2 py-0.5 text-center text-[10px] ${
+                  s.status === 'running'
+                    ? 'bg-anthropic-leaf/30 text-anthropic-text'
+                    : s.status === 'waiting'
+                    ? 'bg-anthropic-accent/15 text-anthropic-text'
+                    : s.status === 'finished'
+                    ? 'bg-anthropic-text/10 text-anthropic-gray'
+                    : 'bg-transparent text-anthropic-gray/50'
+                }`}
+              >
+                {statusLabel(s.status)}
+              </span>
+              <div className="flex gap-0.5">{cells}</div>
+              <span className="font-mono text-[10.5px] text-anthropic-gray/60">
+                {s.numBlocks} {t.blocks}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* block pool */}
+      <div className="mb-4">
+        <div className="mb-1.5 text-xs uppercase tracking-wide text-anthropic-gray/70">
+          {t.pool}: {snap.usedBlocks} / {SCHED_TOTAL_BLOCKS} {t.blocks}
+        </div>
+        <div className="flex gap-1">
+          {Array.from({ length: SCHED_TOTAL_BLOCKS }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-6 flex-1 rounded border ${
+                i < snap.usedBlocks
+                  ? 'border-anthropic-text/20 bg-anthropic-accent/70'
+                  : 'border-dashed border-anthropic-text/15 bg-anthropic-stone/30'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <p className="mb-3 text-sm leading-relaxed text-anthropic-text">{snap.note[lang]}</p>
+
+      {!continuous && <p className="mb-3 text-xs leading-relaxed text-anthropic-gray">{t.staticNote}</p>}
+
+      <div className="flex flex-wrap items-center gap-3 text-[10.5px] text-anthropic-gray">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-sm border border-dashed border-anthropic-text/15 bg-anthropic-stone/40" />
+          {t.legendPrompt}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-sm border border-anthropic-accent bg-anthropic-accent" />
+          {t.legendNow}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-sm border border-anthropic-text/20 bg-anthropic-leaf/70" />
+          {t.legendDone}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-sm border border-anthropic-text/20 bg-[#6B8CAE]" />
+          {t.legendGen}
+        </span>
+        <span className="ml-auto font-mono">
+          {snapshots.length} {t.rounds}
+        </span>
+      </div>
+    </Card>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/*  16. Nano-vLLM block pool / prefix cache step-through               */
+/* ------------------------------------------------------------------ */
+
+const BP_BLOCK_SIZE = 4;
+const BP_TOTAL_BLOCKS = 12;
+
+type BPBlock = { refCount: number; hash: string | null; owner: string | null };
+
+type BPStage = {
+  title: { en: string; zh: string };
+  note: { en: string; zh: string };
+  blocks: BPBlock[];
+  tables: { seq: string; ids: number[]; shared: boolean[] }[];
+  highlight: number[];
+};
+
+function buildBlockPoolStages(): BPStage[] {
+  const stages: BPStage[] = [];
+  const blocks: BPBlock[] = Array.from({ length: BP_TOTAL_BLOCKS }, () => ({ refCount: 0, hash: null, owner: null }));
+  const snap = (
+    title: { en: string; zh: string },
+    note: { en: string; zh: string },
+    tables: { seq: string; ids: number[]; shared: boolean[] }[],
+    highlight: number[]
+  ) => {
+    stages.push({
+      title,
+      note,
+      blocks: blocks.map((b) => ({ ...b })),
+      tables: tables.map((tb) => ({ seq: tb.seq, ids: [...tb.ids], shared: [...tb.shared] })),
+      highlight,
+    });
+  };
+
+  const aTable: number[] = [];
+  const bTable: number[] = [];
+
+  snap(
+    { en: 'Empty pool', zh: '空池子' },
+    {
+      en: `The pool is one preallocated tensor carved into ${BP_TOTAL_BLOCKS} blocks of ${BP_BLOCK_SIZE} tokens each. No sequence owns a contiguous region; everyone draws from here.`,
+      zh: `池子就是一整块预先分配好的张量，切成 ${BP_TOTAL_BLOCKS} 个 block、每个 ${BP_BLOCK_SIZE} 个 token。没有任何序列拥有连续区域；所有人都从这里取。`,
+    },
+    [],
+    []
+  );
+
+  // Sequence A: 8-token shared system prompt + 3 user tokens = 11 tokens -> 3 blocks
+  for (let i = 0; i < 3; i++) {
+    blocks[i].refCount = 1;
+    blocks[i].owner = 'A';
+    aTable.push(i);
+  }
+  blocks[0].hash = 'h(sys[0:4])';
+  blocks[1].hash = 'h(sys[4:8] | h0)';
+  snap(
+    { en: 'Sequence A is allocated', zh: '序列 A 分配到 block' },
+    {
+      en: 'A has an 8-token system prompt plus 3 user tokens — 11 tokens, so 3 blocks. Its first two blocks are full, so they get content hashes chained together; the third is partial and stays unhashed.',
+      zh: 'A 有 8 个 token 的 system prompt 加 3 个用户 token —— 11 个 token，需要 3 个 block。前两个 block 是满的，于是被链式地算了内容哈希；第三个没满，暂时不哈希。',
+    },
+    [{ seq: 'A', ids: [...aTable], shared: [false, false, false] }],
+    [0, 1, 2]
+  );
+
+  // Sequence B: same 8-token system prompt + 2 different user tokens = 10 tokens -> 3 blocks
+  blocks[0].refCount = 2;
+  blocks[1].refCount = 2;
+  bTable.push(0, 1);
+  blocks[3].refCount = 1;
+  blocks[3].owner = 'B';
+  bTable.push(3);
+  snap(
+    { en: 'Sequence B hits the prefix cache', zh: '序列 B 命中前缀缓存' },
+    {
+      en: 'B shares A’s system prompt. can_allocate() hashes B’s leading blocks, finds both already in hash_to_block_id with identical token ids, and reuses physical blocks 0 and 1 — ref_count goes to 2. Only B’s divergent tail needs a fresh block. Those 8 tokens are never recomputed.',
+      zh: 'B 和 A 共享同一段 system prompt。can_allocate() 对 B 开头的 block 做哈希，发现两个都已经在 hash_to_block_id 里、且 token id 完全一致，于是直接复用物理 block 0 和 1 —— ref_count 变成 2。只有 B 分叉出来的尾巴需要新 block。那 8 个 token 完全不用重算。',
+    },
+    [
+      { seq: 'A', ids: [...aTable], shared: [true, true, false] },
+      { seq: 'B', ids: [...bTable], shared: [true, true, false] },
+    ],
+    [0, 1, 3]
+  );
+
+  // A decodes until it crosses a block boundary
+  blocks[4].refCount = 1;
+  blocks[4].owner = 'A';
+  aTable.push(4);
+  snap(
+    { en: 'A crosses a block boundary', zh: 'A 跨过一个 block 边界' },
+    {
+      en: 'A generates tokens one at a time into its last block. On the token that makes len(seq) % block_size == 1, that block is full and may_append() grabs exactly one more block — block 4, which happens to sit nowhere near A’s other blocks. Growth is one block at a time, on demand.',
+      zh: 'A 逐个把生成的 token 写进它最后一个 block。当某个 token 让 len(seq) % block_size == 1 时，说明上一个 block 满了，may_append() 就再要恰好一个 block —— block 4，位置和 A 的其他 block 毫不相邻。增长是按需的，一次一个 block。',
+    },
+    [
+      { seq: 'A', ids: [...aTable], shared: [true, true, false, false] },
+      { seq: 'B', ids: [...bTable], shared: [true, true, false] },
+    ],
+    [4]
+  );
+
+  // A finishes, deallocate
+  blocks[0].refCount = 1;
+  blocks[1].refCount = 1;
+  blocks[2] = { refCount: 0, hash: null, owner: null };
+  blocks[4] = { refCount: 0, hash: null, owner: null };
+  snap(
+    { en: 'A finishes', zh: 'A 结束' },
+    {
+      en: 'deallocate() walks A’s block table decrementing ref_count. Blocks 2 and 4 drop to zero and return to the free pool. Blocks 0 and 1 do not — B still holds a reference, so the shared prefix survives A entirely. Blocks are freed by reference count, not by owner.',
+      zh: 'deallocate() 遍历 A 的 block table，逐个把 ref_count 减一。block 2 和 4 掉到 0，回到空闲池。block 0 和 1 不会 —— B 还持有引用，所以这段共享前缀比 A 活得更久。block 是按引用计数释放的，不是按归属。',
+    },
+    [{ seq: 'B', ids: [...bTable], shared: [true, true, false] }],
+    [2, 4]
+  );
+
+  return stages;
+}
+
+const BP_STR = {
+  en: {
+    title: 'Interactive: the block pool over time',
+    sub: 'Block size shrunk to 4 tokens, pool to 12 blocks. Physical blocks are shared by content hash, freed by reference count.',
+    prev: 'Prev',
+    next: 'Next',
+    stage: 'Stage',
+    pool: 'Physical block pool',
+    tables: 'Block tables',
+    free: 'free',
+    ref: 'ref',
+    shared: 'shared',
+  },
+  zh: {
+    title: '交互：block 池随时间的变化',
+    sub: 'block 大小缩到 4 个 token，池子缩到 12 个 block。物理 block 按内容哈希共享，按引用计数释放。',
+    prev: '上一步',
+    next: '下一步',
+    stage: '阶段',
+    pool: '物理 block 池',
+    tables: 'Block table',
+    free: '空闲',
+    ref: 'ref',
+    shared: '共享',
+  },
+};
+
+export const NanoVLLMBlockPoolExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
+  const t = BP_STR[lang];
+  const stages = useMemo(() => buildBlockPoolStages(), []);
+  const [idx, setIdx] = useState(0);
+  const stage = stages[idx];
+
+  return (
+    <Card>
+      <h4 className="text-lg font-serif text-anthropic-text mb-1">{t.title}</h4>
+      <p className="text-sm text-anthropic-gray mb-4">{t.sub}</p>
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => setIdx(Math.max(0, idx - 1))}
+          disabled={idx === 0}
+          className="rounded-md border border-anthropic-text/20 px-3 py-1.5 text-xs disabled:opacity-30 hover:border-anthropic-accent hover:text-anthropic-accent"
+        >
+          {t.prev}
+        </button>
+        <button
+          onClick={() => setIdx(Math.min(stages.length - 1, idx + 1))}
+          disabled={idx >= stages.length - 1}
+          className="rounded-md border border-anthropic-text/20 px-3 py-1.5 text-xs disabled:opacity-30 hover:border-anthropic-accent hover:text-anthropic-accent"
+        >
+          {t.next}
+        </button>
+        <span className="font-mono text-xs text-anthropic-gray">
+          {t.stage} {idx + 1} / {stages.length}
+        </span>
+        <span className="text-sm font-medium text-anthropic-text">{stage.title[lang]}</span>
+      </div>
+
+      <div className="mb-4">
+        <div className="mb-1.5 text-xs uppercase tracking-wide text-anthropic-gray/70">{t.pool}</div>
+        <div className="grid grid-cols-6 gap-1.5">
+          {stage.blocks.map((b, i) => {
+            const isHot = stage.highlight.includes(i);
+            const busy = b.refCount > 0;
+            return (
+              <div
+                key={i}
+                className={`rounded-md border px-1.5 py-1.5 text-center transition-colors ${
+                  busy
+                    ? b.refCount > 1
+                      ? 'border-anthropic-leaf bg-anthropic-leaf/50'
+                      : 'border-anthropic-accent/60 bg-anthropic-accent/20'
+                    : 'border-dashed border-anthropic-text/15 bg-anthropic-stone/25'
+                } ${isHot ? 'ring-2 ring-anthropic-accent ring-offset-1 ring-offset-anthropic-bg' : ''}`}
+              >
+                <div className="font-mono text-[11px] font-semibold text-anthropic-text">{i}</div>
+                <div className="font-mono text-[9.5px] text-anthropic-gray">
+                  {busy ? `${t.ref}=${b.refCount}` : t.free}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {stage.tables.length > 0 && (
+        <div className="mb-4">
+          <div className="mb-1.5 text-xs uppercase tracking-wide text-anthropic-gray/70">{t.tables}</div>
+          <div className="space-y-1.5">
+            {stage.tables.map((tb) => (
+              <div key={tb.seq} className="flex flex-wrap items-center gap-1.5 text-xs">
+                <span className="w-24 flex-shrink-0 font-mono text-anthropic-text">
+                  {tb.seq}.block_table
+                </span>
+                <span className="font-mono text-anthropic-gray/50">=</span>
+                {tb.ids.map((id, i) => (
+                  <span
+                    key={i}
+                    className={`rounded px-2 py-0.5 font-mono text-[11px] ${
+                      tb.shared[i]
+                        ? 'bg-anthropic-leaf/60 text-anthropic-text'
+                        : 'bg-anthropic-accent/25 text-anthropic-text'
+                    }`}
+                  >
+                    {id}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <p className="text-sm leading-relaxed text-anthropic-text">{stage.note[lang]}</p>
     </Card>
   );
 };

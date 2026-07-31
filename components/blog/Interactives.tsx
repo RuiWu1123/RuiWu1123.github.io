@@ -2459,14 +2459,55 @@ const NV_ARCH_STR = {
   },
 };
 
-export const NanoVLLMArchitectureExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
+export const NanoVLLMArchitectureExplorer: React.FC<{
+  lang?: Lang;
+  initialFile?: string;
+  files?: string[];
+}> = ({ lang = 'en', initialFile, files }) => {
   const t = NV_ARCH_STR[lang];
-  const [activePath, setActivePath] = useState('engine/llm_engine.py');
-  const active = NV_FILES.find((f) => f.path === activePath)!;
+  const compact = !!files?.length;
+  const [activePath, setActivePath] = useState(initialFile ?? 'engine/llm_engine.py');
+  const active = NV_FILES.find((f) => f.path === activePath) ?? NV_FILES[0];
   const pathFiles = useMemo(
     () => NV_FILES.filter((f) => f.step).sort((a, b) => (a.step! - b.step!)),
     []
   );
+  const compactFiles = useMemo(
+    () => (files ?? []).map((p) => NV_FILES.find((f) => f.path === p)).filter(Boolean) as NVFile[],
+    [files]
+  );
+
+  const codePanel = (
+    <>
+      <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="font-mono text-sm text-anthropic-text">
+          {active.step ? `${active.step}. ` : ''}nanovllm/{active.path}
+        </span>
+        <span className="font-mono text-[11px] text-anthropic-gray/60">
+          {active.code.split('\n').length} {t.lines}
+        </span>
+      </div>
+      <p className="mb-3 text-sm leading-relaxed text-anthropic-text">{active.role[lang]}</p>
+      <pre className="overflow-x-auto rounded-lg border border-anthropic-text/10 bg-[#191919] p-4 text-xs md:text-sm leading-relaxed text-[#F4F3EF]">
+        <code>{active.code}</code>
+      </pre>
+    </>
+  );
+
+  if (compact) {
+    return (
+      <Card>
+        <div className="mb-3 flex flex-wrap gap-2">
+          {compactFiles.map((f) => (
+            <Pill key={f.path} active={f.path === activePath} onClick={() => setActivePath(f.path)}>
+              {f.name}
+            </Pill>
+          ))}
+        </div>
+        {codePanel}
+      </Card>
+    );
+  }
 
   const fileButton = (f: NVFile) => {
     const isActive = f.path === activePath;
@@ -2553,18 +2594,7 @@ export const NanoVLLMArchitectureExplorer: React.FC<{ lang?: Lang }> = ({ lang =
       </div>
 
       {/* code panel */}
-      <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="font-mono text-sm text-anthropic-text">
-          {active.step ? `${active.step}. ` : ''}nanovllm/{active.path}
-        </span>
-        <span className="font-mono text-[11px] text-anthropic-gray/60">
-          {active.code.split('\n').length} {t.lines}
-        </span>
-      </div>
-      <p className="mb-3 text-sm leading-relaxed text-anthropic-text">{active.role[lang]}</p>
-      <pre className="overflow-x-auto rounded-lg border border-anthropic-text/10 bg-[#191919] p-4 text-xs md:text-sm leading-relaxed text-[#F4F3EF]">
-        <code>{active.code}</code>
-      </pre>
+      {codePanel}
     </Card>
   );
 };

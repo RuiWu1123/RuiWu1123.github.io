@@ -402,6 +402,24 @@ const Blog: React.FC = () => {
                         if (alt === 'interactive:nanovllm-arch') {
                           return <NanoVLLMArchitectureExplorer lang={lang} />;
                         }
+                        if (alt === 'interactive:nanovllm-code-blockmgr') {
+                          return (
+                            <NanoVLLMArchitectureExplorer
+                              lang={lang}
+                              initialFile="engine/block_manager.py"
+                              files={['engine/block_manager.py', 'layers/attention.py', 'engine/model_runner.py']}
+                            />
+                          );
+                        }
+                        if (alt === 'interactive:nanovllm-code-sched') {
+                          return (
+                            <NanoVLLMArchitectureExplorer
+                              lang={lang}
+                              initialFile="engine/scheduler.py"
+                              files={['engine/scheduler.py', 'engine/sequence.py', 'engine/llm_engine.py']}
+                            />
+                          );
+                        }
                         if (alt === 'interactive:nanovllm-scheduler') {
                           return <NanoVLLMSchedulerExplorer lang={lang} />;
                         }

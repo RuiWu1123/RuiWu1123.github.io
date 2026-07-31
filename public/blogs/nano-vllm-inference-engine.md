@@ -19,97 +19,44 @@ Two details in that tree are worth flagging before we start walking it. `utils/c
 
 ## 2. A prompt becomes a `Sequence`
 
-`LLMEngine.add_request()` tokenizes the prompt and wraps it in a `Sequence`, then hands it to the scheduler:
+`LLMEngine.add_request()` tokenizes the prompt, wraps it in a `Sequence`, and pushes it onto the scheduler's `waiting` queue. Nothing else happens until the next scheduling round.
 
-```python
-def add_request(self, prompt: str | list[int], sampling_params: SamplingParams):
-    if isinstance(prompt, str):
-        prompt = self.tokenizer.encode(prompt)
-    seq = Sequence(prompt, sampling_params)
-    self.scheduler.add(seq)
-```
+A `Sequence` is the complete state of one request: its token ids, how many of them have already been computed into the KV cache (`num_cached_tokens`), how many are being computed this round (`num_scheduled_tokens`), and which physical cache blocks it owns (`block_table`). The distinction between those first two counters is what makes chunked prefill and prefix caching expressible at all — a sequence can be half-computed, and the engine needs to know exactly where the boundary is.
 
-A `Sequence` is the complete state of one request: its token ids, how many of them have already been computed into the KV cache (`num_cached_tokens`), how many are being computed this round (`num_scheduled_tokens`), and which physical cache blocks it owns (`block_table`). Two derived properties matter later:
-
-```python
-@property
-def num_blocks(self):
-    return (self.num_tokens + self.block_size - 1) // self.block_size
-
-def block(self, i):
-    assert 0 <= i < self.num_blocks
-    return self.token_ids[i*self.block_size: (i+1)*self.block_size]
-```
-
-`block(i)` slices the sequence's tokens into block-sized chunks. That slicing is what makes prefix caching possible, because it gives every block a well-defined content to hash.
+One method matters more than the rest: `block(i)` slices the sequence's tokens into block-sized chunks, and `num_blocks` reports how many such chunks it spans. That slicing gives every block a well-defined content, which is precisely what makes it hashable — and hashability is what prefix caching runs on.
 
 ## 3. The scheduler, and what continuous batching actually is
 
-Each engine step begins by asking the scheduler what to run. The answer is always either "prefill work" or "one decode token for everything running" — never both:
+Each engine step begins by asking the scheduler what to run. The answer is always either "prefill work" or "one decode token for everything running" — never both. `schedule()` tries the first, and only falls through to the second if it scheduled nothing.
+
+The prefill pass drains the `waiting` queue under two budgets: `max_num_seqs` sequences and `max_num_batched_tokens` tokens. If a single prompt is larger than the remaining token budget it gets **chunked** — prefilled across several rounds — but only ever one prompt per round, enforced by a single conjunct:
 
 ```python
-def schedule(self) -> tuple[list[Sequence], bool]:
-    scheduled_seqs = []
-    num_batched_tokens = 0
+if remaining < num_tokens and scheduled_seqs:  # only allow chunked prefill for the first seq
+    break
+```
 
-    # prefill
-    while self.waiting and len(scheduled_seqs) < self.max_num_seqs:
-        seq = self.waiting[0]
-        remaining = self.max_num_batched_tokens - num_batched_tokens
-        if remaining == 0:
-            break
-        if not seq.block_table:
-            num_cached_blocks = self.block_manager.can_allocate(seq)
-            if num_cached_blocks == -1:
-                break
-            num_tokens = seq.num_tokens - num_cached_blocks * self.block_size
+`scheduled_seqs` is empty only for the round's first candidate, so the first sequence is allowed to overrun the budget and be split, while any later one that doesn't fit simply defers to the next round. A chunked sequence also stays in `waiting`, because the promotion to `running` is gated on `num_cached_tokens + num_scheduled_tokens == num_tokens` — that's how it gets picked up again.
+
+The decode pass is where memory pressure surfaces, and it leans on Python's least-known construct:
+
+```python
+while self.running and len(scheduled_seqs) < self.max_num_seqs:
+    seq = self.running.popleft()
+    while not self.block_manager.can_append(seq):
+        if self.running:
+            self.preempt(self.running.pop())
         else:
-            num_tokens = seq.num_tokens - seq.num_cached_tokens
-        if remaining < num_tokens and scheduled_seqs:  # only allow chunked prefill for the first seq
+            self.preempt(seq)
             break
-        if not seq.block_table:
-            self.block_manager.allocate(seq, num_cached_blocks)
-        seq.num_scheduled_tokens = min(num_tokens, remaining)
-        num_batched_tokens += seq.num_scheduled_tokens
-        if seq.num_cached_tokens + seq.num_scheduled_tokens == seq.num_tokens:
-            seq.status = SequenceStatus.RUNNING
-            self.waiting.popleft()
-            self.running.append(seq)
+    else:
+        seq.num_scheduled_tokens = 1
+        seq.is_prefill = False
+        self.block_manager.may_append(seq)
         scheduled_seqs.append(seq)
-
-    if scheduled_seqs:
-        return scheduled_seqs, True
-
-    # decode
-    while self.running and len(scheduled_seqs) < self.max_num_seqs:
-        seq = self.running.popleft()
-        while not self.block_manager.can_append(seq):
-            if self.running:
-                self.preempt(self.running.pop())
-            else:
-                self.preempt(seq)
-                break
-        else:
-            seq.num_scheduled_tokens = 1
-            seq.is_prefill = False
-            self.block_manager.may_append(seq)
-            scheduled_seqs.append(seq)
-    assert scheduled_seqs
-    self.running.extendleft(reversed(scheduled_seqs))
-    return scheduled_seqs, False
 ```
 
-The prefill loop drains the `waiting` queue under two budgets: `max_num_seqs` sequences and `max_num_batched_tokens` tokens. If a single prompt is larger than the remaining token budget, it gets **chunked** — prefilled across several rounds — but the `and scheduled_seqs` guard means only the first sequence in a round may be chunked, so nano-vllm never splits two prompts in the same round. A chunked sequence stays in `waiting` (the status change only fires once `num_cached_tokens + num_scheduled_tokens == num_tokens`), which is how it gets picked up again next round.
-
-The `while ... else` in the decode loop is Python's least-known construct: the `else` runs only if the `while` condition went false without hitting `break`. So a sequence is scheduled only if `can_append` eventually succeeded. If it never does, `preempt()` evicts a victim — the most recently added running sequence, or the sequence itself if nothing else is running — freeing its blocks and pushing it back to the front of `waiting`:
-
-```python
-def preempt(self, seq: Sequence):
-    seq.status = SequenceStatus.WAITING
-    seq.is_prefill = True
-    self.block_manager.deallocate(seq)
-    self.waiting.appendleft(seq)
-```
+A `while ... else` runs its `else` only when the loop condition went false *without* hitting `break`. So the sequence gets scheduled only if `can_append` eventually succeeded. If it never does, `preempt()` evicts a victim — the most recently added running sequence, or the sequence itself when nothing else is left — deallocating its blocks and pushing it back onto the *front* of `waiting` so it is re-prefilled first when room appears.
 
 Preemption is not an error path. It is the designed response to the KV cache filling up, and the reason the engine degrades gracefully under load instead of failing.
 
@@ -119,43 +66,20 @@ The consequence of prefill-first ordering is that batch membership is fluid: a r
 
 ## 4. Building the GPU tensors
 
-Scheduled sequences become flat tensors. For prefill, every sequence's uncomputed tokens are concatenated into one 1-D tensor with cumulative offsets marking the boundaries — no padding anywhere:
+Scheduled sequences become flat tensors. For prefill, every sequence's uncomputed tokens are concatenated into one 1-D tensor, with cumulative offsets marking where each sequence starts and ends. Nothing is padded to a common length — this is what "varlen" packing means, and it is why a batch of wildly different prompt lengths costs exactly the sum of those lengths.
+
+Two separate offset arrays are maintained, and the gap between them carries real information:
 
 ```python
-for seq in seqs:
-    start = seq.num_cached_tokens
-    seqlen_q = seq.num_scheduled_tokens
-    end = start + seqlen_q
-    seqlen_k = end
-    input_ids.extend(seq[start:end])
-    positions.extend(range(start, end))
-    cu_seqlens_q.append(cu_seqlens_q[-1] + seqlen_q)
-    cu_seqlens_k.append(cu_seqlens_k[-1] + seqlen_k)
+seqlen_q = seq.num_scheduled_tokens
+seqlen_k = end
+cu_seqlens_q.append(cu_seqlens_q[-1] + seqlen_q)
+cu_seqlens_k.append(cu_seqlens_k[-1] + seqlen_k)
 ```
 
-Note `seqlen_q` and `seqlen_k` differ whenever a prefix was cached: the query length is only the *new* tokens, while the key length spans the whole sequence including the cached prefix it must attend to. `cu_seqlens_k[-1] > cu_seqlens_q[-1]` is precisely the test nano-vllm uses to detect that a prefix cache hit occurred and that block tables therefore need to be passed to the attention kernel.
+The query length counts only the *new* tokens; the key length spans the whole sequence, including any cached prefix the new tokens must still attend to. So `cu_seqlens_k[-1] > cu_seqlens_q[-1]` is exactly the condition "a prefix cache hit happened this round," and nano-vllm uses precisely that test to decide whether block tables need to be handed to the attention kernel at all.
 
-The other output is `slot_mapping`: for every new token, the exact physical slot in the cache it should be written to, computed by walking the sequence's `block_table`.
-
-```python
-start_block = start // self.block_size
-end_block = (end + self.block_size - 1) // self.block_size
-for i in range(start_block, end_block):
-    slot_start = seq.block_table[i] * self.block_size
-    if i == start_block:
-        slot_start += start % self.block_size
-    if i != end_block - 1:
-        slot_end = seq.block_table[i] * self.block_size + self.block_size
-    else:
-        slot_end = seq.block_table[i] * self.block_size + end - i * self.block_size
-    slot_mapping.extend(range(slot_start, slot_end))
-```
-
-Decode is the same idea with one token per sequence, so the slot is just the tail of the last block:
-
-```python
-slot_mapping.append(seq.block_table[-1] * self.block_size + seq.last_block_num_tokens - 1)
-```
+The other output is `slot_mapping`: for every new token, the absolute physical slot it should be written into, obtained by walking the sequence's `block_table` and converting each block id into a base offset. Decode is the degenerate case — one token per sequence, so the slot is just the tail of the last block. This array is the handoff to PagedAttention, and it is the only thing the attention layer needs in order to write into a cache whose physical layout it knows nothing about.
 
 ## 5. PagedAttention
 
@@ -169,63 +93,13 @@ The sequence's own view stays sequential — block 0, block 1, block 2 — while
 
 ### Allocation, and content-addressed reuse
 
-`can_allocate()` does the cache probing, walking the sequence's full blocks and chain-hashing them:
+`can_allocate()` probes the cache before anything is committed. It walks the sequence's full blocks, hashing each one *chained with the previous block's hash*, and looks each digest up in a `hash_to_block_id` dictionary. Three details in that loop carry the whole design.
 
-```python
-@classmethod
-def compute_hash(cls, token_ids: list[int], prefix: int = -1):
-    h = xxhash.xxh64()
-    if prefix != -1:
-        h.update(prefix.to_bytes(8, "little"))
-    h.update(np.array(token_ids).tobytes())
-    return h.intdigest()
+The chaining means a block's identity is not "these 256 tokens" but "these 256 tokens, at this position, following this exact history" — so two sequences can only share a block if they agree all the way back to token zero, which is what makes the reuse safe rather than merely plausible. The loop breaks at the first miss, since a prefix match is by definition a leading run. And on every apparent hit it re-checks the stored `token_ids` against the sequence's actual tokens, so a hash collision produces a miss rather than silently serving another request's KV data.
 
-def can_allocate(self, seq: Sequence) -> int:
-    h = -1
-    num_cached_blocks = 0
-    num_new_blocks = seq.num_blocks
-    for i in range(seq.num_blocks - 1):
-        token_ids = seq.block(i)
-        h = self.compute_hash(token_ids, h)
-        block_id = self.hash_to_block_id.get(h, -1)
-        if block_id == -1 or self.blocks[block_id].token_ids != token_ids:
-            break
-        num_cached_blocks += 1
-        if block_id in self.used_block_ids:
-            num_new_blocks -= 1
-    if len(self.free_block_ids) < num_new_blocks:
-        return -1
-    return num_cached_blocks
-```
+The return value is overloaded, which is worth knowing before reading the scheduler: `-1` means "not enough free blocks, don't schedule this yet," and any other value is the *count* of leading blocks that hit. That count is what the scheduler subtracts to work out how many tokens genuinely need computing.
 
-Three things are load-bearing. Each hash is chained with the previous block's hash, so a block's identity is "these tokens, in this position, after this exact history" — two sequences can only match if they agree from token zero. The loop `break`s at the first miss, because a prefix match is by definition a leading run. And the explicit `self.blocks[block_id].token_ids != token_ids` re-check guards against hash collisions rather than trusting the digest.
-
-The return value is overloaded: `-1` means "not enough free blocks, don't schedule this yet," any other value is the count of blocks that came back as cache hits. That's the value the scheduler subtracts to work out how many tokens actually need computing.
-
-`allocate()` then commits it — reusing cached blocks by bumping their reference count, and taking fresh blocks for the rest:
-
-```python
-def allocate(self, seq: Sequence, num_cached_blocks: int):
-    assert not seq.block_table
-    h = -1
-    for i in range(num_cached_blocks):
-        token_ids = seq.block(i)
-        h = self.compute_hash(token_ids, h)
-        block_id = self.hash_to_block_id[h]
-        block = self.blocks[block_id]
-        if block_id in self.used_block_ids:
-            block.ref_count += 1
-        else:
-            block.ref_count = 1
-            self.free_block_ids.remove(block_id)
-            self.used_block_ids.add(block_id)
-        seq.block_table.append(block_id)
-    for i in range(num_cached_blocks, seq.num_blocks):
-        seq.block_table.append(self._allocate_block())
-    seq.num_cached_tokens = num_cached_blocks * self.block_size
-```
-
-Growth during decode is deliberately cheap:
+`allocate()` then commits — hits get their `ref_count` incremented, misses draw fresh blocks off the free deque. Growth during decode is deliberately almost free:
 
 ```python
 def can_append(self, seq: Sequence) -> bool:
@@ -236,92 +110,42 @@ def may_append(self, seq: Sequence):
         seq.block_table.append(self._allocate_block())
 ```
 
-`len(seq) % block_size == 1` is true exactly when the sequence has just spilled past a block boundary, so a new block is requested on exactly one token in every 256. Note the comparison in `can_append` relies on Python's `bool` being an `int`: it reads as "free blocks ≥ 1" on a boundary token and "free blocks ≥ 0" otherwise.
+`len(seq) % block_size == 1` is true exactly on the token that spills past a block boundary, so a new block is requested on one token in every 256 and the other 255 cost nothing. The comparison in `can_append` quietly relies on Python's `bool` being an `int`: it reads as "free blocks ≥ 1" on a boundary token and "free blocks ≥ 0" — trivially true — otherwise.
 
-Freeing is by reference count, not by owner, which is what lets a shared prefix outlive the sequence that created it:
-
-```python
-def deallocate(self, seq: Sequence):
-    for block_id in reversed(seq.block_table):
-        block = self.blocks[block_id]
-        block.ref_count -= 1
-        if block.ref_count == 0:
-            self._deallocate_block(block_id)
-    seq.num_cached_tokens = 0
-    seq.block_table.clear()
-```
-
-Watching the pool evolve makes the sharing and the reference counting easier to hold onto than the code does:
+Freeing walks the block table decrementing reference counts, releasing only blocks that reach zero. Because it's refcounted rather than owner-based, a shared prefix outlives whichever sequence happened to create it. Watching the pool evolve carries this better than the code does:
 
 ![interactive:nanovllm-blocks](#)
 
 ![Prefix caching: identical leading blocks share one physical block](blogs/images/nanovllm-prefix-cache.svg?v=1)
 
-One subtlety: blocks are hashed *after* they are computed, not when allocated. `hash_blocks()` runs in `postprocess()` and only covers blocks that became full during the round, which is why a sequence's final partial block never enters the cache — its contents aren't settled yet.
+One subtlety the diagram can't show: blocks are hashed *after* being computed, not when allocated. `hash_blocks()` runs during `postprocess()` and covers only blocks that filled up during that round, which is why a sequence's trailing partial block never enters the cache — its contents aren't settled yet, so it has no stable identity to key on.
 
 ### Getting K/V in and out
 
-Writing is a scatter, done by a Triton kernel — one program per token, each copying that token's key and value into the slot `slot_mapping` assigns it:
+Writing is a scatter, done by a Triton kernel with one program per token: each loads its token's key and value, reads its destination from `slot_mapping`, and stores into the cache at that slot. There's one guard worth noting — `if slot == -1: return`. That sentinel is what makes CUDA graph replay safe, since captured graphs run at a fixed batch size and the unused padding entries are marked `-1` and skipped.
+
+Reading is where the indirection pays off, and the punchline is that `Attention.forward()` never gathers anything itself. It passes `block_table` straight to `flash_attn_varlen_func` (prefill) or `flash_attn_with_kvcache` (decode), and the kernel does the scattered gather internally. The only real branch is this one:
 
 ```python
-@triton.jit
-def store_kvcache_kernel(
-    key_ptr, key_stride, value_ptr, value_stride,
-    k_cache_ptr, v_cache_ptr, slot_mapping_ptr, D: tl.constexpr,
-):
-    idx = tl.program_id(0)
-    slot = tl.load(slot_mapping_ptr + idx)
-    if slot == -1: return
-    key_offsets = idx * key_stride + tl.arange(0, D)
-    value_offsets = idx * value_stride + tl.arange(0, D)
-    key = tl.load(key_ptr + key_offsets)
-    value = tl.load(value_ptr + value_offsets)
-    cache_offsets = slot * D + tl.arange(0, D)
-    tl.store(k_cache_ptr + cache_offsets, key)
-    tl.store(v_cache_ptr + cache_offsets, value)
+if context.is_prefill:
+    if context.block_tables is not None:    # prefix cache
+        k, v = k_cache, v_cache
 ```
 
-The `slot == -1` early return is what makes CUDA graph replay safe: captured graphs run at a fixed batch size, so padding entries are marked `-1` and skipped.
+On a prefix cache hit the freshly computed `k` and `v` cover only the new tokens, but attention has to see the cached prefix too — so they are *replaced* wholesale by the full caches, and the kernel reads everything back through the block table. That is the entire seam between "paged storage" and "ordinary attention."
 
-Reading is where the indirection pays off. `Attention.forward()` never gathers blocks itself — it hands `block_table` to the attention kernel, which does the gather internally:
+Full source for the pieces above, if you want to read them end to end rather than in excerpt:
 
-```python
-def forward(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor):
-    context = get_context()
-    k_cache, v_cache = self.k_cache, self.v_cache
-    if k_cache.numel() and v_cache.numel():
-        store_kvcache(k, v, k_cache, v_cache, context.slot_mapping)
-    if context.is_prefill:
-        if context.block_tables is not None:    # prefix cache
-            k, v = k_cache, v_cache
-        o = flash_attn_varlen_func(q, k, v,
-                                   max_seqlen_q=context.max_seqlen_q, cu_seqlens_q=context.cu_seqlens_q,
-                                   max_seqlen_k=context.max_seqlen_k, cu_seqlens_k=context.cu_seqlens_k,
-                                   softmax_scale=self.scale, causal=True, block_table=context.block_tables)
-    else:    # decode
-        o = flash_attn_with_kvcache(q.unsqueeze(1), k_cache, v_cache,
-                                    cache_seqlens=context.context_lens, block_table=context.block_tables,
-                                    softmax_scale=self.scale, causal=True)
-    return o
-```
-
-Note the branch: on a prefix cache hit, `k` and `v` are *replaced* by the full caches, because the freshly computed `k`/`v` only cover the new tokens while attention must see the cached prefix too. The kernel then reads everything through `block_table`.
+![interactive:nanovllm-code-blockmgr](#)
 
 The attention math is completely unchanged by any of this — softmax over scaled dot products, exactly as always. Paging changes only where K and V live. (The tiling and bandwidth reasoning inside the flash-attention kernel itself is the subject of the [GPU field guide](#/blog?id=gpu-guide-for-dl); this post treats that kernel as given.)
 
 ## 6. Sampling
 
-Logits become a token id in nine lines:
+The whole sampler is nine lines: scale the logits by temperature, softmax, and then one strange-looking line does the sampling.
 
 ```python
-class Sampler(nn.Module):
-
-    @torch.compile
-    def forward(self, logits: torch.Tensor, temperatures: torch.Tensor):
-        logits = logits.float().div_(temperatures.unsqueeze(dim=1))
-        probs = torch.softmax(logits, dim=-1)
-        sample_tokens = probs.div_(torch.empty_like(probs).exponential_(1).clamp_min_(1e-10)).argmax(dim=-1)
-        return sample_tokens
+sample_tokens = probs.div_(torch.empty_like(probs).exponential_(1).clamp_min_(1e-10)).argmax(dim=-1)
 ```
 
 Dividing each probability by an independent `Exponential(1)` draw and taking the `argmax` samples from the categorical distribution exactly — it's the Gumbel-max trick in disguise, since dividing by an exponential is the same as subtracting a Gumbel in log space. The reason to write it this way rather than call `torch.multinomial` is that it is pure elementwise arithmetic plus an argmax, with no data-dependent control flow, so `torch.compile` can fuse the whole thing into one kernel.
@@ -338,26 +162,20 @@ For a batch of long prompts this turns a vocab-sized projection over thousands o
 
 ## 7. Closing the loop
 
-`postprocess()` finishes the round: hash any blocks that filled up, advance the cached-token count, append the new token, and retire finished sequences.
+`postprocess()` finishes the round: hash any blocks that filled up, advance the cached-token count, append the new token, and retire sequences that hit EOS or `max_tokens` — returning their blocks to the free pool immediately rather than at some later sweep.
+
+It also contains the other half of chunked prefill:
 
 ```python
-def postprocess(self, seqs: list[Sequence], token_ids: list[int], is_prefill: bool):
-    for seq, token_id in zip(seqs, token_ids):
-        self.block_manager.hash_blocks(seq)
-        seq.num_cached_tokens += seq.num_scheduled_tokens
-        seq.num_scheduled_tokens = 0
-        if is_prefill and seq.num_cached_tokens < seq.num_tokens:
-            continue
-        seq.append_token(token_id)
-        if (not seq.ignore_eos and token_id == self.eos) or seq.num_completion_tokens == seq.max_tokens:
-            seq.status = SequenceStatus.FINISHED
-            self.block_manager.deallocate(seq)
-            self.running.remove(seq)
+if is_prefill and seq.num_cached_tokens < seq.num_tokens:
+    continue
 ```
 
-The `continue` is the chunked-prefill case: a sequence still mid-prompt discards the sampled token, because a token predicted from a partial prompt is meaningless. Only once the prompt is fully consumed does generation actually begin.
+A sequence still partway through its prompt throws the sampled token away, because a token predicted from half a prompt is meaningless. Generation only starts once the prompt is fully consumed. This is the counterpart to the scheduler's decision to split the prompt in the first place, and the two have to agree or the sequence would emit garbage mid-prefill.
 
-`generate()` wraps it all in a loop that runs until both queues are empty, then detokenizes each sequence's accumulated ids back into text.
+`generate()` wraps everything in a loop that runs until both queues are empty, then detokenizes each sequence's accumulated ids back into text.
+
+![interactive:nanovllm-code-sched](#)
 
 ## 8. What's missing compared to real vLLM
 

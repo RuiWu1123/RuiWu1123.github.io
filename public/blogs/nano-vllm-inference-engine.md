@@ -9,9 +9,9 @@ It's worth being precise about why it's four, because those two reasons are the 
 
 The first is that the KV cache is enormous and its size is unknowable in advance. Every token a sequence generates leaves behind key and value vectors, and they have to stay in GPU memory for as long as that sequence is alive. So you allocate a buffer per request. But you can't know whether this user wants 20 tokens or 2,000, so you allocate for the maximum. Every request then uses a sliver of what it reserved, and you pay for the rest on every concurrent sequence at once. Your GPU looks full. It's mostly holding air.
 
-The second only appears once you start batching. Batching is obviously right — the GPU wants big matrices — so you group requests and step them together. But now the group finishes when its slowest member finishes; a request that arrives one step after the group starts has to wait outside until the whole thing disperses; and sequences that finished early keep their seats, contributing nothing but padding.
+The second only appears once you start batching. Batching is obviously right, since the GPU wants big matrices, so you group requests and step them together. But now the group finishes when its slowest member finishes; a request that arrives one step after the group starts has to wait outside until the whole thing disperses; and sequences that finished early keep their seats, contributing nothing but padding.
 
-vLLM's two famous contributions aim at exactly these. PagedAttention stops requiring the KV cache to be one contiguous per-sequence buffer and hands out fixed-size blocks from a shared pool instead — the same move operating systems made when they stopped giving processes contiguous physical memory. Continuous batching lets the group change membership at every step, so a new request joins on the next round. A third idea, prefix caching, notices that requests often share a long prefix and lets them share the computed blocks too.
+vLLM's two famous contributions aim at exactly these. PagedAttention stops requiring the KV cache to be one contiguous per-sequence buffer and hands out fixed-size blocks from a shared pool instead. That's the same move operating systems made when they stopped giving processes contiguous physical memory. Continuous batching lets the group change membership at every step, so a new request joins on the next round. A third idea, prefix caching, notices that requests often share a long prefix and lets them share the computed blocks too.
 
 The trouble with learning these from real vLLM is that they're buried under years of optimization. [nano-vllm](https://github.com/GeeeekExplorer/nano-vllm) reimplements the same core in about 1,200 lines of Python, and it isn't a toy: on its own benchmark it does 1434 tok/s against real vLLM's 1362 (Qwen3-0.6B, 256 concurrent sequences, one RTX 4070 Laptop). Small enough to read in an afternoon, real enough to be worth reading.
 
@@ -27,7 +27,7 @@ One file is worth flagging now, because it looks strange when it shows up later.
 
 ## 2. What happens to one request
 
-`add_request()` tokenizes the prompt and wraps it in a `Sequence` — the whole state of one request: its tokens, how many are already computed into the cache, how many are being computed right now, and which physical blocks it holds. Then it goes onto the `waiting` queue, and nothing happens until the next round.
+`add_request()` tokenizes the prompt and wraps it in a `Sequence`, which holds the whole state of one request: its tokens, how many are already computed into the cache, how many are being computed right now, and which physical blocks it holds. Then it goes onto the `waiting` queue, and nothing happens until the next round.
 
 After that `step()` runs over and over, doing the same five things each round. The scheduler decides what runs, either prompt-processing work (prefill) or one-token-per-sequence work (decode), never both in the same round. The block manager hands out KV-cache blocks for whatever got picked, reusing cached ones wherever the prefix matches. The model runner flattens those sequences into GPU tensors, including a `slot_mapping` that says where each new token's K/V belongs in the cache. Then the model runs, and this is a completely ordinary Qwen3 forward pass, except that its attention layers read and write through the paging indirection. Finally the sampler turns logits into token ids, and `postprocess()` appends them, hashes any blocks that just filled up, and retires sequences that hit EOS or their token limit, returning their blocks to the pool.
 
@@ -35,23 +35,23 @@ After that `step()` runs over and over, doing the same five things each round. T
 
 ## 3. The scheduler: how a batch stops being a batch
 
-The question the scheduler has to answer every round is simple. Some requests are halfway through generating, some just arrived — what should the GPU do next?
+The question the scheduler has to answer every round is simple: some requests are halfway through generating, some just arrived, and it has to decide what the GPU does next.
 
 Start with the naive answer. Collect a batch of requests and send them together; prefill the whole batch, then decode it round after round; when the last one finishes, return everything at once. That "nobody moves until the group is assembled, nobody leaves until the group is done" arrangement is static batching. Its problem is the one from the opening: the group moves at the speed of its slowest member, and a request that arrives midway just waits outside for the whole thing to disperse.
 
 nano-vllm's rule is the opposite, and it's one sentence: always prefer prefill; run decode only when there's no prefill left to do.
 
-That looks like a scheduling detail. It's actually the whole of continuous batching. Because prefill is checked first, a request that arrived thirty milliseconds ago gets its prompt processed on the very next round, without waiting for anyone to finish. And because decode advances each running sequence by exactly one token, every round boundary becomes a natural switching point where sequences can join and leave freely. At which point the word "batch" has stopped meaning anything — there's no fixed cohort, only whatever happens to be running this round.
+That looks like a scheduling detail. It's actually the whole of continuous batching. Because prefill is checked first, a request that arrived thirty milliseconds ago gets its prompt processed on the very next round, without waiting for anyone to finish. And because decode advances each running sequence by exactly one token, every round boundary becomes a natural switching point where sequences can join and leave freely. At which point the word "batch" has stopped meaning anything, because there is no fixed cohort, only whatever happens to be running this round.
 
-Here's that policy on three requests, next to static batching on the same three:
+Here's that policy on three requests, next to static batching on the same three. A and B arrive at round 1 and C at round 3; block size is shrunk to 4 tokens and the pool to 6 blocks so the memory pressure is visible:
 
-![Same three requests under continuous vs. static batching](blogs/images/nanovllm-batching-timeline.svg?v=1)
+![Same three requests under continuous vs. static batching](blogs/images/nanovllm-batching-timeline.svg?v=2)
 
-Both panels come from actually running nano-vllm's scheduling logic, not from drawing by hand. Same work, 11 rounds against 15 — and the gap widens as arrivals spread out, because that's exactly when static batching spends more time waiting.
+Both panels come from actually running nano-vllm's scheduling logic, not from drawing by hand. Same work, 11 rounds against 15, and the gap widens as arrivals spread out, because that's exactly when static batching spends more time waiting.
 
 Two things in that diagram need explaining, and both are where the implementation gets interesting.
 
-Look at C first: admitted at round 3, preempted at round 4. Check the block-usage bars underneath — the pool hit FULL on that round. Some running sequence needed one more block to continue and there were none left. So `preempt()` picks a victim, the most recently admitted running sequence, frees all of its blocks, and pushes it back to the front of the waiting queue. C loses the work it had done and isn't re-prefilled until round 8.
+Look at C first: admitted at round 3, preempted at round 4. The pool had run out of blocks by then, and some running sequence needed one more to continue. So `preempt()` picks a victim, the most recently admitted running sequence, frees all of its blocks, and pushes it back to the front of the waiting queue. C loses the work it had done and isn't re-prefilled until round 8.
 
 That looks like a failure. It's actually the design. The scheduler deliberately admits more sequences than it can guarantee memory for, because most sequences finish early, and reserving for the worst case is precisely what we were trying to escape. Preemption is the release valve that makes the optimism safe: the engine slows down under pressure instead of falling over.
 
@@ -73,7 +73,7 @@ else:
 
 A `while...else` runs its `else` only when the loop exits because the condition went false, never after a `break`. So this reads: keep evicting others until this sequence can get its block, and only then schedule it; if there's nobody left to evict, it preempts itself and nothing gets scheduled. The alternative spelling needs an extra flag variable and is genuinely uglier.
 
-The other thing is chunked prefill. A single prompt can be longer than the whole per-round token budget. Rather than reject it or blow through the budget, the scheduler splits it across rounds — but only ever one prompt per round, and the rule that enforces this is a single conjunct:
+The other thing is chunked prefill. A single prompt can be longer than the whole per-round token budget. Rather than reject it or blow through the budget, the scheduler splits it across rounds, but only ever one prompt per round, and the rule that enforces this is a single conjunct:
 
 ```python
 if remaining < num_tokens and scheduled_seqs:  # only allow chunked prefill for the first seq
@@ -90,7 +90,7 @@ The fix is lifted straight from operating systems, and the analogy is worth stat
 
 ![The block table: logical blocks map to scattered physical slots](blogs/images/nanovllm-block-table.svg?v=1)
 
-The payoff is that allocation can happen one block at a time as the sequence grows. A sequence holds only what it has actually used, plus at most one partially-filled block. The waste is capped by the block size — 256 tokens — no matter how long it eventually runs.
+The payoff is that allocation can happen one block at a time as the sequence grows. A sequence holds only what it has actually used, plus at most one partially-filled block. The waste is capped by the block size, 256 tokens, no matter how long it eventually runs.
 
 But there's a second payoff, one the OS analogy doesn't suggest, and arguably the better one. Once blocks are just entries in a table, two sequences can point at the same block. If two requests share a system prompt, they can share its KV cache: computed once, stored once.
 
@@ -107,11 +107,11 @@ The chaining is what makes reuse correct rather than merely likely. A block's id
 
 Blocks are freed by reference count, not by owner. Here's the whole lifecycle:
 
-![One block pool, four moments](blogs/images/nanovllm-block-lifecycle.svg?v=1)
+![One block pool, four moments](blogs/images/nanovllm-block-lifecycle.svg?v=2)
 
-Look at the last frame: A finishes, but blocks 0 and 1 don't go anywhere, because B is still using them. The shared prefix outlives the sequence that created it. It also means the cache survives preemption — a preempted sequence being re-prefilled will hit on whichever of its blocks are still resident, which is why preemption costs less than it looks like it should.
+Look at the last frame: A finishes, but blocks 0 and 1 don't go anywhere, because B is still using them. The shared prefix outlives the sequence that created it. It also means the cache survives preemption: a preempted sequence being re-prefilled will hit on whichever of its blocks are still resident, which is why preemption costs less than it looks like it should.
 
-One detail trips people up: blocks are hashed after being computed, not when allocated. `hash_blocks()` runs inside `postprocess()` and covers only blocks that filled up during that round. A sequence's trailing partial block never enters the cache, because its contents aren't final yet — it has no stable identity to key on.
+One detail trips people up: blocks are hashed after being computed, not when allocated. `hash_blocks()` runs inside `postprocess()` and covers only blocks that filled up during that round. A sequence's trailing partial block never enters the cache, because its contents aren't final yet, so it has no stable identity to key on.
 
 Growth during decode is nearly free, and the code is a small joke:
 
@@ -122,11 +122,9 @@ def can_append(self, seq: Sequence) -> bool:
 
 `len(seq) % block_size == 1` is true exactly on the token that spills into a new block. On that one token in 256 it reads "free blocks ≥ 1"; on the other 255 it reads "free blocks ≥ 0", which is trivially true. It leans on `bool` being an `int` in Python, and it's doing real work: this is the check that decides whether a sequence gets preempted.
 
-### Getting K/V into and out of scattered blocks
-
 Two problems are left, and they're the ones that make paging actually run on a GPU.
 
-Writing is a scatter. Each new token's K/V has to land in whatever physical slot its block table implies, and those slots aren't contiguous. `ModelRunner` precomputes the destinations into a `slot_mapping` tensor, and a Triton kernel runs one program per token: load K and V, read the destination, store. It has exactly one guard, `if slot == -1: return`, which exists so CUDA graph replay works — captured graphs run at fixed batch sizes, and the unused slots get marked `-1`.
+Writing is a scatter. Each new token's K/V has to land in whatever physical slot its block table implies, and those slots aren't contiguous. `ModelRunner` precomputes the destinations into a `slot_mapping` tensor, and a Triton kernel runs one program per token: load K and V, read the destination, store. It has exactly one guard, `if slot == -1: return`, which exists so CUDA graph replay works, since captured graphs run at fixed batch sizes and the unused slots get marked `-1`.
 
 Reading is the harder one, and nano-vllm's answer is that it doesn't do it. It hands `block_table` to the attention kernel and lets the kernel gather. Both `flash_attn_varlen_func` and `flash_attn_with_kvcache` accept block tables natively, so that scattered layout never has to be materialized into a contiguous tensor. The only real branch in the entire attention layer is this:
 
@@ -136,13 +134,9 @@ if context.is_prefill:
         k, v = k_cache, v_cache
 ```
 
-On a prefix hit, the freshly computed `k`/`v` only cover the new tokens, but attention has to see the cached prefix too — so they're swapped out for the full caches, and the kernel reads everything back through the block table. Those two lines are the entire seam between paged storage and ordinary attention.
+On a prefix hit, the freshly computed `k`/`v` only cover the new tokens, but attention has to see the cached prefix too, so they're swapped out for the full caches, and the kernel reads everything back through the block table. Those two lines are the entire seam between paged storage and ordinary attention.
 
-Which is the thing worth taking away: none of this changes the math. Attention is still softmax over scaled dot products. Paging changes only where K and V physically live, and pushes the indirection down into a kernel that was going to iterate over blocks anyway. What that kernel does internally — tiling, and why not materializing the full attention matrix matters — is the subject of the [GPU field guide](#/blog?id=gpu-guide-for-dl).
-
-Full source for the pieces above:
-
-![interactive:nanovllm-code-blockmgr](#)
+Which is the thing worth taking away: none of this changes the math. Attention is still softmax over scaled dot products. Paging changes only where K and V physically live, and pushes the indirection down into a kernel that was going to iterate over blocks anyway. What that kernel does internally, meaning tiling and why not materializing the full attention matrix matters, is the subject of the [GPU field guide](#/blog?id=gpu-guide-for-dl).
 
 ## 5. The rest, briefly
 

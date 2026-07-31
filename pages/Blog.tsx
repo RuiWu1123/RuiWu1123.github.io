@@ -402,15 +402,6 @@ const Blog: React.FC = () => {
                         if (alt === 'interactive:nanovllm-arch') {
                           return <NanoVLLMArchitectureExplorer lang={lang} />;
                         }
-                        if (alt === 'interactive:nanovllm-code-blockmgr') {
-                          return (
-                            <NanoVLLMArchitectureExplorer
-                              lang={lang}
-                              initialFile="engine/block_manager.py"
-                              files={['engine/block_manager.py', 'layers/attention.py', 'engine/model_runner.py']}
-                            />
-                          );
-                        }
                         if (alt === 'interactive:moe-gating') {
                           return <MoEGatingExplorer lang={lang} />;
                         }

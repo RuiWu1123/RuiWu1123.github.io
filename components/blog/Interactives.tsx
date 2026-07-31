@@ -2459,24 +2459,14 @@ const NV_ARCH_STR = {
   },
 };
 
-export const NanoVLLMArchitectureExplorer: React.FC<{
-  lang?: Lang;
-  initialFile?: string;
-  files?: string[];
-}> = ({ lang = 'en', initialFile, files }) => {
+export const NanoVLLMArchitectureExplorer: React.FC<{ lang?: Lang }> = ({ lang = 'en' }) => {
   const t = NV_ARCH_STR[lang];
-  const compact = !!files?.length;
-  const [activePath, setActivePath] = useState(initialFile ?? 'engine/llm_engine.py');
+  const [activePath, setActivePath] = useState('engine/llm_engine.py');
   const active = NV_FILES.find((f) => f.path === activePath) ?? NV_FILES[0];
   const pathFiles = useMemo(
     () => NV_FILES.filter((f) => f.step).sort((a, b) => (a.step! - b.step!)),
     []
   );
-  const compactFiles = useMemo(
-    () => (files ?? []).map((p) => NV_FILES.find((f) => f.path === p)).filter(Boolean) as NVFile[],
-    [files]
-  );
-
   const codePanel = (
     <>
       <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -2493,50 +2483,6 @@ export const NanoVLLMArchitectureExplorer: React.FC<{
       </pre>
     </>
   );
-
-  if (compact) {
-    return (
-      <Card>
-        <div className="mb-3 flex flex-wrap gap-2">
-          {compactFiles.map((f) => (
-            <Pill key={f.path} active={f.path === activePath} onClick={() => setActivePath(f.path)}>
-              {f.name}
-            </Pill>
-          ))}
-        </div>
-        {codePanel}
-      </Card>
-    );
-  }
-
-  const fileButton = (f: NVFile) => {
-    const isActive = f.path === activePath;
-    const isHot = !!f.step;
-    return (
-      <button
-        key={f.path}
-        onClick={() => setActivePath(f.path)}
-        className={`flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-left font-mono text-[11px] leading-tight transition-colors ${
-          isActive
-            ? 'border-anthropic-accent bg-anthropic-accent text-white'
-            : isHot
-            ? 'border-anthropic-accent/40 bg-anthropic-accent/10 text-anthropic-text hover:border-anthropic-accent'
-            : 'border-anthropic-text/15 bg-anthropic-bg/40 text-anthropic-gray hover:border-anthropic-text/40 hover:text-anthropic-text'
-        }`}
-      >
-        {isHot && (
-          <span
-            className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-[9px] font-semibold ${
-              isActive ? 'bg-white text-anthropic-accent' : 'bg-anthropic-accent text-white'
-            }`}
-          >
-            {f.step}
-          </span>
-        )}
-        <span className="truncate">{f.name}</span>
-      </button>
-    );
-  };
 
   return (
     <Card>

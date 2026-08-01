@@ -41,7 +41,7 @@ That looks like a scheduling detail. It's actually the whole of continuous batch
 
 Here's that rule on three requests, next to static batching on the same three:
 
-![Same three requests under continuous vs. static batching](blogs/images/nanovllm-batching-timeline.svg?v=3)
+![Same three requests under continuous vs. static batching](blogs/images/nanovllm-batching-timeline.svg?v=4)
 
 Both panels come from actually running nano-vllm's scheduling logic, not from drawing by hand. The parameters are shrunk so memory pressure shows up in an example this small: a block holds 4 tokens and the pool has 6 blocks, so the entire KV cache fits 24 tokens, and each round processes at most 8 tokens. The real defaults are 256 tokens per block, with the pool sized from whatever GPU memory is free at startup.
 

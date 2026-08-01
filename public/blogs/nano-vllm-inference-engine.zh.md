@@ -41,7 +41,7 @@ nano-vllm 的规则正好反过来，而且一句话就能说完：只要还有 
 
 把这条规则放到三个请求上实际跑一遍，再让同样三个请求走一遍静态 batching，差别是这样的：
 
-![Same three requests under continuous vs. static batching](blogs/images/nanovllm-batching-timeline.svg?v=3)
+![Same three requests under continuous vs. static batching](blogs/images/nanovllm-batching-timeline.svg?v=4)
 
 两幅图都是把 nano-vllm 的调度逻辑真跑一遍之后生成的，不是照着感觉画的。为了让内存压力在这么小的例子里能显出来，这里把参数缩小了：一个 block 装 4 个 token，整个池子只有 6 个 block，也就是全部 KV cache 加起来只装得下 24 个 token；每一轮最多处理 8 个 token。真实默认值是一个 block 装 256 个 token，池子有多大则由启动时剩余显存决定。
 

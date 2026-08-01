@@ -115,7 +115,7 @@ The chaining is what makes reuse correct rather than merely likely. A block's id
 
 Blocks are freed by reference count, not by owner. Here's the whole lifecycle:
 
-![One block pool, four moments](blogs/images/nanovllm-block-lifecycle.svg?v=2)
+![One block pool, four moments](blogs/images/nanovllm-block-lifecycle.svg?v=3)
 
 Look at the last frame: A finishes, but blocks 0 and 1 don't go anywhere, because B is still using them. The shared prefix outlives the sequence that created it. It also means the cache survives preemption: a preempted sequence being re-prefilled will hit on whichever of its blocks are still resident, which is why preemption costs less than it looks like it should.
 

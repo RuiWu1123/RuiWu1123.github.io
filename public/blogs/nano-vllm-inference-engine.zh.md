@@ -115,7 +115,7 @@ if block_id == -1 or self.blocks[block_id].token_ids != token_ids:
 
 block 什么时候释放，看的是引用计数，而不是谁最早申请了它。完整的生命周期是这样：
 
-![One block pool, four moments](blogs/images/nanovllm-block-lifecycle.svg?v=2)
+![One block pool, four moments](blogs/images/nanovllm-block-lifecycle.svg?v=3)
 
 留意最后一帧：A 已经结束了，但 block 0 和 1 并没有被回收，因为 B 还在用它们。这段共享的前缀比最早算出它的那个序列活得更久。这同时也意味着缓存能够挺过抢占，一个被踢出去的序列在重新 prefill 时，只要它原来的 block 还留在池子里，就能直接命中。抢占的代价之所以没有看上去那么大，原因就在这儿。
 

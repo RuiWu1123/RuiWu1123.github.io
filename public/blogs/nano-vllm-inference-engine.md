@@ -3,19 +3,15 @@ title: "Inside vLLM: Learning an Inference Engine Through Nano-vLLM"
 date: "2026/7/31"
 ---
 
-Say you've just trained a model and you want to serve it. The first version writes itself: take a request, run the forward pass, sample a token, append it, run again, stop at EOS. It works. You demo it, someone asks how many users it can handle, you measure, and the answer is about four.
+What stops you serving a language model first is usually not compute. It's memory, and specifically it's the memory you waste.
 
-It's worth being precise about why it's four, because those two reasons are the reason the whole field of inference engines exists.
+The culprit is the KV cache. Every token a sequence generates leaves behind key and value vectors, and they have to stay in GPU memory for as long as that sequence is alive. The awkward part is that you don't know in advance how long it will generate: this request might want 20 tokens, or 2,000. So the straightforward implementation reserves for the ceiling, giving every request a contiguous buffer big enough for its longest possible output. What actually gets used is usually a small fraction of that, and the waste repeats on every concurrent request.
 
-The first is that the KV cache is enormous and its size is unknowable in advance. Every token a sequence generates leaves behind key and value vectors, and they have to stay in GPU memory for as long as that sequence is alive. So you allocate a buffer per request. But you can't know whether this user wants 20 tokens or 2,000, so you allocate for the maximum. Every request then uses a sliver of what it reserved, and you pay for the rest on every concurrent sequence at once. Your GPU looks full. It's mostly holding air.
+The second constraint arrives once you start batching. GPUs are built for big matrices, so grouping requests together is the obvious move. But once they're a group, the group only finishes when its slowest member does; a request that arrives after the group starts has to wait for the whole thing to disperse; and sequences that finished early keep their seats, contributing nothing but padding.
 
-The second only appears once you start batching. Batching is obviously right, since the GPU wants big matrices, so you group requests and step them together. But now the group finishes when its slowest member finishes; a request that arrives one step after the group starts has to wait outside until the whole thing disperses; and sequences that finished early keep their seats, contributing nothing but padding.
-
-vLLM's two famous contributions aim at exactly these. PagedAttention stops requiring the KV cache to be one contiguous per-sequence buffer and hands out fixed-size blocks from a shared pool instead. That's the same move operating systems made when they stopped giving processes contiguous physical memory. Continuous batching lets the group change membership at every step, so a new request joins on the next round. A third idea, prefix caching, notices that requests often share a long prefix and lets them share the computed blocks too.
+vLLM's two best-known designs take one constraint each. PagedAttention stops requiring the KV cache to be one contiguous per-sequence buffer and hands out fixed-size blocks from a shared pool instead. That's the same move operating systems made when they stopped giving processes contiguous physical memory. Continuous batching lets the group change membership at every step, so a new request joins on the next round. A third idea, prefix caching, notices that requests often share a long prefix and lets them share the computed blocks too.
 
 The trouble with learning these from real vLLM is that they're buried under years of optimization. [nano-vllm](https://github.com/GeeeekExplorer/nano-vllm) reimplements the same core in about 1,200 lines of Python, and it isn't a toy: on its own benchmark it does 1434 tok/s against real vLLM's 1362 (Qwen3-0.6B, 256 concurrent sequences, one RTX 4070 Laptop). Small enough to read in an afternoon, real enough to be worth reading.
-
-So: first the shape of the repo and what happens to one request end to end, then a section each for the two mechanisms above.
 
 ## 1. The map
 
@@ -37,21 +33,25 @@ After that `step()` runs over and over, doing the same five things each round. T
 
 The question the scheduler has to answer every round is simple: some requests are halfway through generating, some just arrived, and it has to decide what the GPU does next.
 
-Start with the naive answer. Collect a batch of requests and send them together; prefill the whole batch, then decode it round after round; when the last one finishes, return everything at once. That "nobody moves until the group is assembled, nobody leaves until the group is done" arrangement is static batching. Its problem is the one from the opening: the group moves at the speed of its slowest member, and a request that arrives midway just waits outside for the whole thing to disperse.
+Start with the naive answer. Collect the requests currently queued into one batch, prefill the whole batch, then decode it together round after round, and only admit the next batch once the last member of this one has finished. That "nobody starts until the group is assembled, nobody leaves until the group is done" arrangement is static batching. Its problem is the one from the opening: the group moves at the speed of its slowest member, and anything that arrives after it starts waits outside.
 
 nano-vllm's rule is the opposite, and it's one sentence: always prefer prefill; run decode only when there's no prefill left to do.
 
-That looks like a scheduling detail. It's actually the whole of continuous batching. Because prefill is checked first, a request that arrived thirty milliseconds ago gets its prompt processed on the very next round, without waiting for anyone to finish. And because decode advances each running sequence by exactly one token, every round boundary becomes a natural switching point where sequences can join and leave freely. At which point the word "batch" has stopped meaning anything, because there is no fixed cohort, only whatever happens to be running this round.
+That looks like a scheduling detail. It's actually the whole of continuous batching. Because prefill is checked first, a request that just arrived gets its prompt processed on the very next round, without waiting for anyone to finish. And because decode advances each running sequence by exactly one token, every round boundary becomes a natural switching point where sequences can join and leave freely. At which point the word "batch" has stopped meaning anything, because there is no fixed cohort, only whatever happens to be running this round.
 
-Here's that policy on three requests, next to static batching on the same three. A and B arrive at round 1 and C at round 3; block size is shrunk to 4 tokens and the pool to 6 blocks so the memory pressure is visible:
+Here's that rule on three requests, next to static batching on the same three:
 
-![Same three requests under continuous vs. static batching](blogs/images/nanovllm-batching-timeline.svg?v=2)
+![Same three requests under continuous vs. static batching](blogs/images/nanovllm-batching-timeline.svg?v=3)
 
-Both panels come from actually running nano-vllm's scheduling logic, not from drawing by hand. Same work, 11 rounds against 15, and the gap widens as arrivals spread out, because that's exactly when static batching spends more time waiting.
+Both panels come from actually running nano-vllm's scheduling logic, not from drawing by hand. The parameters are shrunk so memory pressure shows up in an example this small: a block holds 4 tokens and the pool has 6 blocks, so the entire KV cache fits 24 tokens, and each round processes at most 8 tokens. The real defaults are 256 tokens per block, with the pool sized from whatever GPU memory is free at startup.
 
-Two things in that diagram need explaining, and both are where the implementation gets interesting.
+A few things in the figure need reading together. The number in a prefill cell is how many prompt tokens that round consumed, which is why it can be 6 or 7; a decode cell is always 1, because a round generates exactly one token. A grey cell with a dash means the sequence is running but did nothing that round.
 
-Look at C first: admitted at round 3, preempted at round 4. The pool had run out of blocks by then, and some running sequence needed one more to continue. So `preempt()` picks a victim, the most recently admitted running sequence, frees all of its blocks, and pushes it back to the front of the waiting queue. C loses the work it had done and isn't re-prefilled until round 8.
+That last one deserves its own paragraph, because it's the direct cost of preferring prefill. A round is either a prefill round or a decode round, never both. So whenever a new request needs prefilling, every sequence already decoding stalls for that entire round: look at rounds 2, 3 and 6 in the continuous panel, where A sits still. It trades latency for the sequences already running against waiting time for the new arrival, and the trade is worth it, because one prefill round swallows an entire prompt while one decode round produces a single token.
+
+The sharpest difference between the panels is C's row. Under static batching, C arrives at round 3 and then queues until round 10, doing nothing for eight rounds. B had finished back at round 4 and its memory was free the whole time, but C still couldn't start, because it wasn't part of the current cohort. Under continuous batching C is admitted at round 3, and from then on its decode steps ride along in the same rounds as A's. Same work, 12 rounds against 15.
+
+C's row has a second thing worth looking at: prefilled at round 3, thrown out at round 4. All 6 blocks in the pool were spoken for by then, and B had just filled its last block and needed one more to continue. So `preempt()` picks a victim, the most recently admitted running sequence, frees all of its blocks, and pushes it back to the front of the waiting queue. The prompt C had just computed is discarded, and it isn't re-prefilled until round 6, once B finishes and releases its blocks.
 
 That looks like a failure. It's actually the design. The scheduler deliberately admits more sequences than it can guarantee memory for, because most sequences finish early, and reserving for the worst case is precisely what we were trying to escape. Preemption is the release valve that makes the optimism safe: the engine slows down under pressure instead of falling over.
 

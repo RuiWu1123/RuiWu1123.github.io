@@ -3,11 +3,11 @@ title: "Inside vLLM: Learning an Inference Engine Through Nano-vLLM"
 date: "2026/7/31"
 ---
 
-What stops you serving a language model first is usually not compute. It's memory, and specifically it's the memory you waste.
+The first thing that stops you when you put a language model into production is usually not compute. It's memory, and specifically the memory you waste.
 
 The culprit is the KV cache. Every token a sequence generates leaves behind key and value vectors, and they have to stay in GPU memory for as long as that sequence is alive. The awkward part is that you don't know in advance how long it will generate: this request might want 20 tokens, or 2,000. So the straightforward implementation reserves for the ceiling, giving every request a contiguous buffer big enough for its longest possible output. What actually gets used is usually a small fraction of that, and the waste repeats on every concurrent request.
 
-The second constraint arrives once you start batching. GPUs are built for big matrices, so grouping requests together is the obvious move. But once they're a group, the group only finishes when its slowest member does; a request that arrives after the group starts has to wait for the whole thing to disperse; and sequences that finished early keep their seats, contributing nothing but padding.
+The second constraint arrives once you start batching. GPUs are built for big matrices, so grouping requests together is the obvious move. But once they're a group, the group only finishes when its slowest member does; a request that arrives after the group starts has to wait for the whole thing to disperse; and sequences that finished early keep their seats without contributing anything.
 
 vLLM's two best-known designs take one constraint each. PagedAttention stops requiring the KV cache to be one contiguous per-sequence buffer and hands out fixed-size blocks from a shared pool instead. That's the same move operating systems made when they stopped giving processes contiguous physical memory. Continuous batching lets the group change membership at every step, so a new request joins on the next round. A third idea, prefix caching, notices that requests often share a long prefix and lets them share the computed blocks too.
 

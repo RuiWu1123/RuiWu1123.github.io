@@ -13,7 +13,11 @@ export default defineConfig(({ mode }) => {
       plugins: [react()],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+        // Blog posts are plain files fetched at runtime, so the browser will
+        // happily serve a stale copy after a deploy. Stamping each build lets
+        // the fetch URL change whenever the site is rebuilt.
+        __BUILD_ID__: JSON.stringify(Date.now().toString(36))
       },
       resolve: {
         alias: {

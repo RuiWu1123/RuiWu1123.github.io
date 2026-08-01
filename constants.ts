@@ -2,13 +2,18 @@
 import { NavItem, ResearchInterest, VisitedPlace, Publication, NewsItem, BlogPost } from './types';
 
 // Function to load blog content from file
+// Stamped at build time by vite (see vite.config.ts). Appending it to blog
+// fetches stops the browser serving a cached post from a previous deploy.
+declare const __BUILD_ID__: string;
+const BUILD_ID = typeof __BUILD_ID__ === 'string' ? __BUILD_ID__ : 'dev';
+
 export const loadBlogContent = async (blogId: string, lang: 'en' | 'zh' = 'en'): Promise<string> => {
   try {
     const suffix = lang === 'zh' ? '.zh.md' : '.md';
-    let response = await fetch(`/blogs/${blogId}${suffix}`);
+    let response = await fetch(`/blogs/${blogId}${suffix}?v=${BUILD_ID}`);
     if (!response.ok && lang === 'zh') {
       // Fallback to English if a Chinese translation isn't available yet
-      response = await fetch(`/blogs/${blogId}.md`);
+      response = await fetch(`/blogs/${blogId}.md?v=${BUILD_ID}`);
     }
     if (!response.ok) {
       throw new Error(`Failed to load blog: ${blogId}`);

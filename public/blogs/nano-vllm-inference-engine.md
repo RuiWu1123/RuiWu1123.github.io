@@ -94,7 +94,9 @@ Back to the first problem. A sequence's cache grows unpredictably, and you have 
 
 The fix is lifted straight from operating systems, and the analogy is worth stating properly because it isn't decorative. A process believes it owns a flat contiguous address space; physically its memory is scattered pages, with a page table translating between the two. PagedAttention does exactly that: a sequence believes it owns a contiguous KV cache; physically that's fixed-size blocks scattered across a shared pool, and each sequence carries a block table mapping logical block index to physical block id.
 
-![The block table: logical blocks map to scattered physical slots](blogs/images/nanovllm-block-table.svg?v=1)
+![The block table: logical blocks map to scattered physical slots](blogs/images/nanovllm-block-table.svg?v=2)
+
+The sequence in the figure owns three blocks. It sees a contiguous block 0, 1, 2, while `block_table` points those at physical blocks 7, 2 and 15, scattered across the pool. Matching colours mean the same piece of memory: logical block, table entry, and pool cell.
 
 The payoff is that allocation can happen one block at a time as the sequence grows. A sequence holds only what it has actually used, plus at most one partially-filled block. The waste is capped by the block size, 256 tokens, no matter how long it eventually runs.
 

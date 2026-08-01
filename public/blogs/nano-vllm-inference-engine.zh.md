@@ -94,7 +94,9 @@ if remaining < num_tokens and scheduled_seqs:  # only allow chunked prefill for 
 
 解决办法是从操作系统那里整个搬过来的，这个类比值得认真讲，因为它并不只是个比方。一个进程以为自己拥有一段平坦而连续的地址空间，但物理上它的内存是散落在各处的页，中间靠页表来完成翻译。PagedAttention 做的完全是同一件事：一个序列以为自己拥有一段连续的 KV cache，物理上那是散落在共享池里的一个个固定大小的 block，而每个序列各自持有一张 block table，负责把逻辑块号翻译成物理块号。
 
-![The block table: logical blocks map to scattered physical slots](blogs/images/nanovllm-block-table.svg?v=1)
+![The block table: logical blocks map to scattered physical slots](blogs/images/nanovllm-block-table.svg?v=2)
+
+图里那条序列一共三块，它自己看到的是连续的 block 0、1、2，但 `block_table` 把它们分别指向了物理池里的 7、2、15 号，位置完全打散。颜色对应关系是：同一个颜色的逻辑块、表项和池中格子是同一块内存。
 
 这样做的直接好处是，空间可以跟着序列的增长，一块一块地给。任何时刻，一个序列手上只有它真正用掉的那些 block，外加最多一个没填满的。于是浪费的空间有了上限，就是一个 block 的大小，也就是 256 个 token。无论这个序列最后生成了多长，这个上限都不会变。
 

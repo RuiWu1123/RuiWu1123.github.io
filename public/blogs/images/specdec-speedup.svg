@@ -1,0 +1,39 @@
+<svg viewBox="0 0 880 380" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+<rect width="880" height="380" fill="#F4F3EF"/>
+<line x1="80" y1="216.47058823529412" x2="690" y2="216.47058823529412" stroke="#191919" stroke-opacity="0.35" stroke-dasharray="5 4"/>
+<text x="70" y="220.47058823529412" font-size="11" text-anchor="end" fill="#5C5C5C">1×</text>
+<line x1="80" y1="142.94117647058823" x2="690" y2="142.94117647058823" stroke="#191919" stroke-opacity="0.1" stroke-dasharray="none"/>
+<text x="70" y="146.94117647058823" font-size="11" text-anchor="end" fill="#5C5C5C">2×</text>
+<line x1="80" y1="69.41176470588235" x2="690" y2="69.41176470588235" stroke="#191919" stroke-opacity="0.1" stroke-dasharray="none"/>
+<text x="70" y="73.41176470588235" font-size="11" text-anchor="end" fill="#5C5C5C">3×</text>
+<text x="86" y="209.47058823529412" font-size="10.5" fill="#5C5C5C">break-even</text>
+<text x="80.0" y="308" font-size="11" text-anchor="middle" fill="#5C5C5C">1</text>
+<text x="135.45454545454544" y="308" font-size="11" text-anchor="middle" fill="#5C5C5C">2</text>
+<text x="190.9090909090909" y="308" font-size="11" text-anchor="middle" fill="#5C5C5C">3</text>
+<text x="246.36363636363635" y="308" font-size="11" text-anchor="middle" fill="#5C5C5C">4</text>
+<text x="301.8181818181818" y="308" font-size="11" text-anchor="middle" fill="#5C5C5C">5</text>
+<text x="357.27272727272725" y="308" font-size="11" text-anchor="middle" fill="#5C5C5C">6</text>
+<text x="412.7272727272727" y="308" font-size="11" text-anchor="middle" fill="#5C5C5C">7</text>
+<text x="468.1818181818182" y="308" font-size="11" text-anchor="middle" fill="#5C5C5C">8</text>
+<text x="523.6363636363636" y="308" font-size="11" text-anchor="middle" fill="#5C5C5C">9</text>
+<text x="579.0909090909091" y="308" font-size="11" text-anchor="middle" fill="#5C5C5C">10</text>
+<text x="634.5454545454545" y="308" font-size="11" text-anchor="middle" fill="#5C5C5C">11</text>
+<text x="690.0" y="308" font-size="11" text-anchor="middle" fill="#5C5C5C">12</text>
+<text x="385.0" y="330" font-size="11.5" text-anchor="middle" fill="#191919">draft length γ</text>
+<polyline points="80.0,198.1 135.5,198.1 190.9,203.8 246.4,210.9 301.8,217.6 357.3,223.7 412.7,229.0 468.2,233.5 523.6,237.5 579.1,241.0 634.5,244.1 690.0,246.8" fill="none" stroke="#C9C3B8" stroke-width="2.4"/>
+<circle cx="80.0" cy="198.08823529411762" r="4" fill="#C9C3B8" stroke="#F4F3EF" stroke-width="1.5"/>
+<text x="702" y="250.75268470209775" font-size="11.5" fill="#8A8272">α = 0.5</text>
+<polyline points="80.0,192.0 135.5,187.1 190.9,190.0 246.4,195.8 301.8,202.4 357.3,208.8 412.7,214.7 468.2,220.0 523.6,224.7 579.1,228.9 634.5,232.7 690.0,236.0" fill="none" stroke="#E6E4DD" stroke-width="2.4"/>
+<circle cx="135.45454545454544" cy="187.05882352941177" r="4" fill="#E6E4DD" stroke="#F4F3EF" stroke-width="1.5"/>
+<text x="702" y="240.00486966920417" font-size="11.5" fill="#8A8272">α = 0.6</text>
+<polyline points="80.0,185.8 135.5,175.0 190.9,173.6 246.4,176.7 301.8,181.9 357.3,187.8 412.7,193.8 468.2,199.5 523.6,204.9 579.1,209.9 634.5,214.5 690.0,218.6" fill="none" stroke="#6B8CAE" stroke-width="2.4"/>
+<circle cx="190.9090909090909" cy="173.59375000000003" r="4" fill="#6B8CAE" stroke="#F4F3EF" stroke-width="1.5"/>
+<text x="702" y="222.61079159751299" font-size="11.5" fill="#6B8CAE">α = 0.7</text>
+<polyline points="80.0,179.7 135.5,161.8 190.9,154.3 246.4,152.7 301.8,154.4 357.3,157.9 412.7,162.5 468.2,167.6 523.6,172.8 579.1,178.0 634.5,183.0 690.0,187.8" fill="none" stroke="#8DA399" stroke-width="2.4"/>
+<circle cx="246.36363636363635" cy="152.67973856209147" r="4" fill="#8DA399" stroke="#F4F3EF" stroke-width="1.5"/>
+<text x="702" y="191.8131035238754" font-size="11.5" fill="#8DA399">α = 0.8</text>
+<polyline points="80.0,173.6 135.5,147.7 190.9,132.0 246.4,122.7 301.8,117.7 357.3,115.6 412.7,115.5 468.2,116.8 523.6,119.0 579.1,121.8 634.5,125.1 690.0,128.7" fill="none" stroke="#D97757" stroke-width="2.4"/>
+<circle cx="412.7272727272727" cy="115.51078737745098" r="4" fill="#D97757" stroke="#F4F3EF" stroke-width="1.5"/>
+<text x="702" y="132.7081710278763" font-size="11.5" fill="#D97757">α = 0.9</text>
+<text x="80" y="26" font-size="12.5" fill="#191919">speedup when one draft pass costs 20% of a target pass; dots mark the best γ</text>
+</svg>

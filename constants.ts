@@ -142,6 +142,11 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: "speculative-decoding-in-2026",
+    title: "Guess and Check: How Speculative Decoding Buys Speed for Free",
+    date: "2026/8/6"
+  },
+  {
     id: "nano-vllm-inference-engine",
     title: "Inside vLLM: Learning an Inference Engine Through Nano-vLLM",
     date: "2026/7/31"

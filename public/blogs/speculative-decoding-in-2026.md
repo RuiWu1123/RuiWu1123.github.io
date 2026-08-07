@@ -13,11 +13,15 @@ What makes this more than a heuristic is that those guesses can be accepted in a
 
 Write `p` for the target's distribution at some position and `q` for the drafter's. We want a procedure that sometimes keeps the drafter's proposal and sometimes overrides it, under one hard constraint: whatever comes out must be distributed exactly as `p`. Subject to that, we want to accept as often as possible, since acceptance is the entire saving.
 
-Stated that way the answer is nearly forced. Suppose the procedure accepts token `x` with probability `A(x)`. Two things bound `A` from above. You can only accept a token the drafter actually proposed, so `A(x) ≤ q(x)`. And you can never emit `x` more often than `p` calls for, so `A(x) ≤ p(x)`. Together `A(x) ≤ min(p(x), q(x))` at every token, which caps the acceptance rate:
+Stated that way the answer is nearly forced. Pick a token `x` from the vocabulary and let `A(x)` be the probability that a single round both proposes `x` and accepts it. `A` is a function over the whole vocabulary rather than one number: a round draws exactly one token, but before the draw every token in the vocabulary has its own chance of being the one that gets proposed and kept. Summing `A` over the vocabulary therefore gives the probability that the round ends in an acceptance at all, which is the acceptance rate α.
+
+Two things bound `A(x)` from above. A round can accept `x` only if it proposed `x`, and it proposes `x` with probability `q(x)`, so `A(x) ≤ q(x)`. The other bound comes from the constraint. Acceptance is one of the ways `x` gets emitted, the override being the other, so `A(x)` cannot exceed the total probability of emitting `x`, and the constraint pins that total at `p(x)`. Hence `A(x) ≤ p(x)`. Together `A(x) ≤ min(p(x), q(x))` at every token, and summing over the vocabulary caps the acceptance rate:
 
 $$
 \alpha \;=\; \sum_x A(x) \;\le\; \sum_x \min(p, q) \;=\; 1 - \mathrm{TV}(p,q), \qquad \mathrm{TV}(p,q) = \tfrac{1}{2}\sum_x |p - q|
 $$
+
+That last equality is a two-line identity worth doing rather than taking on faith. Since `min(a, b) = (a + b − |a − b|)/2`, summing over the vocabulary gives `Σ min(p,q) = (1 + 1 − Σ|p − q|)/2 = 1 − ½Σ|p − q|`, and that trailing quantity is the definition of total variation distance. The ½ is there because `Σ|p − q|` counts every disagreement twice: wherever `q` puts too much mass it must be short by exactly as much somewhere else, and both the surplus and the shortfall show up in the sum. Halving it leaves the amount of probability mass you would have to move to turn `q` into `p`. So the identity says something plain: `Σ min(p, q)` is how much of the two distributions already coincides, TV is how much does not, and the two add to one. The best a lossless scheme can do is accept precisely the part that already agrees.
 
 That ceiling binds *any* scheme that preserves `p`, not just this one. No amount of cleverness gets past it.
 
@@ -41,7 +45,7 @@ Worth saying plainly that none of this originates with speculative decoding. Sha
 
 ![The accept and reject rule](blogs/images/specdec-accept-rule.svg?v=1)
 
-The green mass is `min(p, q)`, kept directly, and it sums to α. The blue mass is `(p − q)⁺`, what the residual has to make up. The closed form `α = 1 − TV(p, q)` appears as Corollary 3.6 in the original paper. Put differently, a drafter whose tokens are accepted half the time is a drafter sitting 0.5 TV away from the target, and no architectural detail enters into it.
+The green mass is `min(p, q)`, kept directly, and it sums to α = 0.66. The blue mass is `(p − q)⁺`, what the residual has to make up, and it is not merely related to the total variation distance but equal to it: `Σ(p − q)⁺ = ½Σ|p − q| = 0.34`. The picture is the identity. The closed form `α = 1 − TV(p, q)` appears as Corollary 3.6 in the original paper. Put differently, a drafter whose tokens are accepted half the time is a drafter sitting 0.5 TV away from the target, and no architectural detail enters into it.
 
 Exactness proofs are easy to nod along to and easy to get subtly wrong in code, so it is worth watching happen. I took a target `p` over eight tokens, deliberately picked a bad draft `q` sitting 0.34 in total variation away from it, and ran two million single-token speculative steps.
 

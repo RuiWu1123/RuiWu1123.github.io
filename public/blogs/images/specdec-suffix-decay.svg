@@ -1,0 +1,59 @@
+<svg viewBox="0 0 795 340" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+<rect width="795" height="340" fill="#F4F3EF"/>
+<line x1="95" y1="212.9" x2="590" y2="212.9" stroke="#191919" stroke-opacity="0.1"/>
+<text x="85" y="216.9" font-size="11" text-anchor="end" fill="#5C5C5C">0.4</text>
+<line x1="95" y1="162.6" x2="590" y2="162.6" stroke="#191919" stroke-opacity="0.1"/>
+<text x="85" y="166.6" font-size="11" text-anchor="end" fill="#5C5C5C">0.6</text>
+<line x1="95" y1="112.3" x2="590" y2="112.3" stroke="#191919" stroke-opacity="0.1"/>
+<text x="85" y="116.3" font-size="11" text-anchor="end" fill="#5C5C5C">0.8</text>
+<line x1="95" y1="62.0" x2="590" y2="62.0" stroke="#191919" stroke-opacity="0.1"/>
+<text x="85" y="66.0" font-size="11" text-anchor="end" fill="#5C5C5C">1</text>
+<text x="95" y="256" font-size="11" text-anchor="middle" fill="#5C5C5C">1</text>
+<text x="166" y="256" font-size="11" text-anchor="middle" fill="#5C5C5C">2</text>
+<text x="236" y="256" font-size="11" text-anchor="middle" fill="#5C5C5C">3</text>
+<text x="307" y="256" font-size="11" text-anchor="middle" fill="#5C5C5C">4</text>
+<text x="378" y="256" font-size="11" text-anchor="middle" fill="#5C5C5C">5</text>
+<text x="449" y="256" font-size="11" text-anchor="middle" fill="#5C5C5C">6</text>
+<text x="519" y="256" font-size="11" text-anchor="middle" fill="#5C5C5C">7</text>
+<text x="590" y="256" font-size="11" text-anchor="middle" fill="#5C5C5C">8</text>
+<text x="342" y="278" font-size="12" text-anchor="middle" fill="#191919">position inside the drafted block</text>
+<text x="28" y="150" font-size="12" text-anchor="middle" fill="#191919" transform="rotate(-90 28 150)">acceptance there</text>
+<polyline points="95.0,112.3 165.7,112.3 236.4,112.3 307.1,112.3 377.9,112.3 448.6,112.3 519.3,112.3 590.0,112.3" fill="none" stroke="#8DA399" stroke-width="2.6"/>
+<circle cx="95.0" cy="112.3" r="3" fill="#8DA399"/>
+<circle cx="165.7" cy="112.3" r="3" fill="#8DA399"/>
+<circle cx="236.4" cy="112.3" r="3" fill="#8DA399"/>
+<circle cx="307.1" cy="112.3" r="3" fill="#8DA399"/>
+<circle cx="377.9" cy="112.3" r="3" fill="#8DA399"/>
+<circle cx="448.6" cy="112.3" r="3" fill="#8DA399"/>
+<circle cx="519.3" cy="112.3" r="3" fill="#8DA399"/>
+<circle cx="590.0" cy="112.3" r="3" fill="#8DA399"/>
+<polyline points="95.0,77.1 165.7,110.2 236.4,138.6 307.1,163.1 377.9,184.1 448.6,202.2 519.3,217.8 590.0,231.2" fill="none" stroke="#D97757" stroke-width="2.6"/>
+<circle cx="95.0" cy="77.1" r="3" fill="#D97757"/>
+<circle cx="165.7" cy="110.2" r="3" fill="#D97757"/>
+<circle cx="236.4" cy="138.6" r="3" fill="#D97757"/>
+<circle cx="307.1" cy="163.1" r="3" fill="#D97757"/>
+<circle cx="377.9" cy="184.1" r="3" fill="#D97757"/>
+<circle cx="448.6" cy="202.2" r="3" fill="#D97757"/>
+<circle cx="519.3" cy="217.8" r="3" fill="#D97757"/>
+<circle cx="590.0" cy="231.2" r="3" fill="#D97757"/>
+<polyline points="95.0,77.1 165.7,87.7 236.4,97.9 307.1,107.6 377.9,116.8 448.6,125.7 519.3,134.1 590.0,142.2" fill="none" stroke="#6B8CAE" stroke-width="2.6"/>
+<circle cx="95.0" cy="77.1" r="3" fill="#6B8CAE"/>
+<circle cx="165.7" cy="87.7" r="3" fill="#6B8CAE"/>
+<circle cx="236.4" cy="97.9" r="3" fill="#6B8CAE"/>
+<circle cx="307.1" cy="107.6" r="3" fill="#6B8CAE"/>
+<circle cx="377.9" cy="116.8" r="3" fill="#6B8CAE"/>
+<circle cx="448.6" cy="125.7" r="3" fill="#6B8CAE"/>
+<circle cx="519.3" cy="134.1" r="3" fill="#6B8CAE"/>
+<circle cx="590.0" cy="142.2" r="3" fill="#6B8CAE"/>
+<text x="624" y="58" font-size="11" fill="#5C5C5C">tokens per round</text>
+<rect x="624" y="76" width="13" height="13" rx="3" fill="#8DA399"/>
+<text x="643" y="87" font-size="11.5" fill="#191919">autoregressive</text>
+<text x="643" y="107" font-size="16" font-weight="700" fill="#8DA399">4.33</text>
+<rect x="624" y="132" width="13" height="13" rx="3" fill="#D97757"/>
+<text x="643" y="143" font-size="11.5" fill="#191919">parallel</text>
+<text x="643" y="163" font-size="16" font-weight="700" fill="#D97757">3.81</text>
+<rect x="624" y="188" width="13" height="13" rx="3" fill="#6B8CAE"/>
+<text x="643" y="199" font-size="11.5" fill="#191919">parallel + seq head</text>
+<text x="643" y="219" font-size="16" font-weight="700" fill="#6B8CAE">5.32</text>
+<text x="95" y="40" font-size="12.5" fill="#191919">a parallel drafter predicts each position independently, so agreement decays along the block</text>
+</svg>

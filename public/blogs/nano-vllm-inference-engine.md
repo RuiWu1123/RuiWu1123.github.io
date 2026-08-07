@@ -43,7 +43,7 @@ Here's that rule on three requests, next to static batching on the same three:
 
 ![Same three requests under continuous vs. static batching](blogs/images/nanovllm-batching-timeline.svg?v=5)
 
-Both panels come from actually running nano-vllm's scheduling logic, not from drawing by hand. The parameters are shrunk so memory pressure shows up in an example this small: a block holds 4 tokens, the pool has 6 blocks, and each round processes at most 8 tokens. The real defaults are 256 tokens per block, with the pool sized from whatever GPU memory is free at startup.
+The parameters are shrunk so memory pressure shows up in an example this small: a block holds 4 tokens, the pool has 6 blocks, and each round processes at most 8 tokens. The real defaults are 256 tokens per block, with the pool sized from whatever GPU memory is free at startup.
 
 One rule has to be stated before the figure makes arithmetic sense: **a block belongs to exactly one sequence.** The tail of A and the head of B are never packed into the same block. So a sequence needs ceil(its length / 4) blocks, and its last block is usually partly empty, with those leftover slots unusable by anyone else.
 

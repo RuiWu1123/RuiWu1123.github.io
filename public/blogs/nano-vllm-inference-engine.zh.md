@@ -19,7 +19,7 @@ vLLM 最为人熟知的两项设计，正好一项对着一个问题。PagedAtte
 
 ![interactive:nanovllm-arch](#)
 
-这里有个文件得先提一句，否则它后面出现的时候会让人摸不着头脑。`utils/context.py` 里放的是一个模块级的全局变量：`ModelRunner` 把分页相关的元数据写进去，`Attention` 在二十多层之后再从里面把它读出来。这样做的目的，是让 block table 不必作为参数一路穿过中间每一层的 `forward()`。这种设计乍看很不讲究，但真要换成规规矩矩传参数的写法，你会发现那样反而更别扭。
+这里有个文件得先提一句，否则它后面出现的时候会让人摸不着头脑。`utils/context.py` 里放的是一个模块级的全局变量：`ModelRunner` 把分页相关的元数据写进去，`Attention` 在二十多层之后再从里面把它读出来。这样做的目的，是让 block table 不必作为参数一路穿过中间每一层的 `forward()`。这种写法乍看很不规矩，但真要换成逐层传参数的版本，你会发现那样反而更别扭。
 
 ## 二、一个请求会经历什么
 
@@ -43,7 +43,7 @@ nano-vllm 的规则正好反过来，而且一句话就能说完：只要还有 
 
 ![Same three requests under continuous vs. static batching](blogs/images/nanovllm-batching-timeline.svg?v=5)
 
-两幅图都是把 nano-vllm 的调度逻辑真跑一遍之后生成的，不是照着感觉画的。为了让内存压力在这么小的例子里能显出来，这里把参数缩小了：一个 block 装 4 个 token，整个池子只有 6 个 block，每一轮最多处理 8 个 token。真实默认值是一个 block 装 256 个 token，池子有多大则由启动时剩余显存决定。
+为了让内存压力在这么小的例子里能显出来，这里把参数缩小了：一个 block 装 4 个 token，整个池子只有 6 个 block，每一轮最多处理 8 个 token。真实默认值是一个 block 装 256 个 token，池子有多大则由启动时剩余显存决定。
 
 读图之前有一条规则必须先说清楚，因为它决定了后面所有的算术：**一个 block 只属于一个序列**，不会把 A 的尾巴和 B 的开头拼在同一块里。所以一个序列需要多少 block，是 ⌈自身长度 / 4⌉ 向上取整，最后那一块通常没填满，空出来的槽位谁也用不了。
 
@@ -128,7 +128,7 @@ def can_append(self, seq: Sequence) -> bool:
     return len(self.free_block_ids) >= (len(seq) % self.block_size == 1)
 ```
 
-`len(seq) % block_size == 1` 只有在某个 token 恰好溢出到新 block 的那一刻才成立。256 个 token 里只有那一个会撞上这种情况，这时它读作"空闲 block 不少于 1"；剩下 255 次，它读作"空闲 block 不少于 0"，恒真。它利用了 Python 里 `bool` 本身就是 `int` 这一点，而且它干的是正经活，一个序列会不会被抢占，判断依据就是这一行。
+`len(seq) % block_size == 1` 只有在某个 token 恰好溢出到新 block 的那一刻才成立。256 个 token 里只有那一个会撞上这种情况，这时它读作"空闲 block 不少于 1"；剩下 255 次，它读作"空闲 block 不少于 0"，恒真。它利用了 Python 里 `bool` 本身就是 `int` 这一点，而且这一行并不是个花哨写法：一个序列会不会被抢占，判断依据就是它。
 
 到这里还剩两个问题没解决，而它们才是让分页在 GPU 上真正跑得起来的关键。
 

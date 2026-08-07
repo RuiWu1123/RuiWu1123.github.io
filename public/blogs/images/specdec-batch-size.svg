@@ -1,36 +1,41 @@
-<svg viewBox="0 0 765 340" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
-<rect width="765" height="340" fill="#F4F3EF"/>
-<line x1="95" y1="233.2" x2="570" y2="233.2" stroke="#191919" stroke-opacity="0.3" stroke-dasharray="5 4"/>
-<text x="85" y="237.2" font-size="11" text-anchor="end" fill="#5C5C5C">1×</text>
-<line x1="95" y1="189.2" x2="570" y2="189.2" stroke="#191919" stroke-opacity="0.1" stroke-dasharray="none"/>
-<text x="85" y="193.2" font-size="11" text-anchor="end" fill="#5C5C5C">1.5×</text>
-<line x1="95" y1="145.2" x2="570" y2="145.2" stroke="#191919" stroke-opacity="0.1" stroke-dasharray="none"/>
-<text x="85" y="149.2" font-size="11" text-anchor="end" fill="#5C5C5C">2×</text>
-<line x1="95" y1="101.2" x2="570" y2="101.2" stroke="#191919" stroke-opacity="0.1" stroke-dasharray="none"/>
-<text x="85" y="105.2" font-size="11" text-anchor="end" fill="#5C5C5C">2.5×</text>
-<text x="95" y="260" font-size="11" text-anchor="middle" fill="#5C5C5C">1</text>
-<text x="154" y="260" font-size="11" text-anchor="middle" fill="#5C5C5C">2</text>
-<text x="273" y="260" font-size="11" text-anchor="middle" fill="#5C5C5C">8</text>
-<text x="392" y="260" font-size="11" text-anchor="middle" fill="#5C5C5C">32</text>
-<text x="451" y="260" font-size="11" text-anchor="middle" fill="#5C5C5C">64</text>
-<text x="570" y="260" font-size="11" text-anchor="middle" fill="#5C5C5C">256</text>
-<text x="332" y="282" font-size="12" text-anchor="middle" fill="#191919">batch size</text>
-<polyline points="95.0,81.0 391.9,205.9" fill="none" stroke="#8DA399" stroke-width="2.6"/>
-<circle cx="95.0" cy="81.0" r="4" fill="#8DA399"/>
-<circle cx="391.9" cy="205.9" r="4" fill="#8DA399"/>
-<text x="403" y="210" font-size="11.5" fill="#8DA399">Su et al. 2023, OPT-6.7B</text>
-<polyline points="154.4,161.9 451.2,199.8" fill="none" stroke="#D97757" stroke-width="2.6"/>
-<circle cx="154.4" cy="161.9" r="4" fill="#D97757"/>
-<circle cx="451.2" cy="199.8" r="4" fill="#D97757"/>
-<text x="462" y="204" font-size="11.5" fill="#D97757">EAGLE-3 paper, SGLang</text>
-<polyline points="95.0,167.2 439.8,232.3" fill="none" stroke="#6B8CAE" stroke-width="2.6"/>
-<circle cx="95.0" cy="167.2" r="4" fill="#6B8CAE"/>
-<circle cx="439.8" cy="232.3" r="4" fill="#6B8CAE"/>
-<text x="451" y="236" font-size="11.5" fill="#6B8CAE">EAGLE-3 paper, vLLM</text>
-<polyline points="391.9,145.2 570.0,100.3" fill="none" stroke="#A98467" stroke-width="2.6"/>
-<circle cx="391.9" cy="145.2" r="4" fill="#A98467"/>
-<circle cx="570.0" cy="100.3" r="4" fill="#A98467"/>
-<text x="581" y="104" font-size="11.5" fill="#A98467">MagicDec, long context</text>
-<text x="95" y="44" font-size="12.5" fill="#191919">speedup as the machine fills up, as reported by each source</text>
-<text x="95" y="62" font-size="11" fill="#5C5C5C">endpoints are published numbers; the line between them is drawn, not measured</text>
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
+<rect width="700" height="240" fill="#F4F3EF"/>
+<line x1="60.0" y1="176.0" x2="525.0" y2="176.0" stroke="#191919" stroke-opacity="0.28" stroke-dasharray="5 4"/>
+<text x="48.0" y="180.0" font-size="11" text-anchor="end" fill="#5C5C5C">1×</text>
+<line x1="60.0" y1="132.0" x2="525.0" y2="132.0" stroke="#191919" stroke-opacity="0.1"/>
+<text x="48.0" y="136.0" font-size="11" text-anchor="end" fill="#5C5C5C">1.5×</text>
+<line x1="60.0" y1="88.0" x2="525.0" y2="88.0" stroke="#191919" stroke-opacity="0.1"/>
+<text x="48.0" y="92.0" font-size="11" text-anchor="end" fill="#5C5C5C">2×</text>
+<line x1="60.0" y1="44.0" x2="525.0" y2="44.0" stroke="#191919" stroke-opacity="0.1"/>
+<text x="48.0" y="48.0" font-size="11" text-anchor="end" fill="#5C5C5C">2.5×</text>
+<text x="60.0" y="202.0" font-size="11" text-anchor="middle" fill="#5C5C5C">1</text>
+<text x="118.1" y="202.0" font-size="11" text-anchor="middle" fill="#5C5C5C">2</text>
+<text x="176.2" y="202.0" font-size="11" text-anchor="middle" fill="#5C5C5C">4</text>
+<text x="234.4" y="202.0" font-size="11" text-anchor="middle" fill="#5C5C5C">8</text>
+<text x="292.5" y="202.0" font-size="11" text-anchor="middle" fill="#5C5C5C">16</text>
+<text x="350.6" y="202.0" font-size="11" text-anchor="middle" fill="#5C5C5C">32</text>
+<text x="408.8" y="202.0" font-size="11" text-anchor="middle" fill="#5C5C5C">64</text>
+<text x="466.9" y="202.0" font-size="11" text-anchor="middle" fill="#5C5C5C">128</text>
+<text x="525.0" y="202.0" font-size="11" text-anchor="middle" fill="#5C5C5C">256</text>
+<text x="292.5" y="226.0" font-size="12" text-anchor="middle" fill="#191919">batch size</text>
+<polyline points="60.0,23.8 350.6,148.7" fill="none" stroke="#8DA399" stroke-width="2.6"/>
+<circle cx="60.0" cy="23.8" r="4" fill="#8DA399"/>
+<circle cx="350.6" cy="148.7" r="4" fill="#8DA399"/>
+<polyline points="118.1,104.7 408.8,142.6" fill="none" stroke="#D97757" stroke-width="2.6"/>
+<circle cx="118.1" cy="104.7" r="4" fill="#D97757"/>
+<circle cx="408.8" cy="142.6" r="4" fill="#D97757"/>
+<polyline points="60.0,110.0 397.6,175.1" fill="none" stroke="#6B8CAE" stroke-width="2.6"/>
+<circle cx="60.0" cy="110.0" r="4" fill="#6B8CAE"/>
+<circle cx="397.6" cy="175.1" r="4" fill="#6B8CAE"/>
+<polyline points="350.6,88.0 525.0,43.1" fill="none" stroke="#A98467" stroke-width="2.6"/>
+<circle cx="350.6" cy="88.0" r="4" fill="#A98467"/>
+<circle cx="525.0" cy="43.1" r="4" fill="#A98467"/>
+<path d="M 532.0 43.1 L 538.0 53.0" fill="none" stroke="#A98467" stroke-opacity="0.45" stroke-width="1"/>
+<text x="545.0" y="57.0" font-size="11.5" fill="#A98467">MagicDec, long context</text>
+<path d="M 415.8 142.6 L 538.0 139.1" fill="none" stroke="#D97757" stroke-opacity="0.45" stroke-width="1"/>
+<text x="545.0" y="143.1" font-size="11.5" fill="#D97757">EAGLE-3 paper, SGLang</text>
+<path d="M 357.6 148.7 L 538.0 156.1" fill="none" stroke="#8DA399" stroke-opacity="0.45" stroke-width="1"/>
+<text x="545.0" y="160.1" font-size="11.5" fill="#8DA399">Su et al. 2023, OPT-6.7B</text>
+<path d="M 404.6 175.1 L 538.0 185.0" fill="none" stroke="#6B8CAE" stroke-opacity="0.45" stroke-width="1"/>
+<text x="545.0" y="189.0" font-size="11.5" fill="#6B8CAE">EAGLE-3 paper, vLLM</text>
 </svg>

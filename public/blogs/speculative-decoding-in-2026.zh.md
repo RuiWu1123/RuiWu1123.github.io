@@ -147,9 +147,9 @@ SGLang 则是让 [speculative worker](https://docs.sglang.ai/advanced_features/s
 
 开头那段的前提是 GPU 有闲着的算力。这个前提会随着机器被填满而变弱，speculative decoding 的收益也跟着变弱。
 
-![Reported speedup against batch size](blogs/images/specdec-batch-size.svg?v=1)
+![Reported speedup against batch size](blogs/images/specdec-batch-size.svg?v=2)
 
-[有人直接量过](https://arxiv.org/abs/2310.18813)：同一套配置在 batch size 为 1 时是 2.73 倍，到 batch size 32 就只剩 1.31 倍，理由是"大 batch 本身已经把 GPU 算力占满了"。EAGLE-3 自己发表的表格是同样的形状：SGLang 上 batch 64 掉到 1.38 倍，vLLM 上 batch 56 掉到 1.01 倍。这本质上是一个延迟优化，只有机器空着的时候才看着像吞吐优化。
+图上每条线只有两个端点取自论文里的表格，中间的连线是画上去的。[有人直接量过](https://arxiv.org/abs/2310.18813)：同一套配置在 batch size 为 1 时是 2.73 倍，到 batch size 32 就只剩 1.31 倍，理由是"大 batch 本身已经把 GPU 算力占满了"。EAGLE-3 自己发表的表格是同样的形状：SGLang 上 batch 64 掉到 1.38 倍，vLLM 上 batch 56 掉到 1.01 倍。这本质上是一个延迟优化，只有机器空着的时候才看着像吞吐优化。
 
 2026 年真正需要补的限定词是序列长度，也就是图上第四条线。[MagicDec](https://arxiv.org/abs/2408.11049) 指出，长上下文下 KV cache 的规模是 batch 乘序列长度，光把它读进来就足以让工作负载在大 batch 下依然访存受限，并报告 Llama-3.1-8B 在 batch 32 到 256 的区间里最高 2.51 倍。所以访存受限这个前提不是被"批处理"推翻的，是被"短序列加小缓存"推翻的。
 

@@ -147,9 +147,9 @@ The last piece is knowing when to stop. Since speculation competes with real req
 
 The premise in the opening paragraph was that the GPU has idle arithmetic capacity. That premise weakens as you fill the machine, and speculative decoding weakens with it.
 
-![Reported speedup against batch size](blogs/images/specdec-batch-size.svg?v=1)
+![Reported speedup against batch size](blogs/images/specdec-batch-size.svg?v=2)
 
-[One study](https://arxiv.org/abs/2310.18813) measured it directly: the same setup giving 2.73× at batch size 1 gives 1.31× at batch size 32, because "large batch sizes already fully utilize the underlying GPU computational resources". EAGLE-3's own published tables show the same shape, falling to 1.38× at batch 64 in SGLang and to 1.01× at batch 56 in vLLM. The technique is a latency optimization that looks like a throughput optimization only when the machine is empty.
+Only the endpoints of each line come from a published table; the segments between them are drawn, not measured. [One study](https://arxiv.org/abs/2310.18813) has the same setup giving 2.73× at batch size 1 and 1.31× at batch size 32, because "large batch sizes already fully utilize the underlying GPU computational resources". EAGLE-3's own published tables show the same shape, falling to 1.38× at batch 64 in SGLang and to 1.01× at batch 56 in vLLM. The technique is a latency optimization that looks like a throughput optimization only when the machine is empty.
 
 The qualifier that matters in 2026 is sequence length, which is the fourth line on that chart. [MagicDec](https://arxiv.org/abs/2408.11049) points out that at long context the KV cache scales with batch times sequence length, so loading it keeps the workload memory-bound even at large batch, and reports up to 2.51× for Llama-3.1-8B at batch sizes from 32 to 256. The memory-bound premise is not repealed by batching; it is repealed by short sequences and small caches.
 

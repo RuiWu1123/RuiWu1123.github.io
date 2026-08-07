@@ -5,13 +5,13 @@ date: "2026/8/6"
 
 Generating one token from a large model reads every weight in the model and does almost no arithmetic with them. At batch size 1 the GPU spends its time waiting on memory while its arithmetic units sit mostly idle. That imbalance is the whole opening for speculative decoding: if memory traffic is what costs you and compute is nearly free, then checking several tokens at once costs barely more than checking one.
 
-So here is the bet. Let something cheap guess the next few tokens. Run the big model once over all of those guesses at the same time, and for each position ask whether it would have produced that token itself. Every guess it agrees with is a token you got without paying for a separate forward pass.
+So here is the idea. Have a small, cheap drafter guess the next γ tokens, then hand the whole span to the big model for a single forward pass. That pass gives you the target's distribution at every position, and you use it to accept or reject each candidate in turn. Every token accepted is one you did not have to run a separate forward pass for.
 
-The part that makes this more than a heuristic is that you can accept those guesses in a way that leaves the output distribution *exactly* unchanged. That result comes from two papers written concurrently and independently, [Leviathan et al.](https://arxiv.org/abs/2211.17192) at ICML 2023 and [Chen et al.](https://arxiv.org/abs/2302.01318) at DeepMind, both reporting roughly 2–3× with identical outputs. Everything since has been an attempt to make the guessing better.
+What makes this more than a heuristic is that those guesses can be accepted in a way that leaves the output distribution *exactly* unchanged. That result comes from two papers written concurrently and independently, [Leviathan et al.](https://arxiv.org/abs/2211.17192) at ICML 2023 and [Chen et al.](https://arxiv.org/abs/2302.01318) at DeepMind, both reporting roughly 2–3× speedups with output identical to what the target would have produced on its own. Everything since has been an attempt to make the guessing better.
 
 ## 1. The rule, and what it buys
 
-Write `p` for the target's distribution at some position and `q` for the draft's. The draft proposes; the target decides:
+Write `p` for the target's distribution at some position and `q` for the drafter's. The drafter proposes a candidate; the target decides whether to keep it:
 
 ```python
 x = sample(q)                            # the draft proposes a token
@@ -27,7 +27,7 @@ That residual is the step people skip, and it is the step that makes the whole t
 
 ![The accept and reject rule](blogs/images/specdec-accept-rule.svg?v=1)
 
-The green mass is kept directly and sums to α, the acceptance rate. The blue mass is what the residual makes up. Read that way, α has a clean closed form: `α = Σ min(p, q) = 1 − TV(p, q)`, one minus the total variation distance between draft and target, which is Corollary 3.6 in the original paper. A draft that agrees half the time is a draft half a TV unit away, and no architectural detail enters into it.
+The green mass is kept directly and sums to α, the acceptance rate. The blue mass is what the residual makes up. Read that way, α has a clean closed form: `α = Σ min(p, q) = 1 − TV(p, q)`, one minus the total variation distance between draft and target, which is Corollary 3.6 in the original paper. Put differently, a drafter whose tokens are accepted half the time is a drafter sitting 0.5 TV away from the target, and no architectural detail enters into it.
 
 Exactness proofs are easy to nod along to and easy to get subtly wrong in code, so it is worth watching happen. I took a target `p` over eight tokens, deliberately picked a bad draft `q` sitting 0.34 in total variation away from it, and ran two million single-token speculative steps.
 

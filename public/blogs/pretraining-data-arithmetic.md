@@ -9,17 +9,13 @@ It is worth asking how much longer that works. The web is large but it is not in
 
 [Villalobos et al.](https://arxiv.org/abs/2211.04325) tried to put a number on it. The indexed web means the portion of public pages a search engine can reach, excluding anything behind a login, private databases, and most dynamically generated pages. Their estimate of the raw stock of text on it is around 510 trillion tokens, with Common Crawl covering about 130T of that. But raw stock is not what you can train on. After assuming that quality filtering keeps somewhere between 10% and 40% of deduplicated web text, and allowing a factor of roughly 5 for how much value repeating data can add, they arrive at an *effective* stock of about 4×10¹⁴ tokens. Meanwhile training-set sizes have been growing at roughly 0.38 orders of magnitude per year, starting from about 10¹³ tokens in 2024.
 
-Two exponentials and a ceiling is an arithmetic problem, and it has a boring answer.
-
 ![The token budget](blogs/images/pdata-budget.svg?v=1)
 
-Extrapolating that growth rate against that ceiling puts the crossing in 2028, comfortably inside the paper's own stated window of 2026 to 2032. This is not a prediction that anything dramatic happens in 2028. It is the observation that the era in which "get more data" was a complete strategy has a visible end, and we are close enough to it that the interesting question has already changed.
+Extrapolating that growth rate against that ceiling puts the crossing in 2028, comfortably inside the paper's own stated window of 2026 to 2032. At that point "get more data" stops being a strategy that works on its own.
 
 Look again at how the 4×10¹⁴ was constructed. It is raw stock, times a filtering retention rate, times a repetition multiplier. Every term in that product except the first is something a data team controls. Better filtering moves the retention rate. Better use of repetition moves the multiplier. And a smarter allocation of a fixed corpus across domains and training stages changes how much a given token is worth in the first place, which does not show up in the product at all but shows up in the model.
 
 So the field has quietly stopped being about acquisition and become about extraction: how much usable signal can you get out of a token you already have. Every technique below is an answer to some version of that question. Filtering, deduplication and quality classifiers decide *which* tokens are worth spending compute on. Mixing decides in what *proportion*. Repetition decides how many *times*. Curriculum decides *when*. Synthetic data tries to move the ceiling itself. And contamination is the bill that arrives when you get any of it wrong without noticing.
-
-This post walks through all six. Where a number is measured rather than cited, I say so and the measurement is reproducible; where it comes from a paper, the paper is linked and the conditions are stated, because a surprising number of widely repeated figures in this area turn out to be misquotations of their sources.
 
 ## 1. What the corpus generations actually changed
 
@@ -39,17 +35,17 @@ The Pile went the other way entirely, assembling 825 GiB from 22 curated subsets
 
 Then came the transparency generation, which is where the field started publishing its ablations instead of just its artifacts. RedPajama reproduced the Llama 1 recipe at 1.21T tokens. SlimPajama ran global MinHashLSH over RedPajama at Jaccard threshold 0.8 on 13-grams and removed 49.6% of the bytes, leaving 627B, which is a startling number to sit with: half of a corpus assembled by a competent team from already-filtered sources was duplicate. [Dolma](https://arxiv.org/abs/2402.00159) published 3T tokens curated down from roughly 200 TB of raw text to 11 TB, and released the toolkit and the ablations alongside. [FineWeb](https://arxiv.org/abs/2406.17557) processed 96 Common Crawl dumps spanning summer 2013 to April 2024 into 15T tokens, later extended past 18.5T, with every ablation model published. [DCLM](https://arxiv.org/abs/2406.11794) standardised 240T tokens of Common Crawl into a benchmark with 53 downstream evaluations and controlled model scales from 412M to 7B, turning data curation into something you could compete at.
 
-Read the chart as two families. The pools, at 240T and 18.5T, are what is available. The corpora people actually train on are one to two orders of magnitude smaller. Everything in the next three sections lives in that gap.
+The pools, at 240T and 18.5T, are what is available; the corpora people actually train on are one to two orders of magnitude smaller. Everything in the next three sections lives in that gap.
 
 ## 2. Deduplication, and why MinHash has an S-curve
 
-Duplication in web text is not a rounding error, and the intuition most people carry about it is far too optimistic.
+Duplication in web text is not a rounding error.
 
 [Lee et al.](https://arxiv.org/abs/2107.06499) ran near-duplicate detection over several standard corpora. In C4, 3.04% of training examples have a near-duplicate elsewhere in training; in RealNews the figure is 13.63%. The extreme cases are stranger than the averages. They report removing from C4 "a single 61 word English sentence that is repeated over 60,000 times." That is one sentence, sixty thousand copies, in a corpus that had already been through line-level deduplication.
 
-Two consequences follow, and they are independent of each other, which is why deduplication is worth doing even if you only care about one of them. First, evaluation: train-test overlap "affects over 4% of the validation set" of standard datasets, so duplicates quietly inflate the numbers you use to make decisions. Second, memorization: deduplication "allows us to train models that emit memorized text ten times less frequently." A model that has seen a passage sixty thousand times has effectively been instructed to memorise it, and it obliges.
+Two consequences follow, and they are independent of each other. First, evaluation: train-test overlap "affects over 4% of the validation set" of standard datasets, so duplicates quietly inflate the numbers you use to make decisions. Second, memorization: deduplication "allows us to train models that emit memorized text ten times less frequently." A model that has seen a passage sixty thousand times has effectively been instructed to memorise it, and it obliges.
 
-The easy cases are easy. Exact duplicate removal is a hash table. Exact *substring* removal is a suffix array built over the concatenated corpus, which finds every repeated span above a length threshold regardless of where document boundaries fall, and catches the very common situation where two documents share a long block of boilerplate but differ elsewhere. Neither of these touches the case that actually dominates: two documents that differ by a header, a timestamp, a navigation menu, or one rewritten sentence.
+Exact duplicate removal is a hash table. Exact *substring* removal is a suffix array built over the concatenated corpus, which finds every repeated span above a length threshold regardless of where document boundaries fall, and catches the very common situation where two documents share a long block of boilerplate but differ elsewhere. Neither of these touches the case that actually dominates: two documents that differ by a header, a timestamp, a navigation menu, or one rewritten sentence.
 
 For that you need approximate matching at corpus scale, which means you cannot compare documents pairwise, because there are 10¹⁰ of them and pairwise is 10²⁰ comparisons. The standard answer is MinHash with locality-sensitive hashing, whose central parameter is one almost nobody tunes deliberately.
 
@@ -59,7 +55,7 @@ $$
 \Pr\big[\min \pi(A) = \min \pi(B)\big] \;=\; \frac{|A \cap B|}{|A \cup B|} \;=\; J(A, B)
 $$
 
-The argument takes one line. The element of A ∪ B with the smallest π value is equally likely to be any element of the union, since π is a uniformly random permutation. The two minima coincide exactly when that element happens to lie in the intersection. So the probability is |A ∩ B| / |A ∪ B|, which is the definition of Jaccard.
+The element of A ∪ B with the smallest π value is equally likely to be any element of the union, since π is a uniformly random permutation. The two minima coincide exactly when that element happens to lie in the intersection. So the probability is |A ∩ B| / |A ∪ B|, which is the definition of Jaccard.
 
 That gives you an estimator: a signature of m independent permutations produces m Bernoulli(J) samples, so the fraction of agreeing positions estimates Jaccard to within about 1/√m. You have replaced set comparison with integer comparison, and the signatures are tiny compared to the documents.
 
@@ -73,17 +69,17 @@ This is a sigmoid in `s`, and its inflection sits near `(1/b)^{1/r}`. That expre
 
 ![The LSH S-curve, measured and predicted](blogs/images/pdata-lsh.svg?v=1)
 
-The curve is the formula and the dots are measured. I built document pairs with controlled overlap, computed real MinHash signatures over 5-gram shingles using 180 permutations implemented as affine maps modulo a Mersenne prime, indexed them in 20 bands of 9 rows, and recorded how often each pair actually surfaced as a candidate. Theory and measurement agree to within sampling noise, which is the boring outcome and the correct one.
+The curve is the formula and the dots are measured. I built document pairs with controlled overlap, computed real MinHash signatures over 5-gram shingles using 180 permutations implemented as affine maps modulo a Mersenne prime, indexed them in 20 bands of 9 rows, and recorded how often each pair actually surfaced as a candidate. Theory and measurement agree to within sampling noise.
 
 The right panel factors the same budget of 180 hashes five different ways. Nothing about the corpus, the shingle size, or the amount of computation changes across those five rows. But 45 bands of 4 rows will pull in pairs down at Jaccard 0.39, treating documents that share barely a third of their content as duplicates, while 5 bands of 36 rows will not look at anything below 0.96 and will miss almost every real near-duplicate. Between those extremes lies every reasonable configuration, and the difference between them is an integer factorisation. If you have ever wondered why two teams running "MinHash deduplication at threshold 0.8" get very different removal rates, this is usually where it lives.
 
-Two further choices matter about as much. Granularity: document-level, paragraph-level and line-level deduplication remove very different things, and SlimPajama's ablations showed that global deduplication across sources and local deduplication within each source are not interchangeable, because the cross-source duplicates are exactly the documents that appear in multiple curated collections and therefore look important. And semantics: [SemDeDup](https://arxiv.org/abs/2303.09540) embeds documents with a pretrained model, clusters the embeddings, and removes near-neighbours within clusters, catching pairs that share no shingles at all because one is a paraphrase or a translation of the other. On a LAION subset it removes "50% of the data with minimal performance loss, effectively halving training time." Its own result on C4 is considerably more sober, beating prior deduplication methods with efficiency gains around 15%, and the authors attribute the smaller margin to C4 already being partially curated. Both numbers are worth remembering together: semantic deduplication has enormous headroom on raw multimodal data and much less on text that someone has already cleaned.
+Two further choices matter about as much. Granularity: document-level, paragraph-level and line-level deduplication remove very different things, and SlimPajama's ablations showed that global deduplication across sources and local deduplication within each source are not interchangeable, because the cross-source duplicates are exactly the documents that appear in multiple curated collections and therefore look important. And semantics: [SemDeDup](https://arxiv.org/abs/2303.09540) embeds documents with a pretrained model, clusters the embeddings, and removes near-neighbours within clusters, catching pairs that share no shingles at all because one is a paraphrase or a translation of the other. On a LAION subset it removes "50% of the data with minimal performance loss, effectively halving training time." Its own result on C4 is considerably more sober, beating prior deduplication methods with efficiency gains around 15%, and the authors attribute the smaller margin to C4 already being partially curated. Semantic deduplication has enormous headroom on raw multimodal data and much less on text that someone has already cleaned.
 
 ## 3. Quality filtering, from rules to classifiers
 
 Deduplication removes text that is redundant. Quality filtering removes text that was never worth having, which is a much harder thing to define and correspondingly easier to get wrong.
 
-The Gopher pipeline established the rule-based standard, and every modern pipeline reimplements some version of it: filter on document statistics like word count, mean word length, symbol-to-word ratio, and the fraction of lines that are bullets or end in an ellipsis; strip repeated text within a document; deduplicate across documents; and remove documents overlapping the test sets. The specific thresholds differ between reimplementations, and chasing them is mostly a waste of time. What matters more is what happens when the filters compose, which Dolma measured directly.
+The Gopher pipeline established the rule-based standard, and every modern pipeline reimplements some version of it: filter on document statistics like word count, mean word length, symbol-to-word ratio, and the fraction of lines that are bullets or end in an ellipsis; strip repeated text within a document; deduplicate across documents; and remove documents overlapping the test sets. The specific thresholds differ between reimplementations, and chasing them is mostly a waste of time. What happens when the filters compose, Dolma measured directly.
 
 ![What survives a composed pipeline](blogs/images/pdata-funnel.svg?v=1)
 
@@ -93,13 +89,13 @@ That number changes what kind of object a pipeline is. Nobody designs a system i
 
 C4's NoPunc rule *on its own* outperformed both the full C4 rule set and the full Gopher rule set, on perplexity and on downstream tasks; the best configuration overall was Gopher-All plus C4-NoPunc. More rules is not more quality. The single crudest rule in the collection, throw away lines that do not end in punctuation, carried much of the benefit, presumably because it is an extremely effective detector of navigation menus, tag clouds and product listings, which is what most of the web actually is.
 
-The 2024 consensus moved from rules to learned classifiers, and the two reference implementations made revealingly different choices about what to learn from.
+The 2024 consensus moved from rules to learned classifiers, and the two reference implementations chose very different things to learn from.
 
 DCLM trains a fastText classifier with instruction-formatted text as the positive class, specifically OpenHermes 2.5 and r/ExplainLikeImFive (ELI5), against random web pages as negatives. The implicit theory is that text resembling a good explanation is text worth training on. FineWeb-Edu takes the more expensive route: have Llama-3-70B-Instruct score 460,000 pages for educational value, distil those judgements into a small classifier that reaches F1 82% at a threshold of 3, then apply that classifier to all 15T tokens at a cost of 6,000 H100 hours. The implicit theory is that a strong model already knows what good text is and you only need to make its opinion cheap enough to apply at scale.
 
 Both work, and both work well. FineWeb-Edu reports that a 1.71B model trained on 350B tokens moves MMLU from 33% to 37% and ARC from 46% to 57%. DCLM's headline is stronger and states the general principle outright, "model-based filtering is key": DCLM-Baseline gives a 7B model 64% 5-shot MMLU on 2.6T tokens, which is 6.6 points over the previous best open-data model while using 40% less compute, and reaches that with a sixth of the compute of Llama 3 8B.
 
-It is worth being precise about what has been achieved here, because "model-based filtering works" is often read as "we now know how to measure data quality," and that is not what happened. Neither team defined quality. Both picked a proxy corpus they believed correlated with it, and the resulting filter inherits every property of that choice. "Text that looks like an ELI5 answer" and "text a 70B model calls educational" are different targets. Neither is obviously the right target for a model that will subsequently be post-trained into a coding agent, and nobody has shown that the ranking between filters is stable across downstream uses.
+"Model-based filtering works" is often read as "we now know how to measure data quality," and that is not what happened. Neither team defined quality. Both picked a proxy corpus they believed correlated with it, and the resulting filter inherits every property of that choice. "Text that looks like an ELI5 answer" and "text a 70B model calls educational" are different targets. Neither is obviously the right target for a model that will subsequently be post-trained into a coding agent, and nobody has shown that the ranking between filters is stable across downstream uses.
 
 The [pretrainer's guide](https://arxiv.org/abs/2305.13169), which pretrained 28 models at 1.5B to study these trade-offs systematically, makes one instance of the problem explicit: filtering toxicity out of pretraining reduces the model's ability to *detect* toxicity later. Quality and capability point in opposite directions along that axis. There is no particular reason to believe it is the only axis where they do, and very little work has looked.
 
@@ -107,7 +103,7 @@ The [pretrainer's guide](https://arxiv.org/abs/2305.13169), which pretrained 28 
 
 Once your corpus has domains, you have proportions, and proportions are the one part of data work that looks like a well-posed optimization problem: a low-dimensional continuous parameter, a differentiable-ish objective, and an obvious evaluation. Predictably, this is where the most technically interesting work has gone.
 
-The problem is harder than it looks for a reason worth stating upfront. You cannot evaluate a mixture without training a model on it, a frontier training run costs millions of dollars, and the number of mixtures is uncountable. Every method below is really a method for making the evaluation cheap enough to search over.
+The difficulty is that you cannot evaluate a mixture without training a model on it, a frontier training run costs millions of dollars, and the number of mixtures is uncountable. Every method below is really a method for making the evaluation cheap enough to search over.
 
 DoReMi attacks it as a minimax problem. Train a small proxy model with [group distributionally robust optimization](https://arxiv.org/abs/2305.10429) over domains: the model minimises worst-case excess loss relative to a fixed reference model, and the domain weights are what the inner maximisation produces. Then take those weights and use them to train a model 30× larger. From a 280M proxy to an 8B target, this "improves average few-shot downstream accuracy by 6.5% points over a baseline model trained using The Pile's default domain weights and reaches the baseline accuracy with 2.6x fewer training steps," which in absolute terms is 75k steps against 200k. The proxy costs about 8% of the target run's FLOPs.
 
@@ -119,7 +115,7 @@ The method cut arXiv to a thirtieth of its original weight, and arXiv perplexity
 
 [RegMix](https://arxiv.org/abs/2407.01492) declines to model the mechanism at all, and gets further for it. Train 512 models of 1M parameters on 1B tokens each, with mixtures sampled from a Dirichlet distribution deliberately tilted toward extremes. A Dirichlet samples directly over non-negative proportions summing to one, the set of which is the simplex; lowering its concentration parameter pushes the samples toward the corners, where one domain dominates, rather than clustering near the uniform mixture. That is what makes the regression's training set cover the space. Fit a regressor from mixture to validation loss. Optimize the regressor. The whole thing costs about 2% of the FLOPs of a single 1B run.
 
-Two details are more informative than the headline. First, LightGBM beats linear regression badly, Spearman 97.1 against 88.0 when predicting the ranking of 1B models, which tells you the loss surface over the simplex is meaningfully non-linear and that anyone fitting a linear model to mixture effects is leaving accuracy on the table. Second, the predicted-best mixture ranked first among 64 candidate 1B models trained on 25B tokens each, so the small-scale ranking transferred. The paper states this as "data mixture effects transcend scaling laws," meaning the *ordering* of mixtures found at tiny scale survives to large scale even though the absolute losses do not. That is the property that makes proxy-model search viable at all, and it is empirical rather than derived.
+Two details are more useful than the headline. First, LightGBM beats linear regression badly, Spearman 97.1 against 88.0 when predicting the ranking of 1B models, which tells you the loss surface over the simplex is meaningfully non-linear and that anyone fitting a linear model to mixture effects is leaving accuracy on the table. Second, the predicted-best mixture ranked first among 64 candidate 1B models trained on 25B tokens each, so the small-scale ranking transferred. The paper states this as "data mixture effects transcend scaling laws," meaning the *ordering* of mixtures found at tiny scale survives to large scale even though the absolute losses do not. That is the property that makes proxy-model search viable at all, and it is empirical rather than derived.
 
 RegMix also independently reproduced DoReMi's most surprising finding from a completely different direction: web corpora, not the sources everyone calls high-quality, correlate most strongly with downstream performance. Two methods with nothing in common methodologically both concluded that you should use much more Common Crawl than a human would choose.
 
@@ -139,11 +135,11 @@ Since the form is explicit, we can just evaluate it. Below is a three-domain ins
 
 Two features of this picture generalise. The optimum is interior and it is not the uniform mixture, which is the entire reason automated mixing exists rather than being a solved problem with an obvious answer. And the surface is shallow near the optimum and steep near the edges: the gap between uniform and optimal here is 0.0129 nats, a nat being the unit of a cross-entropy loss measured in natural logarithms, about 1.44 bits, which under the C4 scaling law is worth about 21% more tokens at a 100B-token budget, while walking to a corner of the simplex costs many times that.
 
-The practical reading is a two-part one. Mixing is worth doing, because 21% of a token budget is enormous when tokens are the constraint. And mixing is not worth agonising over past the first significant figure, because the surface near the optimum is flat enough that the difference between a good mixture and the best mixture is smaller than the noise in most evaluations.
+Mixing is worth doing, because 21% of a token budget is enormous when tokens are the constraint. And mixing is not worth agonising over past the first significant figure, because the surface near the optimum is flat enough that the difference between a good mixture and the best mixture is smaller than the noise in most evaluations.
 
 [CLIMB](https://arxiv.org/abs/2504.13161) addresses the assumption underneath everything above, which is that you have domain labels at all. The Pile has them because it was assembled from labelled sources. Common Crawl does not. CLIMB embeds documents, clusters them in embedding space, and runs a proxy-plus-predictor search over cluster weights instead of source weights, iteratively bootstrapping toward better mixtures. Continued training of a 1B model on 400B tokens with the discovered mixture beats Llama-3.2-1B by 2.0 points, and they release ClimbLab, a 1.2T-token corpus organised into 20 clusters, as a research substrate.
 
-The conceptual step is worth naming: clusters are not domains. Nothing in the mixing formalism requires the partition to be human-meaningful, and once you stop requiring it, the number of possible partitions becomes another thing to optimize over.
+Clusters are not domains. Nothing in the mixing formalism requires the partition to be human-meaningful, and once you stop requiring it, the number of possible partitions becomes another thing to optimize over.
 
 ## 5. Repetition: how many times can you use the same token
 
@@ -159,7 +155,7 @@ $$
 
 with a symmetric expression for effective parameters `N'` under excess parameters `R_N`. Fitting against their runs gives `R_D* = 15.39` and `R_N* = 5.31`, quantities the authors describe as the half-life of repeated data and of excess parameters respectively.
 
-The functional form is the interesting part. As `R_D → 0` the exponential expands to `R_D`, so `D' ≈ U_D(1 + R_D) = D`: the first repetitions are worth their face value, and repetition is free. As `R_D → ∞` the exponential vanishes and `D' → U_D(1 + R_D*)`: there is a hard ceiling, and no amount of repetition can push a corpus past `1 + R_D* = 16.4` times its own size. Everything about repetition follows from where you sit on that curve.
+As `R_D → 0` the exponential expands to `R_D`, so `D' ≈ U_D(1 + R_D) = D`: the first repetitions are worth their face value, and repetition is free. As `R_D → ∞` the exponential vanishes and `D' → U_D(1 + R_D*)`: there is a hard ceiling, and no amount of repetition can push a corpus past `1 + R_D* = 16.4` times its own size. Everything about repetition follows from where you sit on that curve.
 
 ![What repeated epochs are worth](blogs/images/pdata-repetition.svg?v=1)
 
@@ -205,7 +201,7 @@ These are published numbers rather than measurements of mine. GSM8K goes from 24
 
 Stage 2 is between 1% and 8% of the token budget depending on which sample you use, and it moves the average by ten points, which is more than most architectural changes have ever delivered. Whatever is happening in midtraining, it is not "more training." It is closer to the model finally being shown what the tokens were for.
 
-They also name the per-dataset evaluation protocol, *microannealing*, which is the Llama 3 instrument run once per candidate dataset. Two labs independently converging on both the technique and its use as a measurement device is about as strong a signal as this field produces.
+They also name the per-dataset evaluation protocol, *microannealing*, which is the Llama 3 instrument run once per candidate dataset. Two labs converged independently on the technique, and independently on using it as a measurement device.
 
 Which makes section 4's single global mixture the wrong object to be optimizing. What these results describe is a *schedule*, a mixture that varies over training, and none of the mixing methods in section 4 optimize over schedules. They optimize over a point. Data Mixing Laws gets closest, since it can predict the mixture that avoids catastrophic forgetting during continued training, but the general problem of optimizing a trajectory through the simplex is essentially open.
 
@@ -217,7 +213,7 @@ On the productive side, [phi-1](https://arxiv.org/abs/2306.11644) trained a 1.3B
 
 [WRAP](https://arxiv.org/abs/2401.16380) makes the claim that matters most for a data-constrained world. Instead of generating new content, it uses an instruction-tuned model to rephrase existing web documents into different styles, and reports roughly 3× faster pretraining on C4, better than 50% perplexity improvement across Pile subsets at matched compute, and over 2% zero-shot gains across 13 tasks. Rephrasing spends compute to buy something that behaves like unique data, which is precisely the currency section 5 identified as scarce. If repetition caps out at 16.4× your corpus, and rephrasing produces something that is not quite fresh but is not quite a repeat either, then the interesting question is where rephrased data sits on that curve, and nobody has measured it.
 
-On the failure side is the Nature result on [model collapse](https://www.nature.com/articles/s41586-024-07566-y): "indiscriminate use of model-generated content in training causes irreversible defects in the resulting models, in which tails of the original content distribution disappear." The result is usually invoked as though it were a mysterious emergent pathology. It is not. The mechanism is elementary, and reproducing it takes ten lines.
+On the failure side is the Nature result on [model collapse](https://www.nature.com/articles/s41586-024-07566-y): "indiscriminate use of model-generated content in training causes irreversible defects in the resulting models, in which tails of the original content distribution disappear." The result is usually invoked as though it were a mysterious emergent pathology. It is not, and the mechanism is elementary.
 
 Fit a Gaussian by maximum likelihood to `n` samples. Draw `n` fresh samples from the fitted distribution. Refit. Repeat. Each individual step is unbiased in the mean and every step is done correctly. But the maximum-likelihood variance estimator is biased low by exactly `(n−1)/n`, since it divides by `n` rather than `n−1`, so across generations
 
@@ -235,13 +231,11 @@ Which is why the two sides of the synthetic-data argument are not actually in co
 
 ## 9. Contamination, and why n-gram decontamination does not work
 
-Every claim in this post is a benchmark number. The last question is whether benchmark numbers mean anything, and the honest answer is weaker than anyone would like.
+Every claim in this post is a benchmark number. The last question is whether benchmark numbers mean anything.
 
 The standard industrial defence is n-gram decontamination: remove from training any document sharing an n-gram with a test item, with `n` usually between 8 and 13. It is cheap, it is easy to verify, and it catches literal copies of benchmarks that ended up in a crawl. Every major lab does some version of it.
 
 [Yang et al.](https://arxiv.org/abs/2311.04850) showed that it is trivially evaded, and the striking part is that evasion requires no adversary. Rephrase a test item, or translate it into another language and back, and the n-gram overlap goes to zero while the item remains, for every purpose that matters, the same item. Their headline result is that "a 13B model can easily overfit a test benchmark and achieve drastically high performance, on par with GPT-4." On rephrased MMLU, Llama-2 7B goes from 45.3 to 88.5 and the 13B from 54.8 to 89.9, with standard n-gram decontamination detecting nothing.
-
-The mechanism is easier to see than to argue about, so here it is measured on one pair.
 
 ![n-gram overlap between a benchmark item and its paraphrase](blogs/images/pdata-contamination.svg?v=1)
 
@@ -255,10 +249,8 @@ An AUC of 0.72 is a real signal and a poor test. It is enough to support a stati
 
 ## 10. What the arithmetic implies
 
-Putting the numbers in one place makes a shape visible that no individual result shows.
-
 The effective stock of public human text is around 4×10¹⁴ tokens, and dataset sizes reach it around 2028. Composed filtering keeps a few percent of extracted text, with the classifier stage doing most of the removing and defined by an essentially arbitrary choice of positive examples. Deduplication's aggressiveness is set by an integer factorisation that most teams inherit rather than choose. Mixing is worth roughly 20% of a token budget and not much more, but the surface is flat enough near the optimum that a decent mixture captures most of it. Repetition is worth at most 16.4× your unique corpus, and becomes the right allocation at 10²³·⁵ FLOPs for a 1T-token pool and 10²⁷ for the entire web. A tenth of the budget spent last is worth ten points of benchmark average. Synthesis works exactly as long as real data keeps entering the loop, and fails in a way that is provable rather than empirical when it does not. And none of these measurements can currently be validated against a benchmark anyone knows to be clean.
 
 Four of the five biggest levers in that list, the classifier's positive examples, the deduplication granularity, the mixture and the midtraining schedule, are choices someone made once, early, often by copying a previous project, and rarely revisited. The one that gets nearly all the attention, corpus size, is the one running into a ceiling.
 
-There is a version of the next few years in which data work stops looking like acquisition and starts looking like measurement. Not what else can we get, but what is the stuff we already have actually worth, which parts of it are doing the work, and how would we know if we were wrong. The uncomfortable thing about the list above is how many of its entries are numbers nobody has measured for their own corpus, and how few of them would be expensive to measure.
+There is a version of the next few years in which data work stops looking like acquisition and starts looking like measurement. Not what else can we get, but what is the stuff we already have actually worth, which parts of it are doing the work, and how would we know if we were wrong. How many entries on that list are numbers nobody has measured for their own corpus, and how few of them would be expensive to measure.

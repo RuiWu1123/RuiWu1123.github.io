@@ -174,7 +174,8 @@ export const BLOG_POSTS: BlogPost[] = [
 ];
 
 export const SOCIAL_LINKS = {
-  scholar: "https://scholar.google.com/citations?user=M1FovLwAAAAJ&hl=en"
+  scholar: "https://scholar.google.com/citations?user=M1FovLwAAAAJ&hl=en",
+  linkedin: "https://www.linkedin.com/in/rui-wu-6aba08324/"
 };
 
 export const VISITED_PLACES: VisitedPlace[] = [

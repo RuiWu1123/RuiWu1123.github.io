@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Mail, Github, Twitter, MessageCircle, GraduationCap, FileText } from 'lucide-react';
+import { Mail, Github, Twitter, Linkedin, MessageCircle, GraduationCap, FileText } from 'lucide-react';
 import { NEWS_ITEMS, SOCIAL_LINKS, PUBLICATIONS } from '../constants';
 import HeroVisual from '../components/HeroVisual';
 
@@ -87,6 +87,16 @@ const Home: React.FC = () => {
               title="Google Scholar"
             >
               <GraduationCap size={24} strokeWidth={1.5} />
+            </a>
+            <a 
+              href={SOCIAL_LINKS.linkedin}
+              target="_blank" 
+              rel="noreferrer" 
+              className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
+              aria-label="LinkedIn"
+              title="LinkedIn"
+            >
+              <Linkedin size={24} strokeWidth={1.5} />
             </a>
             <a 
               href="https://x.com/RuiWu560670" 

@@ -115,14 +115,14 @@ export const PUBLICATIONS: Publication[] = [
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
-    date: "2026/5/7",
-    content: "Named a 2026 Paul Robeson Scholar, an honor for students who complete and defend a senior thesis through original research!",
-    link: "https://www.cs.rutgers.edu/news-events/highlights/highlight-item/celebrating-excellence-2026-paul-robeson-scholars"
-  },
-  {
     date: "2026/7/9",
     content: "My paper \"From Rebound to Remedy: Understanding and Mitigating Reward Hacking via Representation Engineering\" is accepted by COLM 2026!",
     link: "https://openreview.net/forum?id=LZEBw6n0pB"
+  },
+  {
+    date: "2026/5/7",
+    content: "Named a 2026 Paul Robeson Scholar, an honor for students who complete and defend a senior thesis through original research!",
+    link: "https://www.cs.rutgers.edu/news-events/highlights/highlight-item/celebrating-excellence-2026-paul-robeson-scholars"
   },
   {
     date: "2026/5/7",

@@ -121,12 +121,12 @@ export const NEWS_ITEMS: NewsItem[] = [
   },
   {
     date: "2026/5/7",
-    content: "Named a 2026 Paul Robeson Scholar, an honor for students who complete and defend a senior thesis through original research!",
+    content: "Named a 2026 \"Paul Robeson Scholar\" for completing and defending a senior thesis through original research!",
     link: "https://www.cs.rutgers.edu/news-events/highlights/highlight-item/celebrating-excellence-2026-paul-robeson-scholars"
   },
   {
     date: "2026/5/7",
-    content: "Received the Novieli Award in the 2026 Rutgers Computer Science Departmental Awards!",
+    content: "Received the \"Novieli Award\" at the 2026 Rutgers Computer Science Departmental Awards!",
     link: "https://www.cs.rutgers.edu/news-events/highlights/highlight-item/celebrating-excellence-2026-rutgers-computer-science-department-awards"
   },
   {

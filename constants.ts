@@ -126,7 +126,7 @@ export const NEWS_ITEMS: NewsItem[] = [
   },
   {
     date: "2026/5/7",
-    content: "Received the \"Novieli Award\" at the 2026 Rutgers Computer Science Departmental Awards!",
+    content: "Received the \"Novielli Prize\" at the 2026 Rutgers Computer Science Departmental Awards!",
     link: "https://www.cs.rutgers.edu/news-events/highlights/highlight-item/celebrating-excellence-2026-rutgers-computer-science-department-awards"
   },
   {

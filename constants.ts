@@ -142,6 +142,11 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: "pretraining-data-arithmetic",
+    title: "Running Out of Internet: The Arithmetic of Pretraining Data",
+    date: "2026/8/7"
+  },
+  {
     id: "speculative-decoding-in-2026",
     title: "Guess and Check: How Speculative Decoding Buys Speed for Free",
     date: "2026/8/6"

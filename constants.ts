@@ -81,10 +81,10 @@ export const RESEARCH_INTERESTS: ResearchInterest[] = [
 export const PUBLICATIONS: Publication[] = [
   {
     id: 'reward-hacking-rebounds',
-    title: "When Reward Hacking Rebounds: Understanding and Mitigating It with Representation-Level Signals",
+    title: "From Rebound to Remedy: Understanding and Mitigating Reward Hacking via Representation Engineering",
     authors: ["Rui Wu", "Ruixiang Tang"],
     venue: "COLM 2026",
-    link: "https://arxiv.org/abs/2604.01476",
+    link: "https://openreview.net/forum?id=LZEBw6n0pB",
     year: 2026,
     tags: ["Evaluation and Monitoring"],
     preprint: false
@@ -116,8 +116,8 @@ export const PUBLICATIONS: Publication[] = [
 export const NEWS_ITEMS: NewsItem[] = [
   {
     date: "2026/7/9",
-    content: "My paper \"When Reward Hacking Rebounds: Understanding and Mitigating It with Representation-Level Signals \" is accepted by COLM 2026!",
-    link: "https://arxiv.org/abs/2604.01476"
+    content: "My paper \"From Rebound to Remedy: Understanding and Mitigating Reward Hacking via Representation Engineering\" is accepted by COLM 2026!",
+    link: "https://openreview.net/forum?id=LZEBw6n0pB"
   },
   {
     date: "2026/4/6",

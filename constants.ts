@@ -152,9 +152,9 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
-    id: "pretraining-data-arithmetic",
-    title: "Running Out of Internet: The Arithmetic of Pretraining Data",
-    date: "2026/8/7"
+    id: "pretraining-data-science",
+    title: "Reading the Setup: What Pretraining Data Experiments Actually Show",
+    date: "2026/8/12"
   },
   {
     id: "speculative-decoding-in-2026",

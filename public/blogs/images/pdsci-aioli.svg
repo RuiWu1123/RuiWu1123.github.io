@@ -1,0 +1,63 @@
+<svg viewBox="0 0 730 316" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif"><rect width="730" height="316" fill="#F4F3EF"/>
+<line x1="214.0" y1="44.0" x2="214.0" y2="270.0" stroke="#191919" stroke-opacity="0.12" stroke-width="1"/>
+<text x="214.0" y="286.0" font-size="11" text-anchor="middle" fill="#5C5C5C">-1</text>
+<line x1="261.8" y1="44.0" x2="261.8" y2="270.0" stroke="#191919" stroke-opacity="0.35" stroke-width="1.4"/>
+<text x="261.8" y="286.0" font-size="11" text-anchor="middle" fill="#5C5C5C">0</text>
+<line x1="357.2" y1="44.0" x2="357.2" y2="270.0" stroke="#191919" stroke-opacity="0.12" stroke-width="1"/>
+<text x="357.2" y="286.0" font-size="11" text-anchor="middle" fill="#5C5C5C">+2</text>
+<line x1="452.8" y1="44.0" x2="452.8" y2="270.0" stroke="#191919" stroke-opacity="0.12" stroke-width="1"/>
+<text x="452.8" y="286.0" font-size="11" text-anchor="middle" fill="#5C5C5C">+4</text>
+<line x1="548.2" y1="44.0" x2="548.2" y2="270.0" stroke="#191919" stroke-opacity="0.12" stroke-width="1"/>
+<text x="548.2" y="286.0" font-size="11" text-anchor="middle" fill="#5C5C5C">+6</text>
+<text x="405.0" y="310.0" font-size="12" text-anchor="middle" fill="#191919">test perplexity minus the stratified baseline</text>
+<text x="208.0" y="36.0" font-size="11" text-anchor="end" fill="#8DA399">better</text>
+<text x="224.0" y="36.0" font-size="11" text-anchor="start" fill="#D97757">worse</text>
+<text x="118.0" y="66.0" font-size="11.5" text-anchor="end" fill="#191919">grid search</text>
+<text x="200.0" y="66.0" font-size="11" text-anchor="end" fill="#5C5C5C">4/6</text>
+<circle cx="242.7" cy="62.0" r="4.0" fill="#8DA399"/>
+<circle cx="242.3" cy="62.0" r="4.0" fill="#8DA399"/>
+<circle cx="231.0" cy="62.0" r="4.0" fill="#8DA399"/>
+<circle cx="250.0" cy="62.0" r="4.0" fill="#8DA399"/>
+<circle cx="276.0" cy="62.0" r="4.0" fill="#D97757"/>
+<circle cx="285.1" cy="62.0" r="4.0" fill="#D97757"/>
+<text x="118.0" y="104.0" font-size="11.5" text-anchor="end" fill="#191919">Data Mixing Laws</text>
+<text x="200.0" y="104.0" font-size="11" text-anchor="end" fill="#5C5C5C">4/6</text>
+<circle cx="250.2" cy="100.0" r="4.0" fill="#8DA399"/>
+<circle cx="256.5" cy="100.0" r="4.0" fill="#8DA399"/>
+<circle cx="231.0" cy="100.0" r="4.0" fill="#8DA399"/>
+<circle cx="233.1" cy="100.0" r="4.0" fill="#8DA399"/>
+<circle cx="273.3" cy="100.0" r="4.0" fill="#D97757"/>
+<circle cx="340.1" cy="100.0" r="4.0" fill="#D97757"/>
+<text x="118.0" y="142.0" font-size="11.5" text-anchor="end" fill="#191919">Skill-It</text>
+<text x="200.0" y="142.0" font-size="11" text-anchor="end" fill="#5C5C5C">5/6</text>
+<circle cx="246.2" cy="138.0" r="4.0" fill="#8DA399"/>
+<circle cx="288.1" cy="138.0" r="4.0" fill="#D97757"/>
+<circle cx="227.0" cy="138.0" r="4.0" fill="#8DA399"/>
+<circle cx="234.6" cy="138.0" r="4.0" fill="#8DA399"/>
+<circle cx="252.4" cy="138.0" r="4.0" fill="#8DA399"/>
+<circle cx="253.0" cy="138.0" r="4.0" fill="#8DA399"/>
+<text x="118.0" y="180.0" font-size="11.5" text-anchor="end" fill="#191919">DoReMi</text>
+<text x="200.0" y="180.0" font-size="11" text-anchor="end" fill="#5C5C5C">3/6</text>
+<circle cx="247.1" cy="176.0" r="4.0" fill="#8DA399"/>
+<circle cx="515.0" cy="176.0" r="4.0" fill="#D97757"/>
+<circle cx="251.4" cy="176.0" r="4.0" fill="#8DA399"/>
+<circle cx="243.0" cy="176.0" r="4.0" fill="#8DA399"/>
+<circle cx="591.1" cy="176.0" r="4.0" fill="#D97757"/>
+<circle cx="295.3" cy="176.0" r="4.0" fill="#D97757"/>
+<text x="118.0" y="218.0" font-size="11.5" text-anchor="end" fill="#191919">DoGE</text>
+<text x="200.0" y="218.0" font-size="11" text-anchor="end" fill="#5C5C5C">1/6</text>
+<circle cx="281.8" cy="214.0" r="4.0" fill="#D97757"/>
+<circle cx="270.5" cy="214.0" r="4.0" fill="#D97757"/>
+<circle cx="229.4" cy="214.0" r="4.0" fill="#8DA399"/>
+<circle cx="349.8" cy="214.0" r="4.0" fill="#D97757"/>
+<circle cx="290.6" cy="214.0" r="4.0" fill="#D97757"/>
+<circle cx="307.1" cy="214.0" r="4.0" fill="#D97757"/>
+<text x="118.0" y="256.0" font-size="11.5" text-anchor="end" fill="#191919">Aioli</text>
+<text x="200.0" y="256.0" font-size="11" text-anchor="end" fill="#5C5C5C">6/6</text>
+<circle cx="252.0" cy="252.0" r="4.0" fill="#8DA399"/>
+<circle cx="245.5" cy="252.0" r="4.0" fill="#8DA399"/>
+<circle cx="240.8" cy="252.0" r="4.0" fill="#8DA399"/>
+<circle cx="251.0" cy="252.0" r="4.0" fill="#8DA399"/>
+<circle cx="252.4" cy="252.0" r="4.0" fill="#8DA399"/>
+<circle cx="250.3" cy="252.0" r="4.0" fill="#8DA399"/>
+</svg>

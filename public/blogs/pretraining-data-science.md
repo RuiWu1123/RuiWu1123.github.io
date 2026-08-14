@@ -5,9 +5,13 @@ date: "2026/8/12"
 
 Repeat 0.1% of a pretraining corpus a hundred times and an 800M-parameter model ends up performing like a 400M one. Repeat the entire corpus four times and the loss goes up by 0.5%. Train 1.5 epochs on a deduplicated Pile and the deduplication turns out to have bought nothing measurable.
 
-All three are real results, from Hernandez et al., Muennighoff et al. and Pythia. They disagree because they repeated different things under different budgets, and each number is only as general as the run that produced it.
+All three are real results, from Hernandez et al., Muennighoff et al. and Pythia.
 
-So every finding below comes with its setup: how many models, at what sizes, for how many tokens, against which baseline, measured with which metric.
+The same thing happens on the other main question, which is how to weight the domains a corpus is made of. DoReMi reports 6.5 points of downstream accuracy over the Pile's default domain weights. Aioli puts six mixing methods, DoReMi included, against sampling every group equally, and none of them wins consistently. Olmix, the framework behind Olmo 3, reports 12% better bits-per-byte from mixture search, measured against doing no mixture search at all.
+
+Both sets of numbers are real too. The disagreements come from the experiments: what was repeated, what was held fixed, what the baseline was, how many seeds. Each number is only as general as the run that produced it, so every finding below comes with its setup: how many models, at what sizes, for how many tokens, against which baseline, measured with which metric.
+
+Repetition and mixing also rest on the same assumption, that a small run predicts a large one. That assumption has itself been measured.
 
 ## 1. The coordinate system, and the correction that data constraints force on it
 

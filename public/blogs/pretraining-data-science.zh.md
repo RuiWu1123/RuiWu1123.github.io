@@ -45,7 +45,7 @@ $$
 
 [DataDecide](https://arxiv.org/abs/2504.11393) 正面处理外推问题，用的是这个方向上最大的一次受控扫描：25 份预训练语料 × 14 个尺寸（4M 到 1B）× 3 个 seed，一共 **1050 个模型**、三万多个 checkpoint，约 82 万 H100 小时。每个模型都按 100 token/参数训练，是 Chinchilla 的五倍，刻意过训。这 25 份语料是 Dolma 1.7 加四种 domain ablation、C4、FineWeb-Pro、FineWeb-Edu、Falcon、五种 Falcon+CC 质量过滤变体、六种 DCLM-Baseline 变体，以及三种 DCLM 与 Dolma 的 λ 混合。用 *decision accuracy* 衡量：小尺度上语料两两之间的排序，有多大比例和 1B 上的一致。
 
-他们最主要的结论是：在单个小尺寸（大约 150M）上给语料排序，能对上 1B 目标处约 80% 的两两比较。第二个结论是：**八个 baseline 里没有任何一种 scaling law 方法能越过单尺度 baseline 的 compute–decision accuracy 前沿。**跨几个尺寸拟合一条曲线，大多数团队都在这么做，但相对于「训一个小模型然后直接读排序」并没有换来任何东西。
+他们最主要的结论是：在单个小尺寸（大约 150M）上给语料排序，能对上 1B 目标处约 80% 的两两比较。第二个结论是：**八个 baseline 里没有任何一种 scaling law 方法能越过单尺度 baseline 的 compute–decision accuracy 前沿**。跨几个尺寸拟合一条曲线，大多数团队都在这么做，但相对于「训一个小模型然后直接读排序」并没有换来任何东西。
 
 同一次扫描还有两个结论决定了你该怎么读别人的数字。小尺度上连续的 likelihood 指标胜过 accuracy，而且具体是正确答案的*原始* likelihood；归一化版本会惩罚错误选项上的概率质量，表现更差。换成原始 likelihood 以后，code 类 benchmark 的可预测性「从没法用变成 80%」，因为小模型在这个指标下能爬到噪声之上，同时指标仍然跟得住大尺度的 accuracy。噪声本身并不小：在 1B、5× Chinchilla 这一档，某些配方在多数任务上 seed 之间的标准差「可以高达 2 个百分点的 accuracy」。任何低于两个点的数据处理收益，都在单次训练的噪声之内。
 

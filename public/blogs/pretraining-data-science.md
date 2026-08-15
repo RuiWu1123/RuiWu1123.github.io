@@ -3,15 +3,9 @@ title: "Reading the Setup: What Pretraining Data Experiments Actually Show"
 date: "2026/8/12"
 ---
 
-Repeat 0.1% of a pretraining corpus a hundred times and an 800M-parameter model ends up performing like a 400M one. Repeat the entire corpus four times and the loss goes up by 0.5%. Train 1.5 epochs on a deduplicated Pile and the deduplication turns out to have bought nothing measurable.
+Three papers disagree about whether repeating pretraining data hurts. Hernandez et al. repeat 0.1% of a corpus a hundred times and an 800M model ends up performing like a 400M one; Muennighoff et al. repeat the whole corpus four times and pay 0.5% of loss; Pythia trains 1.5 epochs on a deduplicated Pile and cannot measure any benefit from the deduplication at all. The mixing literature has the same shape: DoReMi reports 6.5 points over models trained on the Pile's default domain weights, and Aioli finds that no mixing method, DoReMi included, consistently beats sampling every group equally.
 
-All three are real results, from Hernandez et al., Muennighoff et al. and Pythia.
-
-The same thing happens on the other main question, which is how to weight the domains a corpus is made of. DoReMi reports 6.5 points of downstream accuracy over the Pile's default domain weights. Aioli puts six mixing methods, DoReMi included, against sampling every group equally, and none of them wins consistently. Olmix, the framework behind Olmo 3, reports 12% better bits-per-byte from mixture search, measured against doing no mixture search at all.
-
-Both sets of numbers are real too. The disagreements come from the experiments: what was repeated, what was held fixed, what the baseline was, how many seeds. Each number is only as general as the run that produced it, so every finding below comes with its setup: how many models, at what sizes, for how many tokens, against which baseline, measured with which metric.
-
-Repetition and mixing also rest on the same assumption, that a small run predicts a large one. That assumption has itself been measured.
+All of those numbers are right. What differs is the experiments, so every finding below comes with the run that produced it.
 
 ## 1. The coordinate system, and the correction that data constraints force on it
 
@@ -59,6 +53,8 @@ Two more consequences follow. Because $R_N^{*} < R_D^{*}$, excess parameters los
 And the ceiling can be raised by changing what counts as the corpus. Mixing in Python from The Stack, they find no degradation up to 50% code even when evaluating only on natural language, which makes code worth a 2× increase in effective tokens. The composite recommendation is explicit: double the data with code, then repeat four times, for "8x more training tokens that are expected to be just as good as having had 8x more unique data." Two of their nineteen evaluation tasks improve the moment any code is added at all: bAbI goes from 0.0 to 12.5 at 10% code, and WebNLG from 4.8 to 9.5, which the authors attribute to code teaching long-range state tracking.
 
 ## 2. What makes a data experiment believable
+
+Everything below rests on one inference: that a small run predicts a large one.
 
 [Pythia](https://arxiv.org/abs/2304.01373) exists to make the inference auditable. Sixteen models, eight sizes from 70M to 12B, two data variants (Pile and Pile-deduped), every model trained on exactly 299,892,736,000 tokens, and, unusually, **all models trained on the same data in the same order**, with an identical batch of 1024 sequences × 2048 tokens at every size. There are 154 checkpoints per model: one at initialisation, log-spaced points at steps 1 through 512, then every 1000 steps. A reproducible dataloader ships with it, so any checkpoint can be tied to the exact tokens seen up to that point. Compare that to the 1 to 30 checkpoints released with GPT-2, GPT-3, OPT, T5 or BLOOM.
 

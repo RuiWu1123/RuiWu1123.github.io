@@ -58,6 +58,18 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #A1A1A1;
       }
+      /* A display equation wider than the column must scroll inside the
+         column, not spill over the table of contents. */
+      .katex-display {
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-top: 0.35em;
+        padding-bottom: 0.35em;
+      }
+      .katex-display > .katex {
+        text-align: left;
+        white-space: normal;
+      }
     </style>
     <script type="importmap">
 {

@@ -15,7 +15,9 @@ $$
 L(N, D) \;=\; E + \frac{A}{N^{\alpha}} + \frac{B}{D^{\beta}}
 $$
 
-where `N` is the parameter count, `D` the number of training tokens, and `L` the cross-entropy in nats per token on held-out text. The three terms are a decomposition of the risk. `E` is what an ideal generative process on the data distribution would still pay, the entropy of natural text. $A/N^{\alpha}$ is the extra loss a perfectly trained transformer with only `N` parameters pays for having a finite hypothesis space. $B/D^{\beta}$ is the extra loss from stopping after `D` tokens instead of training to convergence.
+where `N` is the parameter count, `D` the number of training tokens, and `L` the cross-entropy in nats per token on held-out text. `E` is what an ideal generative process on this data distribution would still pay, the entropy of natural text. $A/N^{\alpha}$ is how far a perfectly trained transformer with `N` parameters falls short of that ideal. $B/D^{\beta}$ is what stopping after `D` tokens costs relative to training to convergence.
+
+The appendix reads the same three terms as a risk decomposition: Bayes risk, an approximation term that depends on the size of the hypothesis space, and the stochastic approximation error of one pass over a finite sample. That reading sits on top of a curve fit, and a curve fit cannot separate approximation error from optimisation error or from whatever is specific to transformers, so it is the authors' interpretation and not something the five constants establish.
 
 The five constants come from a fit. Chinchilla takes the final loss of every run in its first two approaches and minimises a Huber loss with $\delta = 10^{-3}$ between predicted and observed *log* loss, using L-BFGS started from a grid over `α, β ∈ {0, 0.5, …, 2}` and the log-scale versions of `A`, `B` and `E`. Working in log space turns the sum of three terms into a log-sum-exp, which keeps the fit from being dominated by the largest-loss runs. The result is `E = 1.69`, `A = 406.4`, `B = 410.7`, `α = 0.34`, `β = 0.28`, over 400 models between 70M and 16B parameters trained on 5B to 500B tokens.
 
@@ -40,7 +42,7 @@ $$
 D' \;=\; U_D + U_D\, R_D^{*}\left(1 - e^{-R_D / R_D^{*}}\right)
 $$
 
-So $R_D^{*}$ is the per-repeat decay rate $\delta$ in different clothes, written as $(1-\delta)/\delta$ because that form reads as a half-life. The fitted $\delta \approx 6\times 10^{-2}$ is what gives $R_D^{*} = 15.39$. Effective parameters get the same treatment, with $U_N = \min\{N_{\mathrm{opt}}, N\}$ and $R_N = N/U_N - 1$.
+So $R_D^{*}$ is the per-repeat decay rate $\delta$ in different clothes. Written as $(1-\delta)/\delta$ it reads as a half-life, and that is what the authors go on to call it. The fitted $\delta \approx 6\times 10^{-2}$ is what gives $R_D^{*} = 15.39$. Effective parameters get the same treatment, with $U_N = \min\{N_{\mathrm{opt}}, N\}$ and $R_N = N/U_N - 1$.
 
 The fit is layered on Chinchilla's. They first refit the Chinchilla form on C4, using 54 of Chinchilla's own data points with `α` tied to `β`, which gives $L = 1.87 + 521/N^{0.353} + 1488/D^{0.353}$. Those constants are then frozen, and only $R_D^{*}$ and $R_N^{*}$ are fitted, on 182 of their own runs from 7M to 9B parameters and 1 to 500 epochs, with the same Huber-in-log-space objective and L-BFGS from a grid over `{0, 4, …, 20}²`. That gives $R_D^{*} = 15.39$ and $R_N^{*} = 5.31$, which the authors call the half-lives of repeated data and of excess parameters.
 

@@ -8,7 +8,7 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-anthropic-bg/90 backdrop-blur-sm border-b border-anthropic-text/5">
-      <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+      <div className="max-w-[760px] mx-auto px-6 h-20 flex items-center justify-between">
         {/* Logo / Name */}
         <NavLink to="/" className="text-2xl font-serif font-medium tracking-tight hover:opacity-70 transition-opacity">
           Rui Wu

@@ -108,7 +108,7 @@ export const TableOfContentsSidebar: React.FC<{ items: TocItem[]; lang: Lang }> 
   if (items.length < 3) return null;
 
   return (
-    <nav aria-label={t.label} className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2">
+    <nav aria-label={t.label} className="pr-2">
       <div className="text-xs uppercase tracking-wide text-anthropic-gray/60 mb-3 font-sans">{t.label}</div>
       <TocList items={items} activeId={activeId} onNavigate={scrollToHeading} />
     </nav>

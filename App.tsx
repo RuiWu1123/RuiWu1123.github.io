@@ -19,7 +19,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col font-sans text-anthropic-text bg-anthropic-bg selection:bg-anthropic-accent/20">
       <Navbar />
-      <main className="flex-grow w-full max-w-6xl mx-auto px-6">
+      <main className="flex-grow w-full max-w-[760px] mx-auto px-6">
         {children}
       </main>
       <Footer />

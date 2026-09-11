@@ -9,7 +9,7 @@ const Travel: React.FC = () => {
 
   return (
     <div className="animate-fade-in pt-12 pb-20">
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full">
         <div className="mb-12 text-center">
           <h1 className="text-4xl md:text-5xl font-serif font-light mb-4 text-anthropic-text">Travel Gallery</h1>
           <p className="text-lg text-anthropic-gray font-sans font-light max-w-2xl mx-auto">

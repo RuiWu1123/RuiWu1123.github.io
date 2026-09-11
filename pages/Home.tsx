@@ -2,7 +2,6 @@
 import React from 'react';
 import { Mail, Github, Twitter, Linkedin, MessageCircle, GraduationCap, FileText } from 'lucide-react';
 import { NEWS_ITEMS, SOCIAL_LINKS, PUBLICATIONS } from '../constants';
-import HeroVisual from '../components/HeroVisual';
 
 const Home: React.FC = () => {
   const copyWeChat = () => {
@@ -58,18 +57,18 @@ const Home: React.FC = () => {
   return (
     <div className="animate-fade-in pb-20">
       {/* Hero Section */}
-      <section className="pt-10 pb-16 md:pt-20 md:pb-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[500px]">
+      <section className="pt-8 pb-14 md:pt-12 md:pb-16 flex flex-col-reverse sm:flex-row sm:items-center gap-8 sm:gap-10">
         {/* Left: Content */}
-        <div className="max-w-2xl">
-          <h1 className="text-5xl md:text-7xl font-serif font-light mb-8 text-anthropic-text leading-tight">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-4xl md:text-5xl font-serif font-light mb-5 text-anthropic-text leading-tight">
             Hi, I'm Rui.
           </h1>
-          <p className="text-xl md:text-2xl font-sans font-light text-anthropic-gray leading-relaxed mb-8">
+          <p className="text-lg md:text-xl font-sans font-light text-anthropic-gray leading-relaxed mb-6">
             A junior undergraduate at Rutgers University (CS), working on Large Language Models.
           </p>
 
           {/* Social Icons */}
-          <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <button 
               onClick={copyEmail}
               className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 -ml-2 rounded-full hover:bg-anthropic-stone/30"
@@ -129,9 +128,13 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Visual */}
-        <div className="relative h-[400px] w-full hidden lg:block overflow-hidden rounded-2xl">
-          <HeroVisual />
+        {/* Right: Portrait */}
+        <div className="sm:w-[250px] sm:flex-shrink-0">
+          <img
+            src="/portrait.jpg"
+            alt="Rui Wu"
+            className="w-full rounded-xl object-cover aspect-[4/3] border border-anthropic-text/5 shadow-sm"
+          />
         </div>
       </section>
 

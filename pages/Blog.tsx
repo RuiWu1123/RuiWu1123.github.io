@@ -137,7 +137,7 @@ const Blog: React.FC = () => {
 
   return (
     <div className="animate-fade-in pt-12 pb-20">
-      <div className={`mx-auto transition-[max-width] ${hasToc ? 'max-w-6xl' : 'max-w-4xl'}`}>
+      <div className="w-full">
 
         {/* Detail View */}
         {activePost ? (
@@ -172,7 +172,7 @@ const Blog: React.FC = () => {
               </div>
             </div>
 
-            <div className={hasToc ? 'lg:grid lg:grid-cols-[1fr_260px] lg:gap-12' : ''}>
+            <div>
             <article className="animate-fade-in min-w-0">
               <div className="flex flex-wrap items-center gap-3 mb-6">
                 <span className="text-anthropic-accent font-mono text-sm tracking-wide">{activePost.date}</span>
@@ -191,7 +191,7 @@ const Blog: React.FC = () => {
               </h1>
 
               {hasToc && (
-                <div className="lg:hidden">
+                <div className="xl:hidden">
                   <TableOfContentsMobile items={tocItems} lang={lang} />
                 </div>
               )}
@@ -443,7 +443,10 @@ const Blog: React.FC = () => {
             </article>
 
             {hasToc && (
-              <aside className="hidden lg:block">
+              <aside
+                className="hidden xl:block fixed top-32 w-[190px] max-h-[calc(100vh-10rem)] overflow-y-auto"
+                style={{ right: 'calc(50% + 380px + 44px)' }}
+              >
                 <TableOfContentsSidebar items={tocItems} lang={lang} />
               </aside>
             )}

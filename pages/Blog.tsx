@@ -191,7 +191,7 @@ const Blog: React.FC = () => {
               </h1>
 
               {hasToc && (
-                <div className="xl:hidden">
+                <div className="toc:hidden">
                   <TableOfContentsMobile items={tocItems} lang={lang} />
                 </div>
               )}
@@ -444,8 +444,8 @@ const Blog: React.FC = () => {
 
             {hasToc && (
               <aside
-                className="hidden xl:block fixed top-32 w-[190px] max-h-[calc(100vh-10rem)] overflow-y-auto"
-                style={{ right: 'calc(50% + 380px + 44px)' }}
+                className="hidden toc:block fixed top-32 w-[190px] max-h-[calc(100vh-10rem)] overflow-y-auto"
+                style={{ right: 'calc(50% + 380px + 40px)' }}
               >
                 <TableOfContentsSidebar items={tocItems} lang={lang} />
               </aside>

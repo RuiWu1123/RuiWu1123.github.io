@@ -12,6 +12,11 @@
       tailwind.config = {
         theme: {
           extend: {
+            screens: {
+              // The blog's table of contents only floats in the left margin
+              // once there is genuinely room for it beside the 760px column.
+              'toc': '1360px'
+            },
             colors: {
               'anthropic-bg': '#F4F3EF', // Warm paper-like background
               'anthropic-text': '#191919', // Soft black

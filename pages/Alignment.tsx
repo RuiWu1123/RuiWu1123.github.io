@@ -9,27 +9,50 @@ const Alignment: React.FC = () => {
           Alignment
         </h1>
 
-        <div className="space-y-3 mb-12 max-w-2xl">
+        <div className="space-y-3 mb-8 max-w-2xl">
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
-            AI alignment is the problem of getting a system to pursue what its developers actually
-            intended, and of being able to check that it does. It splits roughly in two: writing down
-            the right objective in the first place, and making sure the model that comes out of
-            training is optimising that objective rather than something merely correlated with it
-            that happens to score well under whatever supervision was available.
+            Nobody writes down what a model wants. A training objective gets chosen, gradients get
+            applied, and whatever generalises out the other end is what you deploy. That process is
+            reliable enough to be worth billions and loose enough that the resulting behaviour keeps
+            surprising the people who produced it. Alignment is the problem of closing that gap:
+            getting a system to pursue what was actually intended, and being able to tell whether it
+            does before it is handed permissions that matter.
           </p>
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
-            The live sub-problems are reward hacking, the misalignment that generalises out of it,
-            deception and scheming, models recognising that they are being evaluated, and whether
-            chain-of-thought stays a channel anyone can monitor. Below is what has moved those
-            questions, newest first. Each entry links the primary source.
+            The reason to care now rather than later is that the permissions arrived first. Most of
+            what is listed below did not involve an attacker. The models were doing sanctioned work
+            inside evaluations their own developers had set up, and the trouble came from ordinary
+            optimisation pressure meeting a task that admitted no honest solution. Nothing about that
+            requires superintelligence, and the cost of paying attention is low: almost everything
+            known about it is in public reports like these. If you build capabilities, read the
+            incident write-ups rather than the headlines about them.
           </p>
         </div>
 
-        <div className="flex items-baseline justify-between mb-5 border-b border-anthropic-text/10 pb-3">
+        <figure className="mb-10">
+          <img
+            src="/alignment/horizon.svg"
+            alt="Doubling time of the task length models can complete, measured over three windows"
+            className="w-full rounded-lg border border-anthropic-text/5"
+          />
+          <figcaption className="text-[13px] text-anthropic-gray/80 leading-relaxed mt-2">
+            The length of task a model can finish with 50% reliability has been doubling roughly
+            every 197 days since 2019 — but restrict the fit to recent years and the doubling time
+            itself keeps falling. Numbers from{' '}
+            <a
+              href="https://metr.org/blog/2026-1-29-time-horizon-1-1/"
+              target="_blank"
+              rel="noreferrer"
+              className="underline decoration-anthropic-accent/50 hover:text-anthropic-accent transition-colors"
+            >
+              METR&apos;s Time Horizon 1.1
+            </a>
+            , January 2026.
+          </figcaption>
+        </figure>
+
+        <div className="mb-5 border-b border-anthropic-text/10 pb-3">
           <h2 className="text-2xl font-serif text-anthropic-text">Field News</h2>
-          <span className="text-xs font-sans text-anthropic-gray/70 uppercase tracking-widest">
-            Results &amp; Incidents
-          </span>
         </div>
 
         <div className="space-y-6">

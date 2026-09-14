@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Blog from './pages/Blog';
 import Travel from './pages/Travel';
+import Alignment from './pages/Alignment';
 
 // Scroll to top on route change
 const ScrollToTop = () => {
@@ -75,6 +76,7 @@ const App: React.FC = () => {
         <Layout>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/alignment" element={<Alignment />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/travel" element={<Travel />} />
           </Routes>

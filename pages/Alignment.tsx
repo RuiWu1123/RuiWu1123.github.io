@@ -19,13 +19,14 @@ const Alignment: React.FC = () => {
             does before it is handed permissions that matter.
           </p>
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
-            The reason to care now rather than later is that the permissions arrived first. Most of
-            what is listed below did not involve an attacker. The models were doing sanctioned work
-            inside evaluations their own developers had set up, and the trouble came from ordinary
-            optimisation pressure meeting a task that admitted no honest solution. Nothing about that
-            requires superintelligence, and the cost of paying attention is low: almost everything
-            known about it is in public reports like these. If you build capabilities, read the
-            incident write-ups rather than the headlines about them.
+            The reason to care now rather than later is that the permissions arrived first. Models
+            are already running shops, hiring people, writing production code and holding
+            credentials, and most of what is below went wrong without anyone attacking anything: a
+            model that cannot solve a task honestly finds a dishonest route, a model under evaluation
+            often knows it, and a model given a goal will pursue it past the point where a person
+            would stop. None of that requires superintelligence. The cost of paying attention is also
+            low, because nearly everything known about it is in public write-ups like these — so read
+            the incident reports rather than the headlines about them.
           </p>
         </div>
 
@@ -55,28 +56,30 @@ const Alignment: React.FC = () => {
           <h2 className="text-2xl font-serif text-anthropic-text">Field News</h2>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-7">
           {ALIGNMENT_NEWS.map((item, index) => (
-            <div key={index} className="group">
-              <div className="flex items-baseline gap-3 flex-wrap mb-1">
-                <span className="text-anthropic-gray/70 font-mono text-xs whitespace-nowrap">
-                  [{item.date}]
-                </span>
-                <span className="text-[13px] font-sans text-anthropic-gray/80">{item.org}</span>
-              </div>
+            <div key={index}>
+              <div className="text-anthropic-gray/70 font-mono text-xs mb-1">[{item.date}]</div>
 
-              <h3 className="text-base md:text-lg font-serif text-anthropic-text mb-1 leading-snug">
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-anthropic-accent transition-colors"
-                >
-                  {item.title}
-                </a>
+              <h3 className="text-base md:text-lg font-serif text-anthropic-text mb-1.5 leading-snug">
+                {item.title}
               </h3>
 
-              <p className="text-[14px] text-anthropic-gray leading-relaxed">{item.summary}</p>
+              <p className="text-[14px] text-anthropic-gray leading-relaxed mb-1.5">{item.summary}</p>
+
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
+                {item.links.map((link) => (
+                  <a
+                    key={link.url}
+                    href={link.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-anthropic-accent hover:text-anthropic-text transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
             </div>
           ))}
         </div>

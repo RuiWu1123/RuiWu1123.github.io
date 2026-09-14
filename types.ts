@@ -37,12 +37,16 @@ export interface NewsItem {
   link?: string;
 }
 
+export interface AlignmentLink {
+  label: string;       // who published it
+  url: string;
+}
+
 export interface AlignmentNewsItem {
   date: string;        // YYYY/M/D
   title: string;
-  org: string;         // who published it
-  summary: string;     // one sentence, factual
-  link: string;
+  summary: string;
+  links: AlignmentLink[];
 }
 
 export interface VisitedPlace {

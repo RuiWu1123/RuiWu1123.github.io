@@ -57,75 +57,24 @@ const Home: React.FC = () => {
   return (
     <div className="animate-fade-in pb-20">
       {/* Hero Section */}
-      <section className="pt-8 pb-14 md:pt-12 md:pb-16 flex flex-col-reverse sm:flex-row sm:items-center gap-8 sm:gap-10">
+      <section className="pt-8 pb-14 md:pt-12 md:pb-16 flex flex-col sm:flex-row sm:items-start gap-8 sm:gap-10">
         {/* Left: Content */}
         <div className="flex-1 min-w-0">
           <h1 className="text-4xl md:text-5xl font-serif font-light mb-5 text-anthropic-text leading-tight">
             Hi, I'm Rui.
           </h1>
-          <p className="text-lg md:text-xl font-sans font-light text-anthropic-gray leading-relaxed mb-6">
-            A junior undergraduate at Rutgers University (CS), working on Large Language Models.
+          <p className="text-lg font-sans font-light text-anthropic-gray leading-relaxed mb-4">
+            A junior undergraduate at Rutgers University (CS), working on AI alignment.
+          </p>
+          <p className="text-lg font-sans font-light text-anthropic-gray leading-relaxed mb-4">
+            Currently I am interested in the problem that sits above both reward hacking and goal
+            misgeneralization: a model that learns to pursue the wrong goal while the supervision we
+            have says it is doing fine.
+          </p>
+          <p className="text-lg font-sans font-light text-anthropic-gray leading-relaxed">
+            And I intend to stay on the human side of that, now and however capable these systems get.
           </p>
 
-          {/* Social Icons */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <button 
-              onClick={copyEmail}
-              className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 -ml-2 rounded-full hover:bg-anthropic-stone/30"
-              aria-label="Email"
-              title="rw761@scarletmail.rutgers.edu (Click to Copy)"
-            >
-              <Mail size={24} strokeWidth={1.5} />
-            </button>
-            <a 
-              href={SOCIAL_LINKS.scholar}
-              target="_blank" 
-              rel="noreferrer" 
-              className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
-              aria-label="Google Scholar"
-              title="Google Scholar"
-            >
-              <GraduationCap size={24} strokeWidth={1.5} />
-            </a>
-            <a 
-              href={SOCIAL_LINKS.linkedin}
-              target="_blank" 
-              rel="noreferrer" 
-              className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
-              aria-label="LinkedIn"
-              title="LinkedIn"
-            >
-              <Linkedin size={24} strokeWidth={1.5} />
-            </a>
-            <a 
-              href="https://x.com/RuiWu560670" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
-              aria-label="Twitter"
-              title="Twitter"
-            >
-              <Twitter size={24} strokeWidth={1.5} />
-            </a>
-            <a 
-              href="https://github.com/RuiWu1123" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
-              aria-label="GitHub"
-              title="GitHub"
-            >
-              <Github size={24} strokeWidth={1.5} />
-            </a>
-             <button 
-              onClick={copyWeChat}
-              className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
-              aria-label="WeChat"
-              title="WeChat: R1lastshot (Click to Copy)"
-            >
-              <MessageCircle size={24} strokeWidth={1.5} />
-            </button>
-          </div>
         </div>
 
         {/* Right: Portrait */}
@@ -135,6 +84,66 @@ const Home: React.FC = () => {
             alt="Rui Wu"
             className="w-full rounded-xl object-cover aspect-[4/3] border border-anthropic-text/5 shadow-sm"
           />
+
+          {/* Contact */}
+          <div className="flex items-center justify-center sm:justify-start gap-1 mt-3 sm:-ml-2">
+              <button 
+                onClick={copyEmail}
+                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
+                aria-label="Email"
+                title="rw761@scarletmail.rutgers.edu (Click to Copy)"
+              >
+                <Mail size={20} strokeWidth={1.5} />
+              </button>
+              <a 
+                href={SOCIAL_LINKS.scholar}
+                target="_blank" 
+                rel="noreferrer" 
+                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
+                aria-label="Google Scholar"
+                title="Google Scholar"
+              >
+                <GraduationCap size={20} strokeWidth={1.5} />
+              </a>
+              <a 
+                href={SOCIAL_LINKS.linkedin}
+                target="_blank" 
+                rel="noreferrer" 
+                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
+                aria-label="LinkedIn"
+                title="LinkedIn"
+              >
+                <Linkedin size={20} strokeWidth={1.5} />
+              </a>
+              <a 
+                href="https://x.com/RuiWu560670" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
+                aria-label="Twitter"
+                title="Twitter"
+              >
+                <Twitter size={20} strokeWidth={1.5} />
+              </a>
+              <a 
+                href="https://github.com/RuiWu1123" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
+                aria-label="GitHub"
+                title="GitHub"
+              >
+                <Github size={20} strokeWidth={1.5} />
+              </a>
+               <button 
+                onClick={copyWeChat}
+                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
+                aria-label="WeChat"
+                title="WeChat: R1lastshot (Click to Copy)"
+              >
+                <MessageCircle size={20} strokeWidth={1.5} />
+              </button>
+          </div>
         </div>
       </section>
 

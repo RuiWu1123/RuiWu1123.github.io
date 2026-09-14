@@ -64,9 +64,7 @@ const Home: React.FC = () => {
             Hi, I'm Rui.
           </h1>
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
-            A junior undergraduate at Rutgers University (CS), working on AI alignment. Currently I am
-            interested in how models learn to pursue the wrong goal when human supervision is
-            imperfect. I was born and raised in Yuexi, a small county in Anhui, China. Outside of
+            A junior undergraduate at Rutgers University (CS), working on AI alignment. I was born and raised in Yuexi, a small county in Anhui, China. Outside of
             research, I am into fashion, and I like wandering through independent boutiques and
             vintage shops that actually have a point of view.
           </p>

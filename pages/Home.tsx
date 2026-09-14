@@ -66,7 +66,7 @@ const Home: React.FC = () => {
           <p className="text-lg font-sans font-light text-anthropic-gray leading-relaxed">
             A junior undergraduate at Rutgers University (CS), working on AI alignment. Currently I am
             interested in the problem that a model learns to pursue the wrong goal under imperfect
-            human supervision. And I promise I will always be on the human side.
+            human supervision.
           </p>
 
         </div>

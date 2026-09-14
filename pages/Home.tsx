@@ -171,10 +171,10 @@ const Home: React.FC = () => {
           <span className="text-xs font-sans text-anthropic-gray/70 uppercase tracking-widest">Selected Papers</span>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {PUBLICATIONS.map((pub) => (
-            <div key={pub.id} className="group border-l-4 pl-5 md:pl-6 py-3 pr-3 rounded-r-lg transition-colors duration-300 border-anthropic-stone hover:border-anthropic-accent">
-              <h3 className="text-lg md:text-xl font-serif text-anthropic-text mb-1.5 leading-snug">
+            <div key={pub.id} className="group">
+              <h3 className="text-base md:text-lg font-serif text-anthropic-text mb-1 leading-snug">
                 {pub.link ? (
                   <a href={pub.link} target="_blank" rel="noreferrer" className="hover:text-anthropic-accent transition-colors">
                     {pub.title}
@@ -184,7 +184,7 @@ const Home: React.FC = () => {
                 )}
               </h3>
 
-              <p className="text-anthropic-gray text-[15px] mb-1.5">
+              <p className="text-anthropic-gray text-[14px] mb-1 leading-relaxed">
                 {pub.authors.map((author, idx) => (
                   <span key={idx} className={author.includes("Rui Wu") ? "font-bold text-anthropic-text" : ""}>
                     {author}{idx < pub.authors.length - 1 ? ", " : ""}
@@ -192,11 +192,11 @@ const Home: React.FC = () => {
                 ))}
               </p>
 
-              <div className="text-[13px] text-anthropic-gray/90 italic mb-2.5">
+              <div className="text-[13px] text-anthropic-gray/90 italic mb-1.5">
                 {pub.venue} ({pub.year})
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex gap-4 text-[13px]">
                 {pub.link && (
                   <a
                     href={pub.link}

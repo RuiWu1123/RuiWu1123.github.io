@@ -467,14 +467,14 @@ const Blog: React.FC = () => {
                     <div 
                       key={post.id} 
                       onClick={() => handlePostClick(post.id)}
-                      className="group py-8 cursor-pointer hover:bg-anthropic-stone/20 -mx-4 px-4 rounded-lg transition-colors duration-200"
+                      className="group py-3.5 cursor-pointer hover:bg-anthropic-stone/20 -mx-3 px-3 rounded-lg transition-colors duration-200"
                     >
-                      <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-8">
-                        <div className="w-32 flex-shrink-0">
-                          <span className="text-anthropic-gray/60 font-mono text-sm">{post.date}</span>
+                      <div className="flex flex-col md:flex-row md:items-baseline gap-1 md:gap-6">
+                        <div className="w-[6.5rem] flex-shrink-0">
+                          <span className="text-anthropic-gray/70 font-mono text-xs">{post.date}</span>
                         </div>
                         <div className="flex-grow">
-                          <h3 className="text-2xl font-serif text-anthropic-text group-hover:text-anthropic-accent transition-colors mb-2">
+                          <h3 className="text-lg font-serif text-anthropic-text group-hover:text-anthropic-accent transition-colors">
                             {post.title}
                           </h3>
                         </div>

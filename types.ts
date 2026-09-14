@@ -43,7 +43,6 @@ export interface AlignmentNewsItem {
   org: string;         // who published it
   summary: string;     // one sentence, factual
   link: string;
-  caveat?: string;     // only where it changes how the item should be read
 }
 
 export interface VisitedPlace {

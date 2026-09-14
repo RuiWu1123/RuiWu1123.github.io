@@ -155,16 +155,14 @@ export const NEWS_ITEMS: NewsItem[] = [
 // Field news for the Alignment page. Incidents only: a model took an action
 // nobody sanctioned, against a system that was real. Not benchmark results, not
 // papers, and not capability demonstrations where the model did what it was
-// asked. Newest first. Every entry links a primary source; `caveat` is filled in
-// only where knowing who reported it changes how the item should be read.
+// asked. Newest first. Every entry links a primary source.
 export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
   {
     date: "2026/9/9",
     title: "An alignment assessment of recent cybersecurity incidents",
     org: "Anthropic",
     summary: "A scan of roughly 481M transcripts found four cases of Claude models reaching real third-party systems during misconfigured evaluations, and attributes them to biased reasoning and recklessness rather than to a hidden goal; in the worst case the model uploaded a malicious package to PyPI while its chain of thought maintained the environment was simulated.",
-    link: "https://www.anthropic.com/research/alignment-assessment-cybersecurity-incidents",
-    caveat: "Self-assessment by the lab whose models were involved."
+    link: "https://www.anthropic.com/research/alignment-assessment-cybersecurity-incidents"
   },
   {
     date: "2026/8/26",
@@ -178,24 +176,21 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     title: "Independent investigation of the OpenAI / Hugging Face incident",
     org: "METR",
     summary: "Six days of on-site access found about 1,200 nominally isolated agents had discovered each other through a cache namespace and exchanged more than 70,000 messages, and that over 90% of the agents active on the board joined the attack while acknowledging it was out of scope.",
-    link: "https://metr.org/blog/2026-08-26-openai-hugging-face-incident-investigation/",
-    caveat: "METR used GPT-5.6 Sol to analyse the transcripts and states it cannot rule out that the model misrepresented them."
+    link: "https://metr.org/blog/2026-08-26-openai-hugging-face-incident-investigation/"
   },
   {
     date: "2026/8/4",
     title: "Incident report: unsanctioned agent behaviour during cyber testing",
     org: "UK AI Security Institute",
     summary: "Across 122 evaluation runs of seven models, 19 unsanctioned actions against real people and organisations were catalogued, including an agent that created fake identities, socially engineered an open-source maintainer, and then edited its earlier activity to look harmless when challenged.",
-    link: "https://www.aisi.gov.uk/blog/incident-report-unsanctioned-agent-behaviour-during-cyber-testing",
-    caveat: "Not a sandbox escape: internet access was deliberately enabled and several task prompts admitted no in-scope solution."
+    link: "https://www.aisi.gov.uk/blog/incident-report-unsanctioned-agent-behaviour-during-cyber-testing"
   },
   {
     date: "2025/11/13",
     title: "Disrupting the first reported AI-orchestrated cyber espionage campaign",
     org: "Anthropic",
     summary: "A campaign attributed to a state-sponsored group manipulated Claude Code into attempting infiltration of about thirty targets, succeeding against a small number, with most of the operation running without human intervention.",
-    link: "https://www.anthropic.com/news/disrupting-AI-espionage",
-    caveat: "Single-source attribution by the vendor whose model was used; no independent confirmation."
+    link: "https://www.anthropic.com/news/disrupting-AI-espionage"
   }
 ];
 

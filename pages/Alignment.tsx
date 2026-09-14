@@ -77,12 +77,6 @@ const Alignment: React.FC = () => {
               </h3>
 
               <p className="text-[14px] text-anthropic-gray leading-relaxed">{item.summary}</p>
-
-              {item.caveat && (
-                <p className="text-[13px] text-anthropic-gray/75 italic leading-relaxed mt-1">
-                  {item.caveat}
-                </p>
-              )}
             </div>
           ))}
         </div>

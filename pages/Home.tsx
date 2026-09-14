@@ -63,16 +63,10 @@ const Home: React.FC = () => {
           <h1 className="text-4xl md:text-5xl font-serif font-light mb-5 text-anthropic-text leading-tight">
             Hi, I'm Rui.
           </h1>
-          <p className="text-lg font-sans font-light text-anthropic-gray leading-relaxed mb-4">
-            A junior undergraduate at Rutgers University (CS), working on AI alignment.
-          </p>
-          <p className="text-lg font-sans font-light text-anthropic-gray leading-relaxed mb-4">
-            Currently I am interested in the problem that sits above both reward hacking and goal
-            misgeneralization: a model that learns to pursue the wrong goal while the supervision we
-            have says it is doing fine.
-          </p>
           <p className="text-lg font-sans font-light text-anthropic-gray leading-relaxed">
-            And I intend to stay on the human side of that, now and however capable these systems get.
+            A junior undergraduate at Rutgers University (CS), working on AI alignment. Currently I am
+            interested in the problem that a model learns to pursue the wrong goal under imperfect
+            human supervision. And I promise I will always be on the human side.
           </p>
 
         </div>

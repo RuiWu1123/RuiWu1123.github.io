@@ -55,15 +55,15 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="animate-fade-in pb-20">
+    <div className="animate-fade-in pb-16">
       {/* Hero Section */}
-      <section className="pt-8 pb-14 md:pt-12 md:pb-16 flex flex-col sm:flex-row sm:items-start gap-8 sm:gap-10">
+      <section className="pt-6 pb-10 md:pt-8 md:pb-12 flex flex-col sm:flex-row sm:items-start gap-6 sm:gap-8">
         {/* Left: Content */}
         <div className="flex-1 min-w-0">
-          <h1 className="text-4xl md:text-5xl font-serif font-light mb-5 text-anthropic-text leading-tight">
+          <h1 className="text-3xl md:text-4xl font-serif font-light mb-3 text-anthropic-text leading-tight">
             Hi, I'm Rui.
           </h1>
-          <p className="text-lg font-sans font-light text-anthropic-gray leading-relaxed">
+          <p className="text-base font-sans text-anthropic-gray leading-relaxed">
             A junior undergraduate at Rutgers University (CS), working on AI alignment. Currently I am
             interested in the problem that a model learns to pursue the wrong goal under imperfect
             human supervision.
@@ -72,7 +72,7 @@ const Home: React.FC = () => {
         </div>
 
         {/* Right: Portrait */}
-        <div className="sm:w-[250px] sm:flex-shrink-0">
+        <div className="sm:w-[200px] sm:flex-shrink-0">
           <img
             src="/portrait.jpg"
             alt="Rui Wu"
@@ -80,82 +80,82 @@ const Home: React.FC = () => {
           />
 
           {/* Contact */}
-          <div className="flex items-center justify-center sm:justify-start gap-1 mt-3 sm:-ml-2">
+          <div className="flex items-center justify-center sm:justify-start gap-0.5 mt-2 sm:-ml-1.5">
               <button 
                 onClick={copyEmail}
-                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
+                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-1.5 rounded-full hover:bg-anthropic-stone/30"
                 aria-label="Email"
                 title="rw761@scarletmail.rutgers.edu (Click to Copy)"
               >
-                <Mail size={20} strokeWidth={1.5} />
+                <Mail size={18} strokeWidth={1.6} />
               </button>
               <a 
                 href={SOCIAL_LINKS.scholar}
                 target="_blank" 
                 rel="noreferrer" 
-                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
+                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-1.5 rounded-full hover:bg-anthropic-stone/30"
                 aria-label="Google Scholar"
                 title="Google Scholar"
               >
-                <GraduationCap size={20} strokeWidth={1.5} />
+                <GraduationCap size={18} strokeWidth={1.6} />
               </a>
               <a 
                 href={SOCIAL_LINKS.linkedin}
                 target="_blank" 
                 rel="noreferrer" 
-                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
+                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-1.5 rounded-full hover:bg-anthropic-stone/30"
                 aria-label="LinkedIn"
                 title="LinkedIn"
               >
-                <Linkedin size={20} strokeWidth={1.5} />
+                <Linkedin size={18} strokeWidth={1.6} />
               </a>
               <a 
                 href="https://x.com/RuiWu560670" 
                 target="_blank" 
                 rel="noreferrer" 
-                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
+                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-1.5 rounded-full hover:bg-anthropic-stone/30"
                 aria-label="Twitter"
                 title="Twitter"
               >
-                <Twitter size={20} strokeWidth={1.5} />
+                <Twitter size={18} strokeWidth={1.6} />
               </a>
               <a 
                 href="https://github.com/RuiWu1123" 
                 target="_blank" 
                 rel="noreferrer" 
-                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
+                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-1.5 rounded-full hover:bg-anthropic-stone/30"
                 aria-label="GitHub"
                 title="GitHub"
               >
-                <Github size={20} strokeWidth={1.5} />
+                <Github size={18} strokeWidth={1.6} />
               </a>
                <button 
                 onClick={copyWeChat}
-                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-2 rounded-full hover:bg-anthropic-stone/30"
+                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-1.5 rounded-full hover:bg-anthropic-stone/30"
                 aria-label="WeChat"
                 title="WeChat: R1lastshot (Click to Copy)"
               >
-                <MessageCircle size={20} strokeWidth={1.5} />
+                <MessageCircle size={18} strokeWidth={1.6} />
               </button>
           </div>
         </div>
       </section>
 
        {/* News Section */}
-      <section className="mb-20">
-        <div className="flex items-baseline justify-between mb-8 border-b border-anthropic-text/10 pb-4">
-          <h2 className="text-3xl font-serif text-anthropic-text">News</h2>
-          <span className="text-sm font-sans text-anthropic-gray/60 uppercase tracking-widest">Latest Updates</span>
+      <section className="mb-12">
+        <div className="flex items-baseline justify-between mb-5 border-b border-anthropic-text/10 pb-3">
+          <h2 className="text-2xl font-serif text-anthropic-text">News</h2>
+          <span className="text-xs font-sans text-anthropic-gray/70 uppercase tracking-widest">Latest Updates</span>
         </div>
         
-        <div className="max-h-60 overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-anthropic-stone scrollbar-track-transparent">
-          <div className="space-y-6">
+        <div>
+          <div className="space-y-3">
             {NEWS_ITEMS.map((news, index) => (
-              <div key={index} className="flex gap-6 group">
-                <span className="text-anthropic-gray/60 font-mono text-sm whitespace-nowrap pt-1 w-24 flex-shrink-0">
+              <div key={index} className="flex gap-5 group">
+                <span className="text-anthropic-gray/70 font-mono text-xs whitespace-nowrap pt-1 w-[5.5rem] flex-shrink-0">
                   [{news.date}]
                 </span>
-                <p className="text-anthropic-gray font-light leading-relaxed group-hover:text-anthropic-text transition-colors">
+                <p className="text-anthropic-gray text-[15px] leading-relaxed group-hover:text-anthropic-text transition-colors">
                   {renderNewsContent(news.content, news.link)}
                 </p>
               </div>
@@ -166,15 +166,15 @@ const Home: React.FC = () => {
 
       {/* Publications */}
       <section>
-        <div className="flex items-baseline justify-between mb-8 border-b border-anthropic-text/10 pb-4">
-          <h2 className="text-3xl font-serif text-anthropic-text">Publications</h2>
-          <span className="text-sm font-sans text-anthropic-gray/60 uppercase tracking-widest">Selected Papers</span>
+        <div className="flex items-baseline justify-between mb-5 border-b border-anthropic-text/10 pb-3">
+          <h2 className="text-2xl font-serif text-anthropic-text">Publications</h2>
+          <span className="text-xs font-sans text-anthropic-gray/70 uppercase tracking-widest">Selected Papers</span>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-4">
           {PUBLICATIONS.map((pub) => (
-            <div key={pub.id} className="group border-l-4 pl-6 md:pl-8 py-4 pr-4 rounded-r-lg transition-colors duration-300 border-anthropic-stone hover:border-anthropic-accent">
-              <h3 className="text-xl md:text-2xl font-serif text-anthropic-text mb-3 leading-tight">
+            <div key={pub.id} className="group border-l-4 pl-5 md:pl-6 py-3 pr-3 rounded-r-lg transition-colors duration-300 border-anthropic-stone hover:border-anthropic-accent">
+              <h3 className="text-lg md:text-xl font-serif text-anthropic-text mb-1.5 leading-snug">
                 {pub.link ? (
                   <a href={pub.link} target="_blank" rel="noreferrer" className="hover:text-anthropic-accent transition-colors">
                     {pub.title}
@@ -184,7 +184,7 @@ const Home: React.FC = () => {
                 )}
               </h3>
 
-              <p className="text-anthropic-gray text-base mb-3 font-light">
+              <p className="text-anthropic-gray text-[15px] mb-1.5">
                 {pub.authors.map((author, idx) => (
                   <span key={idx} className={author.includes("Rui Wu") ? "font-bold text-anthropic-text" : ""}>
                     {author}{idx < pub.authors.length - 1 ? ", " : ""}
@@ -192,7 +192,7 @@ const Home: React.FC = () => {
                 ))}
               </p>
 
-              <div className="text-sm text-anthropic-gray/80 italic mb-4">
+              <div className="text-[13px] text-anthropic-gray/90 italic mb-2.5">
                 {pub.venue} ({pub.year})
               </div>
 

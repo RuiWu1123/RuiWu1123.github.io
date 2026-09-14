@@ -11,8 +11,8 @@ const Travel: React.FC = () => {
     <div className="animate-fade-in pt-12 pb-20">
       <div className="w-full">
         <div className="mb-12 text-center">
-          <h1 className="text-4xl md:text-5xl font-serif font-light mb-4 text-anthropic-text">Travel Gallery</h1>
-          <p className="text-lg text-anthropic-gray font-sans font-light max-w-2xl mx-auto">
+          <h1 className="text-3xl md:text-4xl font-serif font-light mb-3 text-anthropic-text">Travel Gallery</h1>
+          <p className="text-base text-anthropic-gray font-sans max-w-2xl mx-auto">
             A record of my journey around the globe. Select a marked location to view details.
           </p>
         </div>
@@ -55,7 +55,7 @@ const Travel: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="max-w-xl text-anthropic-gray font-light leading-relaxed">
+              <div className="max-w-xl text-anthropic-gray leading-relaxed">
                 {selectedPlace.description}
               </div>
             </div>
@@ -92,7 +92,7 @@ const Travel: React.FC = () => {
           </div>
         ) : (
           <div className="text-center py-16 bg-anthropic-stone/20 rounded-xl border border-dashed border-anthropic-text/10">
-             <p className="text-anthropic-gray font-light text-lg">Select a marker on the map to view my journey.</p>
+             <p className="text-anthropic-gray text-base">Select a marker on the map to view my journey.</p>
           </div>
         )}
       </div>

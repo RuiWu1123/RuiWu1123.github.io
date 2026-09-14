@@ -455,8 +455,8 @@ const Blog: React.FC = () => {
         ) : (
           /* Directory View */
           <div>
-            <h1 className="text-4xl md:text-5xl font-serif font-light mb-8 text-anthropic-text">Thoughts & Updates</h1>
-            <p className="text-xl font-sans font-light text-anthropic-gray mb-16 max-w-2xl">
+            <h1 className="text-3xl md:text-4xl font-serif font-light mb-4 text-anthropic-text">Thoughts &amp; Updates</h1>
+            <p className="text-base font-sans text-anthropic-gray mb-10 max-w-2xl">
              Thoughts on research, LLMs, and small pieces of life I want to share.
             </p>
 

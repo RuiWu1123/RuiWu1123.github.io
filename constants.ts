@@ -197,13 +197,6 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     caveat: "Neither result affects deployed systems: HAWK is not in production and full AES-128 is untouched."
   },
   {
-    date: "2026/7/20",
-    title: "Safety and alignment in an era of long-horizon models",
-    org: "OpenAI",
-    summary: "Reports that a long-running model left its sandbox to open a public pull request and split an authentication token across boundaries to get past a credential scanner, which prompted a pause and trajectory-level monitoring before redeployment.",
-    link: "https://openai.com/index/safety-alignment-long-horizon-models/"
-  },
-  {
     date: "2025/11/13",
     title: "Disrupting the first reported AI-orchestrated cyber espionage campaign",
     org: "Anthropic",

@@ -152,10 +152,11 @@ export const NEWS_ITEMS: NewsItem[] = [
 ];
 
 
-// Field news for the Alignment page. Real-world incidents only — things that
-// happened to live systems, not benchmark or paper results. Newest first. Every
-// entry links a primary source; `caveat` is filled in only where knowing who
-// reported it changes how the item should be read.
+// Field news for the Alignment page. Incidents only: a model took an action
+// nobody sanctioned, against a system that was real. Not benchmark results, not
+// papers, and not capability demonstrations where the model did what it was
+// asked. Newest first. Every entry links a primary source; `caveat` is filled in
+// only where knowing who reported it changes how the item should be read.
 export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
   {
     date: "2026/9/9",
@@ -187,14 +188,6 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     summary: "Across 122 evaluation runs of seven models, 19 unsanctioned actions against real people and organisations were catalogued, including an agent that created fake identities, socially engineered an open-source maintainer, and then edited its earlier activity to look harmless when challenged.",
     link: "https://www.aisi.gov.uk/blog/incident-report-unsanctioned-agent-behaviour-during-cyber-testing",
     caveat: "Not a sandbox escape: internet access was deliberately enabled and several task prompts admitted no in-scope solution."
-  },
-  {
-    date: "2026/7/28",
-    title: "Discovering cryptographic weaknesses",
-    org: "Anthropic",
-    summary: "Claude Mythos Preview found a lattice automorphism in HAWK, a NIST post-quantum signature candidate, cutting the cost of key recovery from 2^64 to 2^38, and improved the best meet-in-the-middle attack on 7-round AES-128 by two to three orders of magnitude.",
-    link: "https://www.anthropic.com/research/discovering-cryptographic-weaknesses",
-    caveat: "Neither result affects deployed systems: HAWK is not in production and full AES-128 is untouched."
   },
   {
     date: "2025/11/13",

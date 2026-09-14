@@ -42,7 +42,8 @@ const WorldMap: React.FC<WorldMapProps> = ({ onPlaceSelect, selectedPlaceId }) =
     svg.selectAll("*").remove(); // Clear previous render
 
     const width = containerRef.current.clientWidth;
-    const height = 500; // Fixed height for map area
+    // Keep the framing the old 1104x500 layout had, whatever the column width is.
+    const height = Math.max(200, Math.round(width * 0.453));
 
     svg.attr("width", width).attr("height", height);
 
@@ -114,7 +115,7 @@ const WorldMap: React.FC<WorldMapProps> = ({ onPlaceSelect, selectedPlaceId }) =
 
   if (error) {
     return (
-      <div className="w-full h-[500px] bg-[#EAE8E2]/30 rounded-lg flex items-center justify-center border border-anthropic-text/5 text-anthropic-gray">
+      <div className="w-full aspect-[1104/500] min-h-[200px] bg-[#EAE8E2]/30 rounded-lg flex items-center justify-center border border-anthropic-text/5 text-anthropic-gray">
         Map data unavailable. Please refresh or try again later.
       </div>
     );
@@ -127,7 +128,7 @@ const WorldMap: React.FC<WorldMapProps> = ({ onPlaceSelect, selectedPlaceId }) =
           <span className="text-anthropic-gray text-sm tracking-widest uppercase">Loading Map...</span>
         </div>
       )}
-      <svg ref={svgRef} className="w-full h-[500px]"></svg>
+      <svg ref={svgRef} className="w-full block"></svg>
     </div>
   );
 };

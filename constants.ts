@@ -153,8 +153,9 @@ export const NEWS_ITEMS: NewsItem[] = [
 
 
 // Field news for the Alignment page: AI news that bears on alignment. Things
-// that happened, not papers or benchmark results. Newest first. Where several
-// parties wrote up the same event, all of them are linked.
+// that happened, not papers or benchmark results, and not purely legal or
+// regulatory news with no technical content. Newest first. Where several parties
+// wrote up the same event, all of them are linked.
 export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
   {
     date: "2026/9/9",
@@ -206,15 +207,6 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
       { label: "Hugging Face", url: "https://huggingface.co/blog/security-incident-july-2026" },
       { label: "OpenAI", url: "https://openai.com/index/hugging-face-incident-and-the-road-ahead/" },
       { label: "METR", url: "https://metr.org/blog/2026-08-26-openai-hugging-face-incident-investigation/" }
-    ]
-  },
-  {
-    date: "2026/6/1",
-    title: "Florida sues OpenAI; a second state opens an investigation",
-    summary: "The Florida Attorney General filed what his office describes as the first state-led lawsuit against OpenAI, alleging it marketed ChatGPT to the public including children while concealing risks and suppressing internal safety warnings. The release also confirms a criminal investigation opened in May after review of a shooter's ChatGPT logs. Alabama separately subpoenaed OpenAI in August over the Hugging Face breach.",
-    links: [
-      { label: "Florida AG", url: "https://www.myfloridalegal.com/newsrelease/attorney-general-james-uthmeier-files-first-nation-state-led-lawsuit-against-openai-ceo" },
-      { label: "Alabama AG", url: "https://www.alabamaag.gov/attorney-general-marshall-launches-investigation-into-openai-and-sam-altman-for-massive-artificial-intelligence-data-breach/" }
     ]
   },
   {

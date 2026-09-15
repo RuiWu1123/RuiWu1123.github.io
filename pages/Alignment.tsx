@@ -19,33 +19,26 @@ const Alignment: React.FC = () => {
             behaviors, the rapid growth in model capabilities has amplified the potential harm when
             they do occur.
           </p>
-          <p className="text-base font-sans text-anthropic-gray leading-relaxed">
-            This is why I think the current split of effort is off. Most of the value that actually
-            reaches people comes from applying models that already work, not from making them more
-            general, and it is the push toward generality that raises the cost of every failure
-            downstream. I would like to see the race toward AGI slowed down, more engineering effort
-            put into applications, and far heavier investment in alignment, both in defining what we
-            actually want and in checking whether a model has learned it.
-          </p>
         </div>
 
         <figure className="mb-10">
           <img
-            src="/alignment/horizon.svg"
-            alt="Doubling time of the task length models can complete, measured over three windows"
-            className="w-full rounded-lg border border-anthropic-text/5"
+            src="https://metr.org/assets/images/time-horizon-1-1/time-horizon-1-vs-1-1-hybrid.png"
+            alt="METR's measured 50% time horizon for each model plotted against its release date, on a log scale, with a fitted exponential trend"
+            loading="lazy"
+            className="w-full rounded-lg border border-anthropic-text/5 bg-white"
           />
           <figcaption className="text-[13px] text-anthropic-gray/80 leading-relaxed mt-2">
-            The length of task a model can finish with 50% reliability has been doubling roughly
-            every 197 days since 2019 — but restrict the fit to recent years and the doubling time
-            itself keeps falling. Numbers from{' '}
+            The task length a model can complete with 50% reliability, plotted against release date on
+            a log scale. The fitted doubling time is about 196 days over the whole period, 131 days if
+            the fit starts at 2023, and 89 days if it starts at 2024. Figure from{' '}
             <a
               href="https://metr.org/blog/2026-1-29-time-horizon-1-1/"
               target="_blank"
               rel="noreferrer"
               className="underline decoration-anthropic-accent/50 hover:text-anthropic-accent transition-colors"
             >
-              METR&apos;s Time Horizon 1.1
+              METR, Time Horizon 1.1
             </a>
             , January 2026.
           </figcaption>

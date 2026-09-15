@@ -11,25 +11,21 @@ const Alignment: React.FC = () => {
 
         <div className="space-y-3 mb-8 max-w-2xl">
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
-            Capability has a lever: add compute and data, and the curves move predictably enough to
-            plan a company around. Alignment has none. The objective cannot be written down, because
-            what we want from a model is far easier to recognise than to state, and checking whether a
-            system learned the right thing only gets harder as the system gets more capable, since a
-            more capable model has more ways to look correct. So the failure has been there the whole
-            time: something adjacent to what was intended, optimised under supervision too coarse to
-            notice the difference. What alignment research has bought is frequency. What matters is
-            frequency times the cost of a single failure, and that second term is set by capability,
-            which is the term that compounds. Going wrong once in ten thousand runs meant little when
-            a run was a paragraph of text. It means something else when a run holds a corporate card,
-            a shell, and eight hours.
+            While the capabilities of large language models have advanced rapidly due to scaling laws,
+            progress in alignment techniques has been slower, because the optimisation objectives are
+            difficult to define. Even though frontier labs are recruiting alignment researchers and
+            investing significant resources, the risk of models pursuing incorrect objectives persists.
+            Worse, although alignment techniques have reduced the frequency of such misaligned
+            behaviors, the rapid growth in model capabilities has amplified the potential harm when
+            they do occur.
           </p>
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
-            Which is why the split of effort looks wrong to me. Most of the value actually reaching
-            people comes from applying models that already work, not from the next increment of
-            generality, and that increment is precisely what raises the cost of every failure
-            downstream. I would rather see the race toward general capability slowed, engineering
-            attention moved to applications, and far more of the field&apos;s money and talent pointed
-            at the part we still cannot do: saying what we want, and checking whether we got it.
+            This is why I think the current split of effort is off. Most of the value that actually
+            reaches people comes from applying models that already work, not from making them more
+            general, and it is the push toward generality that raises the cost of every failure
+            downstream. I would like to see the race toward AGI slowed down, more engineering effort
+            put into applications, and far heavier investment in alignment, both in defining what we
+            actually want and in checking whether a model has learned it.
           </p>
         </div>
 

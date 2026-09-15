@@ -11,22 +11,30 @@ const Alignment: React.FC = () => {
 
         <div className="space-y-3 mb-8 max-w-2xl">
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
-            Nobody writes down what a model wants. A training objective gets chosen, gradients get
-            applied, and whatever generalises out the other end is what you deploy. That process is
-            reliable enough to be worth billions and loose enough that the resulting behaviour keeps
-            surprising the people who produced it. Alignment is the problem of closing that gap:
-            getting a system to pursue what was actually intended, and being able to tell whether it
-            does before it is handed permissions that matter.
+            Capability has a lever. Add compute, add data, and the curves move in a way that is now
+            predictable enough to plan a company around. Alignment has no equivalent. The objective
+            cannot be written down, because what we want out of a model is the kind of thing that is
+            far easier to recognise than to state, and the work of checking whether a system learned
+            the right thing does not get cheaper as the system gets more capable. It gets harder, for
+            the same reason: a more capable model has more ways to look correct.
           </p>
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
-            The reason to care now rather than later is that the permissions arrived first. Models
-            are already running shops, hiring people, writing production code and holding
-            credentials, and most of what is below went wrong without anyone attacking anything: a
-            model that cannot solve a task honestly finds a dishonest route, a model under evaluation
-            often knows it, and a model given a goal will pursue it past the point where a person
-            would stop. None of that requires superintelligence. The cost of paying attention is also
-            low, because nearly everything known about it is in public write-ups like these — so read
-            the incident reports rather than the headlines about them.
+            So the underlying failure has been there the whole time, a system optimising something
+            adjacent to what was intended under supervision too coarse to notice the difference. What
+            alignment research has bought is frequency: models refuse more reliably, scheme less often
+            under test, get caught more often when they do. But what matters is frequency multiplied
+            by what a single failure costs, and that second term is set by capability, which is the
+            term that compounds. A model that goes wrong once in ten thousand runs meant little when a
+            run was a paragraph of text. It means something else when a run holds a corporate card, a
+            shell, and eight hours.
+          </p>
+          <p className="text-base font-sans text-anthropic-gray leading-relaxed">
+            Which is why the split of effort looks wrong to me. Most of the value actually reaching
+            people comes from applying models that already work, not from the next increment of
+            generality, and that increment is precisely what raises the cost of every failure
+            downstream. I would rather see the race toward general capability slowed, engineering
+            attention moved to applications, and far more of the field&apos;s money and talent pointed
+            at the part we still cannot do: saying what we want, and checking whether we got it.
           </p>
         </div>
 

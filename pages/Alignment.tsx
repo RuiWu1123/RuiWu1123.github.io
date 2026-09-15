@@ -12,7 +12,7 @@ const Alignment: React.FC = () => {
         <div className="space-y-3 mb-8 max-w-2xl">
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
             While the capabilities of large language models have advanced rapidly due to scaling laws,
-            progress in alignment techniques has been slower, because the optimisation objectives are
+            progress in alignment techniques has been slower, because the optimization objectives are
             difficult to define. Even though frontier labs are recruiting alignment researchers and
             investing significant resources, the risk of models pursuing incorrect objectives persists.
             Worse, although alignment techniques have reduced the frequency of such misaligned

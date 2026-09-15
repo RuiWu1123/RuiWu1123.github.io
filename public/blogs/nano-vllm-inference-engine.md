@@ -49,7 +49,7 @@ One rule has to be stated before the figure makes arithmetic sense: **a block be
 
 Work through the state after round 3. A's prompt is 5 tokens, so ceil(5/4) = 2 blocks; B's is also 2; C's 7-token prompt is 2 as well. That's 6 blocks, and the pool is fully handed out. Only 17 tokens are actually stored, and the pool nominally holds 24, but the 7 free slots are scattered across three different sequences' unfilled tail blocks and cannot be lent to each other. That "looks free, can't be used" gap is the internal fragmentation the block size buys you, and capping it at one block per sequence is exactly what the next section is about.
 
-Here's how to read the cells. The number in a prefill cell is how many prompt tokens that round consumed, so 5 or 7; a decode cell is always 1, because a round generates exactly one token. One thing the figure can't show but is worth knowing: a prefill round also emits the first generated token at the end, which is why A, labelled gen 8, only needs seven more decode rounds. A grey cell with a dash means the sequence is running but did nothing that round.
+Here's how to read the cells. The number in a prefill cell is how many prompt tokens that round consumed, so 5 or 7; a decode cell is always 1, because a round generates exactly one token. One thing the figure can't show but is worth knowing: a prefill round also emits the first generated token at the end, which is why A, labeled gen 8, only needs seven more decode rounds. A gray cell with a dash means the sequence is running but did nothing that round.
 
 That last one deserves its own paragraph, because it's the direct cost of preferring prefill. A round is either a prefill round or a decode round, never both. So whenever a new request needs prefilling, every sequence already decoding stalls for that entire round: look at rounds 2, 3 and 6 in the continuous panel, where A sits still. It trades a little latency for the sequences already running against waiting time for the new arrival, and the trade is worth it, because one prefill round swallows an entire prompt while one decode round produces a single token.
 
@@ -96,7 +96,7 @@ The fix is lifted straight from operating systems, and the analogy is worth stat
 
 ![The block table: logical blocks map to scattered physical slots](blogs/images/nanovllm-block-table.svg?v=2)
 
-The sequence in the figure owns three blocks. It sees a contiguous block 0, 1, 2, while `block_table` points those at physical blocks 7, 2 and 15, scattered across the pool. Matching colours mean the same piece of memory: logical block, table entry, and pool cell.
+The sequence in the figure owns three blocks. It sees a contiguous block 0, 1, 2, while `block_table` points those at physical blocks 7, 2 and 15, scattered across the pool. Matching colors mean the same piece of memory: logical block, table entry, and pool cell.
 
 The payoff is that allocation can happen one block at a time as the sequence grows. A sequence holds only what it has actually used, plus at most one partially-filled block. The waste is capped by the block size, 256 tokens, no matter how long it eventually runs.
 

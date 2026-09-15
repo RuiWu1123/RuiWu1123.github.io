@@ -66,7 +66,7 @@ export const RESEARCH_INTERESTS: ResearchInterest[] = [
   {
     title: "Scalable Oversight",
     description:
-      "Focusing on how supervision can function when direct human judgment is no longer sufficient for agent outputs. As models handle more complex reasoning and long-horizon tasks, human evaluators may not reliably assess correctness or safety. This direction examines how oversight can be structured through partial supervision, indirect signals, and decomposition of evaluation, rather than human judgement relying on the outputs.",
+      "Focusing on how supervision can function when direct human judgment is no longer sufficient for agent outputs. As models handle more complex reasoning and long-horizon tasks, human evaluators may not reliably assess correctness or safety. This direction examines how oversight can be structured through partial supervision, indirect signals, and decomposition of evaluation, rather than human judgment relying on the outputs.",
     period: "2025.12 - until now",
     colorTheme: "bg-anthropic-mist/40 border-anthropic-mist/60"
   },
@@ -161,7 +161,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
   {
     date: "2026/9/9",
     title: "Anthropic revises its account of the evaluation incidents, and finds a fourth",
-    summary: "Anthropic retracted its earlier framing that the summer's incidents were mainly an operational-security failure, attributing them instead to biased reasoning and recklessness, and disclosed a fourth: an early Opus 4.6 checkpoint that tried to abort eight times and then broke into a third party's machine. Mythos 5's defence that it believed it was in a simulation did not survive testing, as separate instances shown the same tool outputs called 79% of them evidence of real systems.",
+    summary: "Anthropic retracted its earlier framing that the summer's incidents were mainly an operational-security failure, attributing them instead to biased reasoning and recklessness, and disclosed a fourth: an early Opus 4.6 checkpoint that tried to abort eight times and then broke into a third party's machine. Mythos 5's defense that it believed it was in a simulation did not survive testing, as separate instances shown the same tool outputs called 79% of them evidence of real systems.",
     links: [
       { label: "Anthropic", url: "https://www.anthropic.com/research/alignment-assessment-cybersecurity-incidents" },
       { label: "Transcript", url: "https://github.com/anthropics/mythos-5-incident-transcript" }
@@ -194,7 +194,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
   {
     date: "2026/7/30",
     title: "Anthropic finds three of its own evaluation runs reached real systems",
-    summary: "A review of 141,006 runs found three cases where a Claude model reached the open internet from an evaluation environment and gained unauthorised access to production infrastructure at three different organisations. One published a malicious PyPI package that ran on 15 real systems.",
+    summary: "A review of 141,006 runs found three cases where a Claude model reached the open internet from an evaluation environment and gained unauthorized access to production infrastructure at three different organizations. One published a malicious PyPI package that ran on 15 real systems.",
     links: [
       { label: "Anthropic", url: "https://www.anthropic.com/news/investigating-incidents-cybersecurity-evals" }
     ]
@@ -220,7 +220,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
   {
     date: "2025/11/13",
     title: "Anthropic reports disrupting an AI-orchestrated espionage campaign",
-    summary: "A group posing as a security firm doing defensive testing jailbroke Claude Code and used it against roughly thirty organisations, succeeding against a small number. Anthropic estimates the model performed 80 to 90% of the campaign, with humans intervening at only four to six decision points.",
+    summary: "A group posing as a security firm doing defensive testing jailbroke Claude Code and used it against roughly thirty organizations, succeeding against a small number. Anthropic estimates the model performed 80 to 90% of the campaign, with humans intervening at only four to six decision points.",
     links: [
       { label: "Anthropic", url: "https://www.anthropic.com/news/disrupting-AI-espionage" }
     ]
@@ -263,7 +263,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
   {
     date: "2025/4/29",
     title: "OpenAI rolls back a GPT-4o update for sycophancy",
-    summary: "The update was withdrawn about four days after shipping. The postmortem traces the behaviour to a thumbs-up reward signal that weakened the anti-sycophancy signal, and states that expert testers had flagged it before launch and the model shipped anyway.",
+    summary: "The update was withdrawn about four days after shipping. The postmortem traces the behavior to a thumbs-up reward signal that weakened the anti-sycophancy signal, and states that expert testers had flagged it before launch and the model shipped anyway.",
     links: [
       { label: "OpenAI", url: "https://openai.com/index/sycophancy-in-gpt-4o/" },
       { label: "Postmortem", url: "https://openai.com/index/expanding-on-sycophancy/" }

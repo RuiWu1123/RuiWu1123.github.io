@@ -56,32 +56,53 @@ const Alignment: React.FC = () => {
           <h2 className="text-2xl font-serif text-anthropic-text">Field News</h2>
         </div>
 
-        <div className="space-y-7">
-          {ALIGNMENT_NEWS.map((item, index) => (
-            <div key={index}>
-              <div className="text-anthropic-gray/70 font-mono text-xs mb-1">[{item.date}]</div>
+        {/* A time axis running upward: the newest event sits at the top. */}
+        <div className="relative">
+          <div
+            aria-hidden="true"
+            className="absolute left-[5px] top-1.5 bottom-0 w-px"
+            style={{
+              background:
+                'linear-gradient(to top, rgba(25,25,25,0) 0%, rgba(25,25,25,0.13) 18%, rgba(25,25,25,0.13) 100%)'
+            }}
+          />
 
-              <h3 className="text-base md:text-lg font-serif text-anthropic-text mb-1.5 leading-snug">
-                {item.title}
-              </h3>
+          <div className="space-y-7">
+            {ALIGNMENT_NEWS.map((item, index) => (
+              <div key={index} className="relative pl-8">
+                <span
+                  aria-hidden="true"
+                  className={`absolute left-0 top-[5px] w-[11px] h-[11px] rounded-full ring-4 ring-anthropic-bg ${
+                    index === 0 ? 'bg-anthropic-accent' : 'bg-anthropic-stone'
+                  }`}
+                />
 
-              <p className="text-[14px] text-anthropic-gray leading-relaxed mb-1.5">{item.summary}</p>
+                <div className="text-anthropic-gray/70 font-mono text-xs mb-1">{item.date}</div>
 
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
-                {item.links.map((link) => (
-                  <a
-                    key={link.url}
-                    href={link.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-anthropic-accent hover:text-anthropic-text transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                ))}
+                <h3 className="text-base md:text-lg font-serif text-anthropic-text mb-1.5 leading-snug">
+                  {item.title}
+                </h3>
+
+                <p className="text-[14px] text-anthropic-gray leading-relaxed mb-1.5">
+                  {item.summary}
+                </p>
+
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
+                  {item.links.map((link) => (
+                    <a
+                      key={link.url}
+                      href={link.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-anthropic-accent hover:text-anthropic-text transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

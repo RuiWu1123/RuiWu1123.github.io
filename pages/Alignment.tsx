@@ -11,22 +11,17 @@ const Alignment: React.FC = () => {
 
         <div className="space-y-3 mb-8 max-w-2xl">
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
-            Capability has a lever. Add compute, add data, and the curves move in a way that is now
-            predictable enough to plan a company around. Alignment has no equivalent. The objective
-            cannot be written down, because what we want out of a model is the kind of thing that is
-            far easier to recognise than to state, and the work of checking whether a system learned
-            the right thing does not get cheaper as the system gets more capable. It gets harder, for
-            the same reason: a more capable model has more ways to look correct.
-          </p>
-          <p className="text-base font-sans text-anthropic-gray leading-relaxed">
-            So the underlying failure has been there the whole time, a system optimising something
-            adjacent to what was intended under supervision too coarse to notice the difference. What
-            alignment research has bought is frequency: models refuse more reliably, scheme less often
-            under test, get caught more often when they do. But what matters is frequency multiplied
-            by what a single failure costs, and that second term is set by capability, which is the
-            term that compounds. A model that goes wrong once in ten thousand runs meant little when a
-            run was a paragraph of text. It means something else when a run holds a corporate card, a
-            shell, and eight hours.
+            Capability has a lever: add compute and data, and the curves move predictably enough to
+            plan a company around. Alignment has none. The objective cannot be written down, because
+            what we want from a model is far easier to recognise than to state, and checking whether a
+            system learned the right thing only gets harder as the system gets more capable, since a
+            more capable model has more ways to look correct. So the failure has been there the whole
+            time: something adjacent to what was intended, optimised under supervision too coarse to
+            notice the difference. What alignment research has bought is frequency. What matters is
+            frequency times the cost of a single failure, and that second term is set by capability,
+            which is the term that compounds. Going wrong once in ten thousand runs meant little when
+            a run was a paragraph of text. It means something else when a run holds a corporate card,
+            a shell, and eight hours.
           </p>
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
             Which is why the split of effort looks wrong to me. Most of the value actually reaching

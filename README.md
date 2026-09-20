@@ -1,20 +1,25 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# ruiwu1123.github.io
 
-# Run and deploy your AI Studio app
+My personal website. React + Vite, deployed to GitHub Pages by an Action on every push to `main`.
 
-This contains everything you need to run your app locally.
+## Layout
 
-View your app in AI Studio: https://ai.studio/apps/temp/1
+- `pages/` — Home, Alignment, Blogs, Travel Gallery
+- `constants.ts` — publications, news, blog registry, alignment field news
+- `public/blogs/` — posts as `<id>.md` and `<id>.zh.md`, figures in `public/blogs/images/`
 
-## Run Locally
+## Local development
 
-**Prerequisites:**  Node.js
+```bash
+npm install
+npm run dev     # http://localhost:3000
+```
 
+Before pushing:
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+```bash
+npx tsc --noEmit -p tsconfig.json
+npm run build
+```
+
+`tsc` is not optional — `vite build` only transpiles and will not catch undefined identifiers.

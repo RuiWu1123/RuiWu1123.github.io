@@ -60,8 +60,8 @@ const WorldMap: React.FC<WorldMapProps> = ({ onPlaceSelect, selectedPlaceId }) =
       .data(geoJson.features)
       .join("path")
       .attr("d", path as any)
-      .attr("fill", "#E6E4DD") // Anthropic stone/beige
-      .attr("stroke", "#F4F3EF") // Background color for borders
+      .attr("fill", "#E8E8E8") // Neutral land fill
+      .attr("stroke", "#FFFFFF") // Background color for borders
       .attr("stroke-width", 0.5)
       .style("opacity", 0.8);
 
@@ -89,8 +89,8 @@ const WorldMap: React.FC<WorldMapProps> = ({ onPlaceSelect, selectedPlaceId }) =
     // Inner circle
     markers.append("circle")
       .attr("r", 4)
-      .attr("fill", (d) => d.id === selectedPlaceId ? "#191919" : "#D97757") // Black if selected, accent if not
-      .attr("stroke", "#F4F3EF")
+      .attr("fill", (d) => d.id === selectedPlaceId ? "#191919" : "#9A9A9A") // Black if selected, grey if not
+      .attr("stroke", "#FFFFFF")
       .attr("stroke-width", 1)
       .transition()
       .duration(300)
@@ -115,16 +115,16 @@ const WorldMap: React.FC<WorldMapProps> = ({ onPlaceSelect, selectedPlaceId }) =
 
   if (error) {
     return (
-      <div className="w-full aspect-[1104/500] min-h-[200px] bg-[#EAE8E2]/30 rounded-lg flex items-center justify-center border border-anthropic-text/5 text-anthropic-gray">
+      <div className="w-full aspect-[1104/500] min-h-[200px] flex items-center justify-center border border-anthropic-text/10 text-anthropic-gray">
         Map data unavailable. Please refresh or try again later.
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className="w-full bg-[#EAE8E2]/30 rounded-lg overflow-hidden border border-anthropic-text/5 relative">
+    <div ref={containerRef} className="w-full overflow-hidden border border-anthropic-text/10 relative">
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center z-10 bg-[#EAE8E2]/50">
+        <div className="absolute inset-0 flex items-center justify-center z-10 bg-anthropic-bg">
           <span className="text-anthropic-gray text-sm tracking-widest uppercase">Loading Map...</span>
         </div>
       )}

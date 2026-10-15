@@ -7,7 +7,7 @@ const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-anthropic-bg/90 backdrop-blur-sm border-b border-anthropic-text/5">
+    <nav className="sticky top-0 z-50 w-full bg-anthropic-bg border-b border-anthropic-text/10">
       <div className="max-w-[760px] mx-auto px-6 h-20 flex items-center justify-between">
         {/* Logo / Name */}
         <NavLink to="/" className="text-2xl font-serif font-medium tracking-tight hover:opacity-70 transition-opacity">
@@ -22,7 +22,7 @@ const Navbar: React.FC = () => {
               to={item.path}
               className={({ isActive }) =>
                 `text-sm font-sans tracking-wide transition-colors duration-200 ${
-                  isActive ? 'text-anthropic-accent font-medium' : 'text-anthropic-text hover:text-anthropic-accent'
+                  isActive ? 'text-anthropic-text underline underline-offset-[6px] decoration-anthropic-text/40' : 'text-anthropic-gray hover:text-anthropic-text'
                 }`
               }
             >
@@ -50,7 +50,7 @@ const Navbar: React.FC = () => {
               to={item.path}
               className={({ isActive }) =>
                 `block text-base font-sans ${
-                  isActive ? 'text-anthropic-accent font-medium' : 'text-anthropic-text'
+                  isActive ? 'text-anthropic-text underline underline-offset-4 decoration-anthropic-text/40' : 'text-anthropic-gray'
                 }`
               }
               onClick={() => setIsOpen(false)}

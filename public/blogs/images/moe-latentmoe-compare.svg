@@ -1,11 +1,11 @@
 <svg viewBox="0 0 1120 230" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
-  <rect x="0" y="0" width="1120" height="230" fill="#F4F3EF"/>
+  <rect x="0" y="0" width="1120" height="230" fill="#FFFFFF"/>
 
   <text x="550" y="24" text-anchor="middle" font-size="16" font-weight="600" fill="#191919">LatentMoE</text>
 
   <!-- token -->
   <rect x="40" y="110" width="110" height="48" rx="8" fill="#191919"/>
-  <text x="95" y="139" text-anchor="middle" font-size="14" fill="#F4F3EF">token x</text>
+  <text x="95" y="139" text-anchor="middle" font-size="14" fill="#FFFFFF">token x</text>
 
   <line x1="160" y1="134" x2="196" y2="134" stroke="#191919" stroke-opacity="0.4" stroke-width="1.6"/>
   <polygon points="210,134 196,124 196,144" fill="#191919" fill-opacity="0.4"/>
@@ -36,5 +36,5 @@
 
   <!-- output -->
   <rect x="950" y="110" width="110" height="48" rx="8" fill="#191919"/>
-  <text x="1005" y="139" text-anchor="middle" font-size="14" fill="#F4F3EF">output y</text>
+  <text x="1005" y="139" text-anchor="middle" font-size="14" fill="#FFFFFF">output y</text>
 </svg>

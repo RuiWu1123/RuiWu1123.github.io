@@ -25,7 +25,7 @@ const Travel: React.FC = () => {
           />
           <div className="flex mt-3 gap-5 text-[13px] text-anthropic-gray">
             <div className="flex items-center gap-2">
-               <span className="w-3 h-3 rounded-full bg-anthropic-accent"></span> Visited
+               <span className="w-2.5 h-2.5 rounded-full bg-[#9A9A9A]"></span> Visited
             </div>
             <div className="flex items-center gap-2">
                <span className="w-3 h-3 rounded-full bg-[#191919]"></span> Selected
@@ -35,11 +35,11 @@ const Travel: React.FC = () => {
 
         {/* Details Section - Only visible when selected */}
         {selectedPlace ? (
-          <div className="bg-white border border-anthropic-text/5 rounded-xl overflow-hidden shadow-sm transition-all duration-500 ease-in-out animate-fade-in">
+          <div className="border-t border-anthropic-text/10 transition-all duration-500 ease-in-out animate-fade-in">
             {/* Header Info */}
-            <div className="p-6 border-b border-anthropic-text/5 flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <div className="pt-6 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-5">
               <div>
-                <div className="flex items-center gap-2 text-anthropic-accent mb-2">
+                <div className="flex items-center gap-2 text-anthropic-gray mb-2">
                   <MapPin size={18} />
                   <span className="text-sm font-semibold tracking-wide uppercase">{selectedPlace.name}</span>
                 </div>
@@ -49,7 +49,7 @@ const Travel: React.FC = () => {
                     <Calendar size={16} />
                     <span>{selectedPlace.date}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-anthropic-stone/50 px-2 py-0.5 rounded-full text-anthropic-text font-medium">
+                  <div className="flex items-center gap-1.5 text-anthropic-text font-medium">
                     <Hash size={14} />
                     <span>Visited {selectedPlace.visitCount} {selectedPlace.visitCount === 1 ? 'time' : 'times'}</span>
                   </div>
@@ -61,7 +61,7 @@ const Travel: React.FC = () => {
             </div>
 
             {/* Horizontal Scroll Gallery */}
-            <div className="bg-anthropic-bg/50 p-6">
+            <div className="border-t border-anthropic-text/10 pt-6">
               <div className="flex items-center gap-2 mb-4 text-anthropic-gray/60 text-sm font-sans uppercase tracking-widest">
                 <Camera size={14} />
                 <span>Gallery ({selectedPlace.images.length} photos)</span>
@@ -72,7 +72,7 @@ const Travel: React.FC = () => {
                 {selectedPlace.images.map((imgUrl, index) => (
                   <div 
                     key={index} 
-                    className="flex-none snap-center relative group rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                    className="flex-none snap-center relative group overflow-hidden"
                   >
                     {/* Fixed height for vertical alignment, width auto preserves aspect ratio */}
                     <img 
@@ -91,7 +91,7 @@ const Travel: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="text-center py-10 bg-anthropic-stone/20 rounded-xl border border-dashed border-anthropic-text/10">
+          <div className="text-center py-10 border-t border-anthropic-text/10">
              <p className="text-anthropic-gray text-base">Select a marker on the map to view my journey.</p>
           </div>
         )}

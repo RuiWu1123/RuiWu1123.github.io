@@ -76,14 +76,14 @@ const Home: React.FC = () => {
           <img
             src="/portrait.jpg"
             alt="Rui Wu"
-            className="w-full rounded-xl object-cover aspect-[4/3] border border-anthropic-text/5 shadow-sm"
+            className="w-full object-cover aspect-[4/3]"
           />
 
           {/* Contact */}
           <div className="flex items-center justify-center sm:justify-start gap-0.5 mt-2 sm:-ml-1.5">
               <button 
                 onClick={copyEmail}
-                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-1.5 rounded-full hover:bg-anthropic-stone/30"
+                className="text-anthropic-text hover:opacity-50 transition-opacity p-1.5"
                 aria-label="Email"
                 title="rw761@scarletmail.rutgers.edu (Click to Copy)"
               >
@@ -93,7 +93,7 @@ const Home: React.FC = () => {
                 href={SOCIAL_LINKS.scholar}
                 target="_blank" 
                 rel="noreferrer" 
-                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-1.5 rounded-full hover:bg-anthropic-stone/30"
+                className="text-anthropic-text hover:opacity-50 transition-opacity p-1.5"
                 aria-label="Google Scholar"
                 title="Google Scholar"
               >
@@ -103,7 +103,7 @@ const Home: React.FC = () => {
                 href={SOCIAL_LINKS.linkedin}
                 target="_blank" 
                 rel="noreferrer" 
-                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-1.5 rounded-full hover:bg-anthropic-stone/30"
+                className="text-anthropic-text hover:opacity-50 transition-opacity p-1.5"
                 aria-label="LinkedIn"
                 title="LinkedIn"
               >
@@ -113,7 +113,7 @@ const Home: React.FC = () => {
                 href="https://x.com/RuiWu560670" 
                 target="_blank" 
                 rel="noreferrer" 
-                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-1.5 rounded-full hover:bg-anthropic-stone/30"
+                className="text-anthropic-text hover:opacity-50 transition-opacity p-1.5"
                 aria-label="Twitter"
                 title="Twitter"
               >
@@ -123,7 +123,7 @@ const Home: React.FC = () => {
                 href="https://github.com/RuiWu1123" 
                 target="_blank" 
                 rel="noreferrer" 
-                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-1.5 rounded-full hover:bg-anthropic-stone/30"
+                className="text-anthropic-text hover:opacity-50 transition-opacity p-1.5"
                 aria-label="GitHub"
                 title="GitHub"
               >
@@ -131,7 +131,7 @@ const Home: React.FC = () => {
               </a>
                <button 
                 onClick={copyWeChat}
-                className="text-anthropic-text hover:text-anthropic-accent transition-colors p-1.5 rounded-full hover:bg-anthropic-stone/30"
+                className="text-anthropic-text hover:opacity-50 transition-opacity p-1.5"
                 aria-label="WeChat"
                 title="WeChat: R1lastshot (Click to Copy)"
               >
@@ -143,9 +143,8 @@ const Home: React.FC = () => {
 
        {/* News Section */}
       <section className="mb-12">
-        <div className="flex items-baseline justify-between mb-5 border-b border-anthropic-text/10 pb-3">
+        <div className="mb-5 border-b border-anthropic-text/10 pb-3">
           <h2 className="text-2xl font-serif text-anthropic-text">News</h2>
-          <span className="text-xs font-sans text-anthropic-gray/70 uppercase tracking-widest">Latest Updates</span>
         </div>
         
         <div>
@@ -166,9 +165,8 @@ const Home: React.FC = () => {
 
       {/* Publications */}
       <section>
-        <div className="flex items-baseline justify-between mb-5 border-b border-anthropic-text/10 pb-3">
+        <div className="mb-5 border-b border-anthropic-text/10 pb-3">
           <h2 className="text-2xl font-serif text-anthropic-text">Publications</h2>
-          <span className="text-xs font-sans text-anthropic-gray/70 uppercase tracking-widest">Selected Papers</span>
         </div>
 
         <div className="space-y-6">
@@ -176,7 +174,7 @@ const Home: React.FC = () => {
             <div key={pub.id} className="group">
               <h3 className="text-base md:text-lg font-serif text-anthropic-text mb-1 leading-snug">
                 {pub.link ? (
-                  <a href={pub.link} target="_blank" rel="noreferrer" className="hover:text-anthropic-accent transition-colors">
+                  <a href={pub.link} target="_blank" rel="noreferrer" className="hover:underline underline-offset-4 decoration-anthropic-text/30">
                     {pub.title}
                   </a>
                 ) : (
@@ -202,7 +200,7 @@ const Home: React.FC = () => {
                     href={pub.link}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center text-sm font-medium text-anthropic-accent hover:text-anthropic-text transition-colors"
+                    className="flex items-center text-sm text-anthropic-gray hover:text-anthropic-text underline underline-offset-4 decoration-anthropic-text/25 transition-colors"
                   >
                     <FileText size={16} className="mr-1.5" />
                     ArXiv
@@ -213,7 +211,7 @@ const Home: React.FC = () => {
                     href={pub.github}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center text-sm font-medium text-anthropic-accent hover:text-anthropic-text transition-colors"
+                    className="flex items-center text-sm text-anthropic-gray hover:text-anthropic-text underline underline-offset-4 decoration-anthropic-text/25 transition-colors"
                   >
                     <Github size={16} className="mr-1.5" />
                     Code

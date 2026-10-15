@@ -152,19 +152,19 @@ const Blog: React.FC = () => {
               </button>
 
               {/* Language Toggle */}
-              <div className="flex items-center rounded-full border border-anthropic-text/10 bg-anthropic-stone/30 p-1 text-sm font-sans">
+              <div className="flex items-center gap-3 text-sm font-sans">
                 <button
                   onClick={() => setLang('en')}
-                  className={`px-3 py-1 rounded-full transition-colors ${
-                    lang === 'en' ? 'bg-anthropic-text text-anthropic-bg' : 'text-anthropic-gray hover:text-anthropic-text'
+                  className={`transition-colors ${
+                    lang === 'en' ? 'text-anthropic-text underline underline-offset-4' : 'text-anthropic-gray hover:text-anthropic-text'
                   }`}
                 >
                   EN
                 </button>
                 <button
                   onClick={() => setLang('zh')}
-                  className={`px-3 py-1 rounded-full transition-colors ${
-                    lang === 'zh' ? 'bg-anthropic-text text-anthropic-bg' : 'text-anthropic-gray hover:text-anthropic-text'
+                  className={`transition-colors ${
+                    lang === 'zh' ? 'text-anthropic-text underline underline-offset-4' : 'text-anthropic-gray hover:text-anthropic-text'
                   }`}
                 >
                   中文
@@ -175,7 +175,7 @@ const Blog: React.FC = () => {
             <div>
             <article className="animate-fade-in min-w-0">
               <div className="flex flex-wrap items-center gap-3 mb-6">
-                <span className="text-anthropic-accent font-mono text-sm tracking-wide">{activePost.date}</span>
+                <span className="text-anthropic-gray font-mono text-sm tracking-wide">{activePost.date}</span>
                 {readingMinutes && (
                   <>
                     <span className="text-anthropic-gray/30">·</span>
@@ -409,7 +409,7 @@ const Blog: React.FC = () => {
                           <img
                             src={src || ''}
                             alt={alt || 'Blog illustration'}
-                            className="mx-auto w-full max-w-4xl h-auto rounded-lg shadow-sm border border-anthropic-text/5 object-cover"
+                            className="mx-auto w-full max-w-4xl h-auto object-cover"
                             loading="lazy"
                           />
                         );
@@ -467,26 +467,23 @@ const Blog: React.FC = () => {
                     <div 
                       key={post.id} 
                       onClick={() => handlePostClick(post.id)}
-                      className="group py-3.5 cursor-pointer hover:bg-anthropic-stone/20 -mx-3 px-3 rounded-lg transition-colors duration-200"
+                      className="group py-3.5 cursor-pointer"
                     >
                       <div className="flex flex-col md:flex-row md:items-baseline gap-1 md:gap-6">
                         <div className="w-[6.5rem] flex-shrink-0">
                           <span className="text-anthropic-gray/70 font-mono text-xs">{post.date}</span>
                         </div>
                         <div className="flex-grow">
-                          <h3 className="text-lg font-serif text-anthropic-text group-hover:text-anthropic-accent transition-colors">
+                          <h3 className="text-lg font-serif text-anthropic-text group-hover:underline underline-offset-4 decoration-anthropic-text/30">
                             {post.title}
                           </h3>
-                        </div>
-                        <div className="hidden md:block text-anthropic-gray/30 group-hover:text-anthropic-accent transform group-hover:translate-x-2 transition-all">
-                          →
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-20 bg-anthropic-stone/20 rounded-lg border border-dashed border-anthropic-text/10 mt-8">
+                <div className="text-center py-20 border-t border-anthropic-text/10 mt-8">
                   <p className="text-anthropic-gray font-serif text-lg italic">
                     "Research is formalized curiosity. It is poking and prying with a purpose."
                   </p>

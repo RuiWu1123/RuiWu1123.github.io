@@ -1,5 +1,5 @@
 <svg viewBox="0 0 1400 340" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
-  <rect x="0" y="0" width="1400" height="340" fill="#F4F3EF"/>
+  <rect x="0" y="0" width="1400" height="340" fill="#FFFFFF"/>
   <text x="700" y="32" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">Three Ways to Assign Tokens to Experts</text>
   <text x="700" y="54" text-anchor="middle" font-size="12.5" fill="#6B6B6B">same 8 tokens, same 4 experts (orange = code tokens, gray = text tokens)</text>
 

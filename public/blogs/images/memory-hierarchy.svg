@@ -1,11 +1,11 @@
 <svg viewBox="0 0 980 600" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
-  <rect x="0" y="0" width="980" height="600" fill="#F4F3EF"/>
+  <rect x="0" y="0" width="980" height="600" fill="#FFFFFF"/>
   <text x="490" y="38" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">The GPU Memory Hierarchy</text>
   <text x="490" y="59" text-anchor="middle" font-size="13" fill="#6B6B6B">smaller &amp; faster at top, bigger &amp; slower at bottom (H100-class, order of magnitude)</text>
 
   <!-- L1 Registers: triangle apex -->
   <polygon points="490,80 560,158 420,158" fill="#D97757" stroke="#191919" stroke-width="1"/>
-  <text x="490" y="148" text-anchor="middle" font-size="12.5" font-weight="600" fill="#F4F3EF">Registers</text>
+  <text x="490" y="148" text-anchor="middle" font-size="12.5" font-weight="600" fill="#FFFFFF">Registers</text>
 
   <!-- L2 Shared memory / L1 -->
   <polygon points="420,158 560,158 630,236 350,236" fill="#8DA399" stroke="#191919" stroke-width="1"/>

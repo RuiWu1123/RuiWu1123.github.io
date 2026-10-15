@@ -18,18 +18,21 @@
               'toc': '1360px'
             },
             colors: {
-              'anthropic-bg': '#F4F3EF', // Warm paper-like background
+              'anthropic-bg': '#FFFFFF', // Page background
               'anthropic-text': '#191919', // Soft black
-              'anthropic-accent': '#D97757', // Terracotta/Burnt Orange
-              'anthropic-stone': '#E6E4DD', // Darker beige for elements
+              'anthropic-accent': '#191919', // No accent colour: links are marked by underline, not hue
+              'anthropic-stone': '#E8E8E8', // Neutral rule / fill
               'anthropic-gray': '#575757', // Secondary text
               'anthropic-leaf': '#8DA399', // Muted Sage Green
               'anthropic-sand': '#F3ECE2',
               'anthropic-mist': '#E3EBF2'
             },
             fontFamily: {
-              serif: ['"Crimson Pro"', 'serif'],
-              sans: ['"Inter"', 'sans-serif'],
+              // The site is set in one serif. `sans` is kept as a key so the
+              // existing font-sans classes keep working; it resolves to the
+              // same face. Inter is still loaded for the figure SVGs.
+              serif: ['"Crimson Pro"', 'Georgia', 'serif'],
+              sans: ['"Crimson Pro"', 'Georgia', 'serif'],
             },
             animation: {
               'fade-in': 'fadeIn 0.5s ease-out forwards',
@@ -46,7 +49,7 @@
     </script>
     <style>
       body {
-        background-color: #F4F3EF;
+        background-color: #FFFFFF;
         color: #191919;
       }
       /* Custom scrollbar for a cleaner look */
@@ -54,10 +57,10 @@
         width: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #F4F3EF;
+        background: #FFFFFF;
       }
       ::-webkit-scrollbar-thumb {
-        background: #D1D1D1;
+        background: #D8D8D8;
         border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {

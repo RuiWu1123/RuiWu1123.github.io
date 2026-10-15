@@ -26,7 +26,7 @@ const Alignment: React.FC = () => {
             src="https://metr.org/assets/images/time-horizon-1-1/time-horizon-1-vs-1-1-hybrid.png"
             alt="METR's measured 50% time horizon for each model plotted against its release date, on a log scale, with a fitted exponential trend"
             loading="lazy"
-            className="w-full rounded-lg border border-anthropic-text/5 bg-white"
+            className="w-full"
           />
           <figcaption className="text-[13px] text-anthropic-gray/80 leading-relaxed mt-2">
             The task length a model can complete with 50% reliability, plotted against release date on
@@ -36,7 +36,7 @@ const Alignment: React.FC = () => {
               href="https://metr.org/blog/2026-1-29-time-horizon-1-1/"
               target="_blank"
               rel="noreferrer"
-              className="underline decoration-anthropic-accent/50 hover:text-anthropic-accent transition-colors"
+              className="underline underline-offset-2 decoration-anthropic-text/30 hover:decoration-anthropic-text transition-colors"
             >
               METR, Time Horizon 1.1
             </a>
@@ -86,7 +86,7 @@ const Alignment: React.FC = () => {
                       href={link.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-anthropic-accent hover:text-anthropic-text transition-colors"
+                      className="text-anthropic-gray underline underline-offset-2 decoration-anthropic-text/25 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors"
                     >
                       {link.label}
                     </a>

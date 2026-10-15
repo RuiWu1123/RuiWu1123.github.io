@@ -1,5 +1,5 @@
 <svg viewBox="0 0 900 292" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
-<rect width="900" height="292" fill="#F4F3EF"/>
+<rect width="900" height="292" fill="#FFFFFF"/>
 <defs>
 <marker id="m0" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#D97757"/></marker>
 <marker id="m1" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#8DA399"/></marker>

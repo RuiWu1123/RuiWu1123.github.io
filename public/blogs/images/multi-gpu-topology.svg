@@ -1,5 +1,5 @@
 <svg viewBox="0 0 1100 600" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
-  <rect x="0" y="0" width="1100" height="600" fill="#F4F3EF"/>
+  <rect x="0" y="0" width="1100" height="600" fill="#FFFFFF"/>
   <text x="550" y="38" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">Multi-GPU Topology: Node vs Cluster</text>
   <text x="550" y="60" text-anchor="middle" font-size="13" fill="#6B6B6B">bandwidth drops roughly an order of magnitude at every hop outward</text>
 
@@ -15,7 +15,7 @@
   <text x="120" y="279" text-anchor="middle" font-size="12.5" fill="#191919">GPU 1</text>
 
   <rect x="220" y="252" width="80" height="45" rx="6" fill="#D97757" stroke="#191919" stroke-width="1"/>
-  <text x="260" y="279" text-anchor="middle" font-size="12" fill="#F4F3EF">NVSwitch</text>
+  <text x="260" y="279" text-anchor="middle" font-size="12" fill="#FFFFFF">NVSwitch</text>
 
   <rect x="360" y="247" width="80" height="55" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
   <text x="400" y="279" text-anchor="middle" font-size="12.5" fill="#191919">GPU 2</text>
@@ -43,7 +43,7 @@
   <text x="700" y="279" text-anchor="middle" font-size="12.5" fill="#191919">GPU 1</text>
 
   <rect x="800" y="252" width="80" height="45" rx="6" fill="#D97757" stroke="#191919" stroke-width="1"/>
-  <text x="840" y="279" text-anchor="middle" font-size="12" fill="#F4F3EF">NVSwitch</text>
+  <text x="840" y="279" text-anchor="middle" font-size="12" fill="#FFFFFF">NVSwitch</text>
 
   <rect x="940" y="247" width="80" height="55" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
   <text x="980" y="279" text-anchor="middle" font-size="12.5" fill="#191919">GPU 2</text>

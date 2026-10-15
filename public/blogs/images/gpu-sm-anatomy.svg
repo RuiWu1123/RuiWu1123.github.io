@@ -1,5 +1,5 @@
 <svg viewBox="0 0 960 640" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif">
-  <rect x="0" y="0" width="960" height="640" fill="#F4F3EF"/>
+  <rect x="0" y="0" width="960" height="640" fill="#FFFFFF"/>
 
   <text x="480" y="36" text-anchor="middle" font-size="22" font-weight="600" fill="#191919">Inside One Streaming Multiprocessor (SM)</text>
   <text x="480" y="58" text-anchor="middle" font-size="13" fill="#6B6B6B">an H100 has 132 of these on one chip</text>
@@ -16,10 +16,10 @@
   <g>
     <rect x="100" y="176" width="178" height="270" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1"/>
     <rect x="113" y="190" width="152" height="104" rx="5" fill="#D97757" stroke="#191919" stroke-width="1"/>
-    <text x="189" y="220" text-anchor="middle" font-size="12.5" fill="#F4F3EF" font-weight="600">32× FP32/INT</text>
-    <text x="189" y="238" text-anchor="middle" font-size="12.5" fill="#F4F3EF" font-weight="600">CUDA Cores</text>
-    <text x="189" y="260" text-anchor="middle" font-size="10.5" fill="#F4F3EF">1 warp = 32 threads,</text>
-    <text x="189" y="276" text-anchor="middle" font-size="10.5" fill="#F4F3EF">lock-step (SIMT)</text>
+    <text x="189" y="220" text-anchor="middle" font-size="12.5" fill="#FFFFFF" font-weight="600">32× FP32/INT</text>
+    <text x="189" y="238" text-anchor="middle" font-size="12.5" fill="#FFFFFF" font-weight="600">CUDA Cores</text>
+    <text x="189" y="260" text-anchor="middle" font-size="10.5" fill="#FFFFFF">1 warp = 32 threads,</text>
+    <text x="189" y="276" text-anchor="middle" font-size="10.5" fill="#FFFFFF">lock-step (SIMT)</text>
     <rect x="113" y="304" width="152" height="54" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
     <text x="189" y="336" text-anchor="middle" font-size="12" fill="#191919">1× Tensor Core</text>
     <rect x="113" y="368" width="152" height="62" rx="5" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
@@ -28,10 +28,10 @@
 
     <rect x="288" y="176" width="178" height="270" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1"/>
     <rect x="301" y="190" width="152" height="104" rx="5" fill="#D97757" stroke="#191919" stroke-width="1"/>
-    <text x="377" y="220" text-anchor="middle" font-size="12.5" fill="#F4F3EF" font-weight="600">32× FP32/INT</text>
-    <text x="377" y="238" text-anchor="middle" font-size="12.5" fill="#F4F3EF" font-weight="600">CUDA Cores</text>
-    <text x="377" y="260" text-anchor="middle" font-size="10.5" fill="#F4F3EF">1 warp = 32 threads,</text>
-    <text x="377" y="276" text-anchor="middle" font-size="10.5" fill="#F4F3EF">lock-step (SIMT)</text>
+    <text x="377" y="220" text-anchor="middle" font-size="12.5" fill="#FFFFFF" font-weight="600">32× FP32/INT</text>
+    <text x="377" y="238" text-anchor="middle" font-size="12.5" fill="#FFFFFF" font-weight="600">CUDA Cores</text>
+    <text x="377" y="260" text-anchor="middle" font-size="10.5" fill="#FFFFFF">1 warp = 32 threads,</text>
+    <text x="377" y="276" text-anchor="middle" font-size="10.5" fill="#FFFFFF">lock-step (SIMT)</text>
     <rect x="301" y="304" width="152" height="54" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
     <text x="377" y="336" text-anchor="middle" font-size="12" fill="#191919">1× Tensor Core</text>
     <rect x="301" y="368" width="152" height="62" rx="5" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
@@ -40,10 +40,10 @@
 
     <rect x="476" y="176" width="178" height="270" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1"/>
     <rect x="489" y="190" width="152" height="104" rx="5" fill="#D97757" stroke="#191919" stroke-width="1"/>
-    <text x="565" y="220" text-anchor="middle" font-size="12.5" fill="#F4F3EF" font-weight="600">32× FP32/INT</text>
-    <text x="565" y="238" text-anchor="middle" font-size="12.5" fill="#F4F3EF" font-weight="600">CUDA Cores</text>
-    <text x="565" y="260" text-anchor="middle" font-size="10.5" fill="#F4F3EF">1 warp = 32 threads,</text>
-    <text x="565" y="276" text-anchor="middle" font-size="10.5" fill="#F4F3EF">lock-step (SIMT)</text>
+    <text x="565" y="220" text-anchor="middle" font-size="12.5" fill="#FFFFFF" font-weight="600">32× FP32/INT</text>
+    <text x="565" y="238" text-anchor="middle" font-size="12.5" fill="#FFFFFF" font-weight="600">CUDA Cores</text>
+    <text x="565" y="260" text-anchor="middle" font-size="10.5" fill="#FFFFFF">1 warp = 32 threads,</text>
+    <text x="565" y="276" text-anchor="middle" font-size="10.5" fill="#FFFFFF">lock-step (SIMT)</text>
     <rect x="489" y="304" width="152" height="54" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
     <text x="565" y="336" text-anchor="middle" font-size="12" fill="#191919">1× Tensor Core</text>
     <rect x="489" y="368" width="152" height="62" rx="5" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>
@@ -52,10 +52,10 @@
 
     <rect x="664" y="176" width="178" height="270" rx="8" fill="#F3ECE2" stroke="#191919" stroke-width="1"/>
     <rect x="677" y="190" width="152" height="104" rx="5" fill="#D97757" stroke="#191919" stroke-width="1"/>
-    <text x="753" y="220" text-anchor="middle" font-size="12.5" fill="#F4F3EF" font-weight="600">32× FP32/INT</text>
-    <text x="753" y="238" text-anchor="middle" font-size="12.5" fill="#F4F3EF" font-weight="600">CUDA Cores</text>
-    <text x="753" y="260" text-anchor="middle" font-size="10.5" fill="#F4F3EF">1 warp = 32 threads,</text>
-    <text x="753" y="276" text-anchor="middle" font-size="10.5" fill="#F4F3EF">lock-step (SIMT)</text>
+    <text x="753" y="220" text-anchor="middle" font-size="12.5" fill="#FFFFFF" font-weight="600">32× FP32/INT</text>
+    <text x="753" y="238" text-anchor="middle" font-size="12.5" fill="#FFFFFF" font-weight="600">CUDA Cores</text>
+    <text x="753" y="260" text-anchor="middle" font-size="10.5" fill="#FFFFFF">1 warp = 32 threads,</text>
+    <text x="753" y="276" text-anchor="middle" font-size="10.5" fill="#FFFFFF">lock-step (SIMT)</text>
     <rect x="677" y="304" width="152" height="54" rx="5" fill="#8DA399" stroke="#191919" stroke-width="1"/>
     <text x="753" y="336" text-anchor="middle" font-size="12" fill="#191919">1× Tensor Core</text>
     <rect x="677" y="368" width="152" height="62" rx="5" fill="#E3EBF2" stroke="#191919" stroke-width="1"/>

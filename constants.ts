@@ -1,46 +1,5 @@
 
-import { ResearchInterest, Publication, NewsItem, BlogPost, AlignmentNewsItem } from './types';
-
-// Function to load blog content from file
-// Stamped at build time by vite (see vite.config.ts). Appending it to blog
-// fetches stops the browser serving a cached post from a previous deploy.
-declare const __BUILD_ID__: string;
-const BUILD_ID = typeof __BUILD_ID__ === 'string' ? __BUILD_ID__ : 'dev';
-
-export const loadBlogContent = async (blogId: string, lang: 'en' | 'zh' = 'en'): Promise<string> => {
-  try {
-    const suffix = lang === 'zh' ? '.zh.md' : '.md';
-    let response = await fetch(`/blogs/${blogId}${suffix}?v=${BUILD_ID}`);
-    if (!response.ok && lang === 'zh') {
-      // Fallback to English if a Chinese translation isn't available yet
-      response = await fetch(`/blogs/${blogId}.md?v=${BUILD_ID}`);
-    }
-    if (!response.ok) {
-      throw new Error(`Failed to load blog: ${blogId}`);
-    }
-    const markdown = await response.text();
-
-    // Parse frontmatter and content
-    const lines = markdown.split('\n');
-    let contentStart = 0;
-
-    // Skip frontmatter (between ---)
-    if (lines[0] === '---') {
-      for (let i = 1; i < lines.length; i++) {
-        if (lines[i] === '---') {
-          contentStart = i + 1;
-          break;
-        }
-      }
-    }
-
-    return lines.slice(contentStart).join('\n').trim();
-  } catch (error) {
-    console.error(`Error loading blog ${blogId}:`, error);
-    return 'Error loading blog content.';
-  }
-};
-
+import { ResearchInterest, Publication, NewsItem, AlignmentNewsItem } from './types';
 
 export const RESEARCH_INTERESTS: ResearchInterest[] = [
   {
@@ -253,39 +212,6 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
       { label: "OpenAI", url: "https://openai.com/index/sycophancy-in-gpt-4o/" },
       { label: "Postmortem", url: "https://openai.com/index/expanding-on-sycophancy/" }
     ]
-  }
-];
-
-export const BLOG_POSTS: BlogPost[] = [
-  {
-    id: "pretraining-data-science",
-    title: "Reading the Setup: What Pretraining Data Experiments Actually Show",
-    date: "8.12.2026"
-  },
-  {
-    id: "speculative-decoding-in-2026",
-    title: "Guess and Check: How Speculative Decoding Buys Speed for Free",
-    date: "8.6.2026"
-  },
-  {
-    id: "nano-vllm-inference-engine",
-    title: "Inside vLLM: Learning an Inference Engine Through Nano-vLLM",
-    date: "7.31.2026"
-  },
-  {
-    id: "intro-moe-in-2026",
-    title: "Sparse by Design: How Mixture-of-Experts Actually Works in 2026",
-    date: "7.24.2026"
-  },
-  {
-    id: "large-scale-distributed-pretrain-intro",
-    title: "Splitting the Model: How Large-Scale Training Actually Works",
-    date: "7.19.2026"
-  },
-  {
-    id: "gpu-guide-for-dl",
-    title: "Inside the GPU: A Field Guide for Deep Learning Researchers",
-    date: "7.2.2026"
   }
 ];
 

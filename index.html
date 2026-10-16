@@ -13,11 +13,6 @@
       tailwind.config = {
         theme: {
           extend: {
-            screens: {
-              // The blog's table of contents only floats in the left margin
-              // once there is genuinely room for it beside the 760px column.
-              'toc': '1360px'
-            },
             colors: {
               'anthropic-bg': '#FFFFFF', // Page background
               'anthropic-text': '#191919', // Soft black
@@ -76,18 +71,6 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #A1A1A1;
       }
-      /* A display equation wider than the column must scroll inside the
-         column, not spill over the table of contents. */
-      .katex-display {
-        overflow-x: auto;
-        overflow-y: hidden;
-        padding-top: 0.35em;
-        padding-bottom: 0.35em;
-      }
-      .katex-display > .katex {
-        text-align: left;
-        white-space: normal;
-      }
     </style>
     <script type="importmap">
 {
@@ -96,8 +79,7 @@
     "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
     "react-dom": "https://esm.sh/react-dom@18.2.0",
-    "react-router-dom": "https://esm.sh/react-router-dom@6.22.3?deps=react@18.2.0,react-dom@18.2.0",
-    "lucide-react": "https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0"
+    "react-router-dom": "https://esm.sh/react-router-dom@6.22.3?deps=react@18.2.0,react-dom@18.2.0"
   }
 }
 </script>

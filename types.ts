@@ -6,14 +6,6 @@ export interface ResearchInterest {
   colorTheme?: string;
 }
 
-export interface BlogPost {
-  id: string;
-  title: string;
-  date: string;
-  generator?: string;
-  content?: string; // Optional: loaded from file
-}
-
 export interface Publication {
   id: string;
   title: string;

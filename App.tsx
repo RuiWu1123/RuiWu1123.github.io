@@ -3,7 +3,6 @@ import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import Blog from './pages/Blog';
 import Alignment from './pages/Alignment';
 
 // Scroll to top on route change
@@ -76,7 +75,6 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/alignment" element={<Alignment />} />
-            <Route path="/blog" element={<Blog />} />
           </Routes>
         </Layout>
       </HashRouter>

@@ -63,11 +63,11 @@ const Home: React.FC = () => {
     <div className="animate-fade-in pb-16">
       {/* Hero: portrait on the left, introduction on the right */}
       <section className="pt-8 pb-10 flex flex-col sm:flex-row sm:items-start gap-6 sm:gap-8">
-        <div className="sm:w-[180px] sm:flex-shrink-0">
+        <div className="sm:w-[140px] sm:flex-shrink-0">
           <img
             src="/portrait.jpg"
             alt="Kris Rui Wu"
-            className="w-[180px] object-cover aspect-[2/3]"
+            className="w-[140px] object-cover aspect-[2/3]"
           />
 
           {/* Contact, set as words rather than icons */}

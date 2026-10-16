@@ -12,10 +12,10 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="w-full border-b border-anthropic-text/10">
-      <div className="max-w-[760px] mx-auto px-6 h-16 flex items-center">
+      <div className="max-w-[680px] mx-auto px-6 h-16 flex items-center">
         <NavLink
           to="/"
-          className="text-xl font-serif tracking-tight hover:opacity-70 transition-opacity"
+          className="text-lg font-serif tracking-tight hover:opacity-70 transition-opacity"
           aria-current={atHome ? 'page' : undefined}
         >
           Kris Rui Wu

@@ -5,7 +5,7 @@ const Alignment: React.FC = () => {
   return (
     <div className="animate-fade-in pt-10 pb-16">
       <div className="w-full">
-        <h1 className="text-2xl md:text-3xl font-serif mb-4 text-anthropic-text">
+        <h1 className="text-xl md:text-2xl font-serif mb-4 text-anthropic-text">
           Alignment
         </h1>
 
@@ -28,7 +28,7 @@ const Alignment: React.FC = () => {
             loading="lazy"
             className="w-full"
           />
-          <figcaption className="text-[13px] text-anthropic-gray/80 leading-relaxed mt-2 max-w-measure-lg">
+          <figcaption className="text-[12px] text-anthropic-gray/80 leading-relaxed mt-2 max-w-measure-lg">
             The task length a model can complete with 50% reliability, plotted against release date on
             a log scale. The fitted doubling time is about 196 days over the whole period, 131 days if
             the fit starts at 2023, and 89 days if it starts at 2024. Figure from{' '}
@@ -45,7 +45,7 @@ const Alignment: React.FC = () => {
         </figure>
 
         <div className="mb-5 border-b border-anthropic-text/10 pb-3">
-          <h2 className="text-xl font-serif text-anthropic-text">Field News</h2>
+          <h2 className="text-lg font-serif text-anthropic-text">Field News</h2>
         </div>
 
         {/* A time axis running upward: the newest event sits at the top. */}
@@ -69,17 +69,17 @@ const Alignment: React.FC = () => {
                   }`}
                 />
 
-                <div className="text-anthropic-gray/70 text-[13px] mb-1">{item.date}</div>
+                <div className="text-anthropic-gray/70 text-[12px] mb-1">{item.date}</div>
 
-                <h3 className="text-base md:text-lg font-serif text-anthropic-text mb-1.5 leading-snug">
+                <h3 className="text-[14px] md:text-base font-serif text-anthropic-text mb-1.5 leading-snug">
                   {item.title}
                 </h3>
 
-                <p className="text-[14px] text-anthropic-gray leading-relaxed mb-1.5 max-w-measure-lg">
+                <p className="text-[12.5px] text-anthropic-gray leading-relaxed mb-1.5 max-w-measure-lg">
                   {item.summary}
                 </p>
 
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
                   {item.links.map((link) => (
                     <a
                       key={link.url}

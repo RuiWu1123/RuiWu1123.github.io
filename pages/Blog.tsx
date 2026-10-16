@@ -175,7 +175,7 @@ const Blog: React.FC = () => {
             <div>
             <article className="animate-fade-in min-w-0">
               <div className="flex flex-wrap items-center gap-3 mb-6">
-                <span className="text-anthropic-gray text-[13px]">{activePost.date}</span>
+                <span className="text-anthropic-gray text-[12px]">{activePost.date}</span>
                 {readingMinutes && (
                   <>
                     <span className="text-anthropic-gray/30">·</span>
@@ -196,7 +196,7 @@ const Blog: React.FC = () => {
                 </div>
               )}
 
-              <div className="max-w-none text-anthropic-text text-[16px] font-normal leading-relaxed border-t border-anthropic-text/10 pt-10">
+              <div className="max-w-none text-anthropic-text text-[12.5px] font-normal leading-relaxed border-t border-anthropic-text/10 pt-10">
                 {loading ? (
                   <div className="text-center py-8">
                     <p className="text-anthropic-gray/60">Loading...</p>
@@ -207,14 +207,14 @@ const Blog: React.FC = () => {
                     rehypePlugins={[rehypeKatex]}
                     components={{
                       h1: ({ children }) => (
-                        <h1 className="text-3xl font-serif text-anthropic-text mb-6 mt-10 leading-tight">
+                        <h1 className="text-2xl font-serif text-anthropic-text mb-5 mt-8 leading-tight">
                           {children}
                         </h1>
                       ),
                       h2: ({ children }) => {
                         const id = slugify(flattenToText(children));
                         return (
-                          <h2 id={id} className="group text-xl font-serif text-anthropic-text mb-4 mt-10 leading-tight scroll-mt-24">
+                          <h2 id={id} className="group text-lg font-serif text-anthropic-text mb-4 mt-9 leading-tight scroll-mt-24">
                             {children}
                             {renderHeadingAnchor(id)}
                           </h2>
@@ -223,7 +223,7 @@ const Blog: React.FC = () => {
                       h3: ({ children }) => {
                         const id = slugify(flattenToText(children));
                         return (
-                          <h3 id={id} className="group text-lg font-serif text-anthropic-text mb-3 mt-8 leading-tight scroll-mt-24">
+                          <h3 id={id} className="group text-base font-serif text-anthropic-text mb-3 mt-7 leading-tight scroll-mt-24">
                             {children}
                             {renderHeadingAnchor(id)}
                           </h3>
@@ -445,7 +445,7 @@ const Blog: React.FC = () => {
             {hasToc && (
               <aside
                 className="hidden toc:block fixed top-32 w-[190px] max-h-[calc(100vh-10rem)] overflow-y-auto"
-                style={{ right: 'calc(50% + 380px + 40px)' }}
+                style={{ right: 'calc(50% + 340px + 40px)' }}
               >
                 <TableOfContentsSidebar items={tocItems} lang={lang} />
               </aside>
@@ -455,7 +455,7 @@ const Blog: React.FC = () => {
         ) : (
           /* Directory View */
           <div>
-            <h1 className="text-2xl md:text-3xl font-serif mb-4 text-anthropic-text">Thoughts &amp; Updates</h1>
+            <h1 className="text-xl md:text-2xl font-serif mb-4 text-anthropic-text">Thoughts &amp; Updates</h1>
             <p className="text-base font-sans text-anthropic-gray mb-10 max-w-measure">
              Thoughts on research, LLMs, and small pieces of life I want to share.
             </p>
@@ -471,10 +471,10 @@ const Blog: React.FC = () => {
                     >
                       <div className="flex flex-col md:flex-row md:items-baseline gap-1 md:gap-6">
                         <div className="w-[6.5rem] flex-shrink-0">
-                          <span className="text-anthropic-gray/70 text-[13px]">{post.date}</span>
+                          <span className="text-anthropic-gray/70 text-[12px]">{post.date}</span>
                         </div>
                         <div className="flex-grow">
-                          <h3 className="text-lg font-serif text-anthropic-text group-hover:underline underline-offset-4 decoration-anthropic-text/30">
+                          <h3 className="text-base font-serif text-anthropic-text group-hover:underline underline-offset-4 decoration-anthropic-text/30">
                             {post.title}
                           </h3>
                         </div>

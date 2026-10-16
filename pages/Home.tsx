@@ -71,7 +71,7 @@ const Home: React.FC = () => {
           />
 
           {/* Contact, set as words rather than icons */}
-          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-anthropic-gray">
+          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-anthropic-gray">
             <button onClick={copyEmail} className={contactClass} title="rw761@scarletmail.rutgers.edu (click to copy)">
               email
             </button>
@@ -94,7 +94,7 @@ const Home: React.FC = () => {
         </div>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-serif mb-3 text-anthropic-text leading-tight">
+          <h1 className="text-xl font-serif mb-3 text-anthropic-text leading-tight">
             Hi, I&apos;m Kris.
           </h1>
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
@@ -116,17 +116,17 @@ const Home: React.FC = () => {
        {/* News Section */}
       <section className="mb-12">
         <div className="mb-5 border-b border-anthropic-text/10 pb-3">
-          <h2 className="text-xl font-serif text-anthropic-text">News</h2>
+          <h2 className="text-lg font-serif text-anthropic-text">News</h2>
         </div>
         
         <div>
           <div className="space-y-3">
             {NEWS_ITEMS.map((news, index) => (
               <div key={index} className="flex gap-5 group">
-                <span className="text-anthropic-gray/70 text-[13px] whitespace-nowrap pt-[3px] w-[4.75rem] flex-shrink-0">
+                <span className="text-anthropic-gray/70 text-[12px] whitespace-nowrap pt-[3px] w-[4.75rem] flex-shrink-0">
                   {news.date}
                 </span>
-                <p className="text-anthropic-gray text-[15px] leading-relaxed group-hover:text-anthropic-text transition-colors">
+                <p className="text-anthropic-gray text-[12px] leading-relaxed group-hover:text-anthropic-text transition-colors">
                   {renderNewsContent(news.content, news.link)}
                 </p>
               </div>
@@ -138,13 +138,13 @@ const Home: React.FC = () => {
       {/* Publications */}
       <section>
         <div className="mb-5 border-b border-anthropic-text/10 pb-3">
-          <h2 className="text-xl font-serif text-anthropic-text">Publications</h2>
+          <h2 className="text-lg font-serif text-anthropic-text">Publications</h2>
         </div>
 
         <div className="space-y-6">
           {PUBLICATIONS.map((pub) => (
             <div key={pub.id} className="group">
-              <h3 className="text-base md:text-lg font-serif text-anthropic-text mb-1 leading-snug">
+              <h3 className="text-[14px] md:text-base font-serif text-anthropic-text mb-1 leading-snug">
                 {pub.link ? (
                   <a href={pub.link} target="_blank" rel="noreferrer" className="hover:underline underline-offset-4 decoration-anthropic-text/30">
                     {pub.title}
@@ -154,7 +154,7 @@ const Home: React.FC = () => {
                 )}
               </h3>
 
-              <p className="text-anthropic-gray text-[14px] mb-1 leading-relaxed">
+              <p className="text-anthropic-gray text-[12.5px] mb-1 leading-relaxed">
                 {pub.authors.map((author, idx) => (
                   <span key={idx} className={author.includes("Rui Wu") ? "font-bold text-anthropic-text" : ""}>
                     {author}{idx < pub.authors.length - 1 ? ", " : ""}
@@ -162,7 +162,7 @@ const Home: React.FC = () => {
                 ))}
               </p>
 
-              <div className="text-[13px] text-anthropic-gray/90 italic mb-1.5">
+              <div className="text-[12px] text-anthropic-gray/90 italic mb-1.5">
                 {pub.venue} ({pub.year})
               </div>
 
@@ -171,7 +171,7 @@ const Home: React.FC = () => {
                   href={pub.github}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[13px] text-anthropic-gray underline underline-offset-2 decoration-anthropic-text/30 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors"
+                  className="text-[12px] text-anthropic-gray underline underline-offset-2 decoration-anthropic-text/30 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors"
                 >
                   code
                 </a>

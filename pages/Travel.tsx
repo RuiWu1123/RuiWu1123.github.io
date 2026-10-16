@@ -12,7 +12,7 @@ const Travel: React.FC = () => {
       <div className="w-full">
         <div className="mb-8">
           <h1 className="text-2xl md:text-3xl font-serif mb-3 text-anthropic-text">Travel Gallery</h1>
-          <p className="text-base text-anthropic-gray font-sans max-w-2xl">
+          <p className="text-base text-anthropic-gray font-sans max-w-measure">
             A record of my journey around the globe. Select a marked location to view details.
           </p>
         </div>

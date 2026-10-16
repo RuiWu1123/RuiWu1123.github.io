@@ -196,7 +196,7 @@ const Blog: React.FC = () => {
                 </div>
               )}
 
-              <div className="max-w-none text-anthropic-text text-lg font-normal leading-relaxed border-t border-anthropic-text/10 pt-10">
+              <div className="max-w-none text-anthropic-text text-[16px] font-normal leading-relaxed border-t border-anthropic-text/10 pt-10">
                 {loading ? (
                   <div className="text-center py-8">
                     <p className="text-anthropic-gray/60">Loading...</p>
@@ -273,7 +273,7 @@ const Blog: React.FC = () => {
                         }
 
                         return (
-                          <p className="mb-6 text-anthropic-text">
+                          <p className="mb-6 text-anthropic-text max-w-measure-lg">
                             {children}
                           </p>
                         );
@@ -456,7 +456,7 @@ const Blog: React.FC = () => {
           /* Directory View */
           <div>
             <h1 className="text-2xl md:text-3xl font-serif mb-4 text-anthropic-text">Thoughts &amp; Updates</h1>
-            <p className="text-base font-sans text-anthropic-gray mb-10 max-w-2xl">
+            <p className="text-base font-sans text-anthropic-gray mb-10 max-w-measure">
              Thoughts on research, LLMs, and small pieces of life I want to share.
             </p>
 

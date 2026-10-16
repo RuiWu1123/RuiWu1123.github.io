@@ -9,7 +9,7 @@ const Alignment: React.FC = () => {
           Alignment
         </h1>
 
-        <div className="space-y-3 mb-8 max-w-2xl">
+        <div className="space-y-3 mb-8 max-w-measure">
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
             While the capabilities of large language models have advanced rapidly due to scaling laws,
             progress in alignment techniques has been slower, because the optimization objectives are
@@ -28,7 +28,7 @@ const Alignment: React.FC = () => {
             loading="lazy"
             className="w-full"
           />
-          <figcaption className="text-[13px] text-anthropic-gray/80 leading-relaxed mt-2">
+          <figcaption className="text-[13px] text-anthropic-gray/80 leading-relaxed mt-2 max-w-measure-lg">
             The task length a model can complete with 50% reliability, plotted against release date on
             a log scale. The fitted doubling time is about 196 days over the whole period, 131 days if
             the fit starts at 2023, and 89 days if it starts at 2024. Figure from{' '}
@@ -75,7 +75,7 @@ const Alignment: React.FC = () => {
                   {item.title}
                 </h3>
 
-                <p className="text-[14px] text-anthropic-gray leading-relaxed mb-1.5">
+                <p className="text-[14px] text-anthropic-gray leading-relaxed mb-1.5 max-w-measure-lg">
                   {item.summary}
                 </p>
 

@@ -28,6 +28,15 @@
               'anthropic-sand': '#F3ECE2',
               'anthropic-mist': '#E3EBF2'
             },
+            fontSize: {
+              // 15px base. Running prose is additionally capped at `measure`
+              // below so a line lands near 80 characters rather than 91.
+              base: ['15px', '1.72'],
+            },
+            maxWidth: {
+              measure: '560px',
+              'measure-lg': '620px',
+            },
             fontFamily: {
               // One face everywhere: Computer Modern Concrete, the LaTeX
               // serif. `sans` is kept as a key so existing font-sans classes

@@ -1,9 +1,4 @@
 
-export interface NavItem {
-  label: string;
-  path: string;
-}
-
 export interface ResearchInterest {
   title: string;
   description: string;
@@ -49,12 +44,3 @@ export interface AlignmentNewsItem {
   links: AlignmentLink[];
 }
 
-export interface VisitedPlace {
-  id: string;
-  name: string;
-  coordinates: [number, number]; // [longitude, latitude]
-  date: string;
-  description: string;
-  images: string[]; // Array of image URLs
-  visitCount: number;
-}

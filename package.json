@@ -17,8 +17,7 @@
     "remark-math": "^6.0.0",
     "rehype-katex": "^7.0.1",
     "katex": "^0.16.9",
-    "lucide-react": "0.263.1",
-    "d3": "7.9.0"
+    "lucide-react": "0.263.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

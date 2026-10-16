@@ -1,5 +1,5 @@
 
-import { NavItem, ResearchInterest, VisitedPlace, Publication, NewsItem, BlogPost, AlignmentNewsItem } from './types';
+import { ResearchInterest, Publication, NewsItem, BlogPost, AlignmentNewsItem } from './types';
 
 // Function to load blog content from file
 // Stamped at build time by vite (see vite.config.ts). Appending it to blog
@@ -41,12 +41,6 @@ export const loadBlogContent = async (blogId: string, lang: 'en' | 'zh' = 'en'):
   }
 };
 
-export const NAV_ITEMS: NavItem[] = [
-  { label: 'Home', path: '/' },
-  { label: 'Alignment', path: '/alignment' },
-  { label: 'Blogs', path: '/blog' },
-  { label: 'Travel Gallery', path: '/travel' },
-];
 
 export const RESEARCH_INTERESTS: ResearchInterest[] = [
   {
@@ -141,8 +135,7 @@ export const NEWS_ITEMS: NewsItem[] = [
   },
   {
     date: "2025/11/28",
-    content: "Completed a 4-day fancy trip to Iceland! See my \"travel gallery\"!",
-    link: "#/travel"
+    content: "Completed a 4-day fancy trip to Iceland!",
   },
   {
     date: "2025/11/8",
@@ -309,24 +302,3 @@ export const SOCIAL_LINKS = {
   linkedin: "https://www.linkedin.com/in/rui-wu-6aba08324/"
 };
 
-export const VISITED_PLACES: VisitedPlace[] = [
-  {
-    id: 'iceland',
-    name: 'Iceland',
-    coordinates: [-19.0208, 64.9631],
-    date: '2025/11/24-2025/11/28',
-    description: 'Blue Lagoon, Golden Circle, Snæfellsnes Peninsula, Aurora Borealis and more.',
-    visitCount: 1,
-    images: [
-      '/travel_pictures/iceland/1b59c304f6cbfe18538f82088182ec89.jpg',
-      '/travel_pictures/iceland/311fcb634aaa63150e69c5a2a695ba76.jpg',
-      '/travel_pictures/iceland/3cabcbf41a1b08f2f7fb4f31972a8475.jpg',
-      '/travel_pictures/iceland/4c0fb2d709e2ade2ef61d846e8a0f32d.jpg',
-      '/travel_pictures/iceland/4cc8ce3d20062c0b17e23c76484c8cd9.jpg',
-      '/travel_pictures/iceland/e28b49b22857f989dd9833e0d7ed2e6c.jpg',
-      '/travel_pictures/iceland/e355376cc0f8c47518a5f4ebee5ef95f.jpg',
-      '/travel_pictures/iceland/ecac61d106da06b3c6e843c11e124341.jpg',
-      '/travel_pictures/iceland/f8ab3bf7b0a4d53df4f0e63cc6c5107d.jpg'
-    ]
-  }
-];

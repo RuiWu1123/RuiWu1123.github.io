@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Mail, Github, Twitter, Linkedin, MessageCircle, GraduationCap, FileText } from 'lucide-react';
 import { NEWS_ITEMS, SOCIAL_LINKS, PUBLICATIONS } from '../constants';
 
@@ -37,7 +38,7 @@ const Home: React.FC = () => {
         );
     }
 
-    // Fallback: Link the whole text if a link exists (e.g. for Travel)
+    // Fallback: link the whole text when a news item has a link
     if (link) {
          return (
           <a 
@@ -64,9 +65,23 @@ const Home: React.FC = () => {
             Hi, I'm Rui.
           </h1>
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
-            A junior undergraduate at Rutgers University (CS), working on AI alignment. I was born and raised in Yuexi, a small county in Anhui, China. Outside of
-            research, I am into fashion, and I like wandering through independent boutiques and
-            vintage shops that actually have a point of view.
+            A junior undergraduate at Rutgers University (CS), working on{' '}
+            <Link
+              to="/alignment"
+              className="underline underline-offset-2 decoration-anthropic-text/35 hover:decoration-anthropic-text transition-colors"
+            >
+              AI alignment
+            </Link>
+            . I also write{' '}
+            <Link
+              to="/blog"
+              className="underline underline-offset-2 decoration-anthropic-text/35 hover:decoration-anthropic-text transition-colors"
+            >
+              longer posts
+            </Link>{' '}
+            on how language models are trained and served. I was born and raised in Yuexi, a small
+            county in Anhui, China. Outside of research, I am into fashion, and I like wandering
+            through independent boutiques and vintage shops that actually have a point of view.
           </p>
 
         </div>

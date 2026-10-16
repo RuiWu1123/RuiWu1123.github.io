@@ -60,7 +60,7 @@ const Home: React.FC = () => {
       <section className="pt-6 pb-10 md:pt-8 md:pb-12 flex flex-col sm:flex-row sm:items-start gap-6 sm:gap-8">
         {/* Left: Content */}
         <div className="flex-1 min-w-0">
-          <h1 className="text-3xl md:text-4xl font-serif font-light mb-3 text-anthropic-text leading-tight">
+          <h1 className="text-2xl md:text-3xl font-serif mb-3 text-anthropic-text leading-tight">
             Hi, I'm Rui.
           </h1>
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
@@ -144,7 +144,7 @@ const Home: React.FC = () => {
        {/* News Section */}
       <section className="mb-12">
         <div className="mb-5 border-b border-anthropic-text/10 pb-3">
-          <h2 className="text-2xl font-serif text-anthropic-text">News</h2>
+          <h2 className="text-xl font-serif text-anthropic-text">News</h2>
         </div>
         
         <div>
@@ -166,7 +166,7 @@ const Home: React.FC = () => {
       {/* Publications */}
       <section>
         <div className="mb-5 border-b border-anthropic-text/10 pb-3">
-          <h2 className="text-2xl font-serif text-anthropic-text">Publications</h2>
+          <h2 className="text-xl font-serif text-anthropic-text">Publications</h2>
         </div>
 
         <div className="space-y-6">

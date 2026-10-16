@@ -186,7 +186,7 @@ const Blog: React.FC = () => {
                 )}
               </div>
 
-              <h1 className="text-3xl md:text-5xl font-serif text-anthropic-text mb-10 leading-tight">
+              <h1 className="text-2xl md:text-4xl font-serif text-anthropic-text mb-8 leading-tight">
                 {activePost.title}
               </h1>
 
@@ -207,14 +207,14 @@ const Blog: React.FC = () => {
                     rehypePlugins={[rehypeKatex]}
                     components={{
                       h1: ({ children }) => (
-                        <h1 className="text-4xl font-serif text-anthropic-text mb-8 mt-12 leading-tight">
+                        <h1 className="text-3xl font-serif text-anthropic-text mb-6 mt-10 leading-tight">
                           {children}
                         </h1>
                       ),
                       h2: ({ children }) => {
                         const id = slugify(flattenToText(children));
                         return (
-                          <h2 id={id} className="group text-3xl font-serif text-anthropic-text mb-6 mt-12 leading-tight scroll-mt-24">
+                          <h2 id={id} className="group text-xl font-serif text-anthropic-text mb-4 mt-10 leading-tight scroll-mt-24">
                             {children}
                             {renderHeadingAnchor(id)}
                           </h2>
@@ -223,14 +223,14 @@ const Blog: React.FC = () => {
                       h3: ({ children }) => {
                         const id = slugify(flattenToText(children));
                         return (
-                          <h3 id={id} className="group text-2xl font-serif text-anthropic-text mb-4 mt-10 leading-tight scroll-mt-24">
+                          <h3 id={id} className="group text-lg font-serif text-anthropic-text mb-3 mt-8 leading-tight scroll-mt-24">
                             {children}
                             {renderHeadingAnchor(id)}
                           </h3>
                         );
                       },
                       h4: ({ children }) => (
-                        <h4 className="text-xl font-serif text-anthropic-text mb-3 mt-8 leading-tight">
+                        <h4 className="text-base font-serif text-anthropic-text mb-2 mt-6 leading-tight">
                           {children}
                         </h4>
                       ),
@@ -455,7 +455,7 @@ const Blog: React.FC = () => {
         ) : (
           /* Directory View */
           <div>
-            <h1 className="text-3xl md:text-4xl font-serif font-light mb-4 text-anthropic-text">Thoughts &amp; Updates</h1>
+            <h1 className="text-2xl md:text-3xl font-serif mb-4 text-anthropic-text">Thoughts &amp; Updates</h1>
             <p className="text-base font-sans text-anthropic-gray mb-10 max-w-2xl">
              Thoughts on research, LLMs, and small pieces of life I want to share.
             </p>

@@ -5,7 +5,7 @@ const Alignment: React.FC = () => {
   return (
     <div className="animate-fade-in pt-10 pb-16">
       <div className="w-full">
-        <h1 className="text-3xl md:text-4xl font-serif font-light mb-4 text-anthropic-text">
+        <h1 className="text-2xl md:text-3xl font-serif mb-4 text-anthropic-text">
           Alignment
         </h1>
 
@@ -45,7 +45,7 @@ const Alignment: React.FC = () => {
         </figure>
 
         <div className="mb-5 border-b border-anthropic-text/10 pb-3">
-          <h2 className="text-2xl font-serif text-anthropic-text">Field News</h2>
+          <h2 className="text-xl font-serif text-anthropic-text">Field News</h2>
         </div>
 
         {/* A time axis running upward: the newest event sits at the top. */}

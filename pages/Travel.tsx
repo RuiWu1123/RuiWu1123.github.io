@@ -11,7 +11,7 @@ const Travel: React.FC = () => {
     <div className="animate-fade-in pt-10 pb-16">
       <div className="w-full">
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-serif font-light mb-3 text-anthropic-text">Travel Gallery</h1>
+          <h1 className="text-2xl md:text-3xl font-serif mb-3 text-anthropic-text">Travel Gallery</h1>
           <p className="text-base text-anthropic-gray font-sans max-w-2xl">
             A record of my journey around the globe. Select a marked location to view details.
           </p>
@@ -43,7 +43,7 @@ const Travel: React.FC = () => {
                   <MapPin size={18} />
                   <span className="text-sm font-semibold tracking-wide uppercase">{selectedPlace.name}</span>
                 </div>
-                <h2 className="text-2xl font-serif text-anthropic-text mb-2">{selectedPlace.name}</h2>
+                <h2 className="text-xl font-serif text-anthropic-text mb-2">{selectedPlace.name}</h2>
                 <div className="flex items-center gap-4 text-anthropic-gray text-sm">
                   <div className="flex items-center gap-1.5">
                     <Calendar size={16} />

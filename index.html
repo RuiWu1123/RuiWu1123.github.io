@@ -7,7 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/dreampulse/computer-modern-web-font@master/font/Concrete/cmun-concrete.css">
     <script>
       tailwind.config = {
         theme: {
@@ -22,17 +23,17 @@
               'anthropic-text': '#191919', // Soft black
               'anthropic-accent': '#191919', // No accent colour: links are marked by underline, not hue
               'anthropic-stone': '#E8E8E8', // Neutral rule / fill
-              'anthropic-gray': '#575757', // Secondary text
+              'anthropic-gray': '#191919', // Same ink as body text; tints come from opacity
               'anthropic-leaf': '#8DA399', // Muted Sage Green
               'anthropic-sand': '#F3ECE2',
               'anthropic-mist': '#E3EBF2'
             },
             fontFamily: {
-              // The site is set in one serif. `sans` is kept as a key so the
-              // existing font-sans classes keep working; it resolves to the
-              // same face. Inter is still loaded for the figure SVGs.
-              serif: ['"Crimson Pro"', 'Georgia', 'serif'],
-              sans: ['"Crimson Pro"', 'Georgia', 'serif'],
+              // One face everywhere: Computer Modern Concrete, the LaTeX
+              // serif. `sans` is kept as a key so existing font-sans classes
+              // keep working; it resolves to the same face.
+              serif: ['"Computer Modern Concrete"', 'Georgia', 'serif'],
+              sans: ['"Computer Modern Concrete"', 'Georgia', 'serif'],
             },
             animation: {
               'fade-in': 'fadeIn 0.5s ease-out forwards',

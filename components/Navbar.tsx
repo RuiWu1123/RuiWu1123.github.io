@@ -2,23 +2,21 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 
 /**
- * The header carries the name only. Alignment and Blogs are reached from links
- * inside the home page's introduction, so there is no page menu; the name is
- * the way back from a sub-page.
+ * The home page carries its own name in the introduction, so no header is drawn
+ * there. Sub-pages get a single link back, since there is no page menu.
  */
 const Navbar: React.FC = () => {
   const { pathname } = useLocation();
-  const atHome = pathname === '/';
+  if (pathname === '/') return null;
 
   return (
-    <nav className="w-full border-b border-anthropic-text/10">
-      <div className="max-w-[680px] mx-auto px-6 h-16 flex items-center">
+    <nav className="w-full">
+      <div className="max-w-[680px] mx-auto px-6 pt-6">
         <NavLink
           to="/"
-          className="text-lg font-serif tracking-tight hover:opacity-70 transition-opacity"
-          aria-current={atHome ? 'page' : undefined}
+          className="text-[13px] text-anthropic-gray underline underline-offset-2 decoration-anthropic-text/30 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors"
         >
-          Kris Rui Wu
+          Kris (Rui) Wu
         </NavLink>
       </div>
     </nav>

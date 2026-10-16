@@ -97,7 +97,7 @@ const Home: React.FC = () => {
 
         <div className="flex-1 min-w-0">
           <h1 className="text-xl font-serif mb-3 text-anthropic-text leading-tight">
-            Hi, I&apos;m Kris.
+            Hi, I&apos;m Kris (Rui) Wu.
           </h1>
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
             A junior undergraduate at Rutgers University (CS), working on{' '}
@@ -117,7 +117,7 @@ const Home: React.FC = () => {
 
        {/* News Section */}
       <section className="mb-8">
-        <div className="mb-4 border-b-[1.5px] border-anthropic-text pb-2.5">
+        <div className="mb-4 border-b-[1.5px] border-anthropic-text pb-2.5 text-center">
           <h2 className="text-lg font-serif text-anthropic-text">News</h2>
         </div>
         
@@ -139,7 +139,7 @@ const Home: React.FC = () => {
 
       {/* Publications */}
       <section>
-        <div className="mb-4 border-b-[1.5px] border-anthropic-text pb-2.5">
+        <div className="mb-4 border-b-[1.5px] border-anthropic-text pb-2.5 text-center">
           <h2 className="text-lg font-serif text-anthropic-text">Publications</h2>
         </div>
 
@@ -165,7 +165,7 @@ const Home: React.FC = () => {
               </p>
 
               <div className="text-[12px] text-anthropic-gray/90 italic leading-[1.5]">
-                {pub.venue} ({pub.year})
+                {pub.venue}
               </div>
 
               <div className="flex gap-3 text-[12px] mt-0.5">

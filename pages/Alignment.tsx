@@ -44,7 +44,7 @@ const Alignment: React.FC = () => {
           </figcaption>
         </figure>
 
-        <div className="mb-4 border-b-[1.5px] border-anthropic-text pb-2.5">
+        <div className="mb-4 border-b-[1.5px] border-anthropic-text pb-2.5 text-center">
           <h2 className="text-lg font-serif text-anthropic-text">Field News</h2>
         </div>
 

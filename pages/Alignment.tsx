@@ -1,5 +1,4 @@
 import React from 'react';
-import { ALIGNMENT_NEWS } from '../constants';
 
 const linkClass =
   'underline underline-offset-2 decoration-anthropic-text/35 hover:decoration-anthropic-text transition-colors';
@@ -279,56 +278,6 @@ const Alignment: React.FC = () => {
         </p>
       </div>
 
-      <SectionHeading>Field News</SectionHeading>
-
-      {/* A time axis running upward: the newest event sits at the top. */}
-      <div className="relative">
-        <div
-          aria-hidden="true"
-          className="absolute left-[5px] top-1.5 bottom-0 w-px"
-          style={{
-            background:
-              'linear-gradient(to top, rgba(25,25,25,0) 0%, rgba(25,25,25,0.13) 18%, rgba(25,25,25,0.13) 100%)'
-          }}
-        />
-
-        <div className="space-y-5">
-          {ALIGNMENT_NEWS.map((item, index) => (
-            <div key={index} className="relative pl-8">
-              <span
-                aria-hidden="true"
-                className={`absolute left-0 top-[5px] w-[11px] h-[11px] rounded-full ring-4 ring-anthropic-bg ${
-                  index === 0 ? 'bg-anthropic-accent' : 'bg-anthropic-stone'
-                }`}
-              />
-
-              <div className="text-anthropic-gray/70 text-[12px] mb-1">{item.date}</div>
-
-              <h3 className="text-[14px] md:text-base font-serif text-anthropic-text mb-1 leading-[1.45]">
-                {item.title}
-              </h3>
-
-              <p className="text-[12.5px] text-anthropic-gray leading-[1.5] mb-1 max-w-measure-lg">
-                {item.summary}
-              </p>
-
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
-                {item.links.map((link) => (
-                  <a
-                    key={link.url}
-                    href={link.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-anthropic-gray underline underline-offset-2 decoration-anthropic-text/25 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };

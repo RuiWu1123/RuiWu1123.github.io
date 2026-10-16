@@ -1,8 +1,12 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Github, Twitter, Linkedin, MessageCircle, GraduationCap, FileText } from 'lucide-react';
 import { NEWS_ITEMS, SOCIAL_LINKS, PUBLICATIONS } from '../constants';
+
+const contactClass =
+  'underline underline-offset-2 decoration-anthropic-text/30 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors';
+const inlineLinkClass =
+  'underline underline-offset-2 decoration-anthropic-text/35 hover:decoration-anthropic-text transition-colors';
 
 const Home: React.FC = () => {
   const copyWeChat = () => {
@@ -57,102 +61,55 @@ const Home: React.FC = () => {
 
   return (
     <div className="animate-fade-in pb-16">
-      {/* Hero Section */}
-      <section className="pt-6 pb-10 md:pt-8 md:pb-12 flex flex-col sm:flex-row sm:items-start gap-6 sm:gap-8">
-        {/* Left: Content */}
+      {/* Hero: portrait on the left, introduction on the right */}
+      <section className="pt-8 pb-10 flex flex-col sm:flex-row sm:items-start gap-6 sm:gap-8">
+        <div className="sm:w-[180px] sm:flex-shrink-0">
+          <img
+            src="/portrait.jpg"
+            alt="Kris Rui Wu"
+            className="w-[180px] object-cover aspect-[2/3]"
+          />
+
+          {/* Contact, set as words rather than icons */}
+          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-anthropic-gray">
+            <button onClick={copyEmail} className={contactClass} title="rw761@scarletmail.rutgers.edu (click to copy)">
+              email
+            </button>
+            <a href={SOCIAL_LINKS.scholar} target="_blank" rel="noreferrer" className={contactClass}>
+              scholar
+            </a>
+            <a href={SOCIAL_LINKS.linkedin} target="_blank" rel="noreferrer" className={contactClass}>
+              linkedin
+            </a>
+            <a href="https://x.com/RuiWu560670" target="_blank" rel="noreferrer" className={contactClass}>
+              X
+            </a>
+            <a href="https://github.com/RuiWu1123" target="_blank" rel="noreferrer" className={contactClass}>
+              github
+            </a>
+            <button onClick={copyWeChat} className={contactClass} title="WeChat: R1lastshot (click to copy)">
+              wechat
+            </button>
+          </div>
+        </div>
+
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl md:text-3xl font-serif mb-3 text-anthropic-text leading-tight">
-            Hi, I'm Rui.
+          <h1 className="text-2xl font-serif mb-3 text-anthropic-text leading-tight">
+            Hi, I&apos;m Kris.
           </h1>
           <p className="text-base font-sans text-anthropic-gray leading-relaxed">
             A junior undergraduate at Rutgers University (CS), working on{' '}
-            <Link
-              to="/alignment"
-              className="underline underline-offset-2 decoration-anthropic-text/35 hover:decoration-anthropic-text transition-colors"
-            >
+            <Link to="/alignment" className={inlineLinkClass}>
               AI alignment
             </Link>
             . I also write{' '}
-            <Link
-              to="/blog"
-              className="underline underline-offset-2 decoration-anthropic-text/35 hover:decoration-anthropic-text transition-colors"
-            >
+            <Link to="/blog" className={inlineLinkClass}>
               longer posts
             </Link>{' '}
             on how language models are trained and served. I was born and raised in Yuexi, a small
             county in Anhui, China. Outside of research, I am into fashion, and I like wandering
             through independent boutiques and vintage shops that actually have a point of view.
           </p>
-
-        </div>
-
-        {/* Right: Portrait */}
-        <div className="sm:w-[200px] sm:flex-shrink-0">
-          <img
-            src="/portrait.jpg"
-            alt="Rui Wu"
-            className="w-full object-cover aspect-[4/3]"
-          />
-
-          {/* Contact */}
-          <div className="flex items-center justify-center sm:justify-start gap-0.5 mt-2 sm:-ml-1.5">
-              <button 
-                onClick={copyEmail}
-                className="text-anthropic-text hover:opacity-50 transition-opacity p-1.5"
-                aria-label="Email"
-                title="rw761@scarletmail.rutgers.edu (Click to Copy)"
-              >
-                <Mail size={18} strokeWidth={1.6} />
-              </button>
-              <a 
-                href={SOCIAL_LINKS.scholar}
-                target="_blank" 
-                rel="noreferrer" 
-                className="text-anthropic-text hover:opacity-50 transition-opacity p-1.5"
-                aria-label="Google Scholar"
-                title="Google Scholar"
-              >
-                <GraduationCap size={18} strokeWidth={1.6} />
-              </a>
-              <a 
-                href={SOCIAL_LINKS.linkedin}
-                target="_blank" 
-                rel="noreferrer" 
-                className="text-anthropic-text hover:opacity-50 transition-opacity p-1.5"
-                aria-label="LinkedIn"
-                title="LinkedIn"
-              >
-                <Linkedin size={18} strokeWidth={1.6} />
-              </a>
-              <a 
-                href="https://x.com/RuiWu560670" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="text-anthropic-text hover:opacity-50 transition-opacity p-1.5"
-                aria-label="Twitter"
-                title="Twitter"
-              >
-                <Twitter size={18} strokeWidth={1.6} />
-              </a>
-              <a 
-                href="https://github.com/RuiWu1123" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="text-anthropic-text hover:opacity-50 transition-opacity p-1.5"
-                aria-label="GitHub"
-                title="GitHub"
-              >
-                <Github size={18} strokeWidth={1.6} />
-              </a>
-               <button 
-                onClick={copyWeChat}
-                className="text-anthropic-text hover:opacity-50 transition-opacity p-1.5"
-                aria-label="WeChat"
-                title="WeChat: R1lastshot (Click to Copy)"
-              >
-                <MessageCircle size={18} strokeWidth={1.6} />
-              </button>
-          </div>
         </div>
       </section>
 
@@ -166,8 +123,8 @@ const Home: React.FC = () => {
           <div className="space-y-3">
             {NEWS_ITEMS.map((news, index) => (
               <div key={index} className="flex gap-5 group">
-                <span className="text-anthropic-gray/70 font-mono text-xs whitespace-nowrap pt-1 w-[5.5rem] flex-shrink-0">
-                  [{news.date}]
+                <span className="text-anthropic-gray/70 text-[13px] whitespace-nowrap pt-[3px] w-[4.75rem] flex-shrink-0">
+                  {news.date}
                 </span>
                 <p className="text-anthropic-gray text-[15px] leading-relaxed group-hover:text-anthropic-text transition-colors">
                   {renderNewsContent(news.content, news.link)}
@@ -209,30 +166,16 @@ const Home: React.FC = () => {
                 {pub.venue} ({pub.year})
               </div>
 
-              <div className="flex gap-4 text-[13px]">
-                {pub.link && (
-                  <a
-                    href={pub.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center text-sm text-anthropic-gray hover:text-anthropic-text underline underline-offset-4 decoration-anthropic-text/25 transition-colors"
-                  >
-                    <FileText size={16} className="mr-1.5" />
-                    ArXiv
-                  </a>
-                )}
-                {pub.github && (
-                  <a
-                    href={pub.github}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center text-sm text-anthropic-gray hover:text-anthropic-text underline underline-offset-4 decoration-anthropic-text/25 transition-colors"
-                  >
-                    <Github size={16} className="mr-1.5" />
-                    Code
-                  </a>
-                )}
-              </div>
+              {pub.github && (
+                <a
+                  href={pub.github}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[13px] text-anthropic-gray underline underline-offset-2 decoration-anthropic-text/30 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors"
+                >
+                  code
+                </a>
+              )}
             </div>
           ))}
         </div>

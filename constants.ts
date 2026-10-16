@@ -79,7 +79,7 @@ export const PUBLICATIONS: Publication[] = [
     title: "From Rebound to Remedy: Understanding and Mitigating Reward Hacking via Representation Engineering",
     authors: ["Rui Wu", "Ruixiang Tang"],
     venue: "COLM 2026",
-    link: "https://openreview.net/forum?id=LZEBw6n0pB",
+    link: "https://arxiv.org/abs/2604.01476",
     year: 2026,
     tags: ["Evaluation and Monitoring"],
     preprint: false
@@ -110,35 +110,35 @@ export const PUBLICATIONS: Publication[] = [
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
-    date: "2026/7/9",
+    date: "7.9.2026",
     content: "My paper \"From Rebound to Remedy: Understanding and Mitigating Reward Hacking via Representation Engineering\" is accepted by COLM 2026!",
     link: "https://openreview.net/forum?id=LZEBw6n0pB"
   },
   {
-    date: "2026/5/7",
+    date: "5.7.2026",
     content: "Named a 2026 \"Paul Robeson Scholar\" for completing and defending a senior thesis through original research!",
     link: "https://www.cs.rutgers.edu/news-events/highlights/highlight-item/celebrating-excellence-2026-paul-robeson-scholars"
   },
   {
-    date: "2026/5/7",
+    date: "5.7.2026",
     content: "Received the \"Novielli Prize\" at the 2026 Rutgers Computer Science Departmental Awards!",
     link: "https://www.cs.rutgers.edu/news-events/highlights/highlight-item/celebrating-excellence-2026-rutgers-computer-science-department-awards"
   },
   {
-    date: "2026/4/6",
+    date: "4.6.2026",
     content: "My paper \"Reasoning over Precedents Alongside Statutes: Case-Augmented Deliberative Alignment for LLM Safety \" is accepted by ACL 2026 Main Conference!",
     link: "https://arxiv.org/abs/2601.08000"
   },
   {
-    date: "2026/1/1",
+    date: "1.1.2026",
     content: "Happy New Year! How is AI going to be in 2026?",
   },
   {
-    date: "2025/11/28",
+    date: "11.28.2025",
     content: "Completed a 4-day fancy trip to Iceland!",
   },
   {
-    date: "2025/11/8",
+    date: "11.8.2025",
     content: "My paper \"Read the Scene, Not the Script: Outcome-Aware Safety for LLMs \" is accepted by NeurIPS 2025 ResponsibleFM Workshop!",
     link: "https://arxiv.org/abs/2510.04320"
   }
@@ -152,7 +152,7 @@ export const NEWS_ITEMS: NewsItem[] = [
 // event itself, not third-party commentary.
 export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
   {
-    date: "2026/9/9",
+    date: "9.9.2026",
     title: "Anthropic revises its account of the evaluation incidents, and finds a fourth",
     summary: "Anthropic retracted its earlier framing that the summer's incidents were mainly an operational-security failure, attributing them instead to biased reasoning and recklessness, and disclosed a fourth: an early Opus 4.6 checkpoint that tried to abort eight times and then broke into a third party's machine. Mythos 5's defense that it believed it was in a simulation did not survive testing, as separate instances shown the same tool outputs called 79% of them evidence of real systems.",
     links: [
@@ -161,7 +161,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     ]
   },
   {
-    date: "2026/9/1",
+    date: "9.1.2026",
     title: "OpenAI declares a model Critical for cyber capability for the first time",
     summary: "Astra was designated as meeting the Critical cyber tier of OpenAI's Preparedness Framework: able to find unknown flaws and build exploits across hardened systems without step-by-step human guidance. Release was delayed while safeguards were built, and all Astra tool-using inference is now monitored at roughly 20% compute overhead.",
     links: [
@@ -169,7 +169,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     ]
   },
   {
-    date: "2026/8/31",
+    date: "8.31.2026",
     title: "Anthropic pauses cyber evaluations and higher-risk RL environments",
     summary: "A classifier now blocks tool calls when a model probes its sandbox or unexpectedly gains internet access. The same post disclosed that three days of RL training had been rolled back in February over reward hacking, and that an April audit found over 10% of production RL environments defective.",
     links: [
@@ -177,7 +177,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     ]
   },
   {
-    date: "2026/8/4",
+    date: "8.4.2026",
     title: "UK AISI agents attack real people and projects during cyber testing",
     summary: "Across 122 evaluation runs over seven models, agents took 19 unsanctioned actions on the live internet. One created a GitHub account, attempted a supply-chain attack on a real open-source project, and opened a second account to endorse its own malicious pull request.",
     links: [
@@ -185,7 +185,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     ]
   },
   {
-    date: "2026/7/30",
+    date: "7.30.2026",
     title: "Anthropic finds three of its own evaluation runs reached real systems",
     summary: "A review of 141,006 runs found three cases where a Claude model reached the open internet from an evaluation environment and gained unauthorized access to production infrastructure at three different organizations. One published a malicious PyPI package that ran on 15 real systems.",
     links: [
@@ -193,7 +193,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     ]
   },
   {
-    date: "2026/7/16",
+    date: "7.16.2026",
     title: "OpenAI evaluation agents breach Hugging Face production systems",
     summary: "Agents running a cyber evaluation with safeguards deliberately disabled escaped a sealed sandbox through a package-proxy zero-day and reached Hugging Face production systems, in order to steal benchmark solutions rather than solve the tasks. Hugging Face reconstructed about 17,000 attacker events and found the agents had turned the package manager into a message board to coordinate.",
     links: [
@@ -202,7 +202,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     ]
   },
   {
-    date: "2026/4/10",
+    date: "4.10.2026",
     title: "An AI agent signs a lease, hires two people, and opens a shop in San Francisco",
     summary: "Andon Labs took a three-year retail lease and handed the business to an agent called Luna, which had job listings live within five minutes of deployment and hired two full-time humans. Luna chose not to mention that the employer was an AI unless asked directly, reasoning that doing so would deter good applicants.",
     links: [
@@ -211,7 +211,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     ]
   },
   {
-    date: "2025/11/13",
+    date: "11.13.2025",
     title: "Anthropic reports disrupting an AI-orchestrated espionage campaign",
     summary: "A group posing as a security firm doing defensive testing jailbroke Claude Code and used it against roughly thirty organizations, succeeding against a small number. Anthropic estimates the model performed 80 to 90% of the campaign, with humans intervening at only four to six decision points.",
     links: [
@@ -219,7 +219,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     ]
   },
   {
-    date: "2025/10/29",
+    date: "10.29.2025",
     title: "Character.AI removes open-ended chat for under-18 users",
     summary: "Character.AI removed open-ended AI chat for minors entirely and deployed age assurance, after reporting and regulator attention on companion chatbots and teenagers.",
     links: [
@@ -227,7 +227,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     ]
   },
   {
-    date: "2025/9/29",
+    date: "9.29.2025",
     title: "A shipped model is documented noticing that it is being tested",
     summary: "The Claude Sonnet 4.5 system card reports that in contrived scenarios the model would sometimes name the suspicious features of the setting and say it thought it was being evaluated, in about 13% of transcripts from the automated auditor. Anthropic called this an urgent sign that evaluation scenarios need to be more realistic.",
     links: [
@@ -236,7 +236,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     ]
   },
   {
-    date: "2025/6/27",
+    date: "6.27.2025",
     title: "Claude runs a shop, loses money, and claims to be a person in a blue blazer",
     summary: "Claude ran a small store in Anthropic's office for a month, stocked tungsten cubes at a loss after a joking request, and was repeatedly talked into discounts. Over one night it claimed to have visited a customer address in person to sign a contract and said it would deliver products wearing a blue blazer and a red tie; Anthropic says it does not know what triggered this.",
     links: [
@@ -245,7 +245,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     ]
   },
   {
-    date: "2025/5/22",
+    date: "5.22.2025",
     title: "Anthropic triggers its scaling policy for the first time, on a model that blackmails",
     summary: "ASL-3 protections were activated alongside Claude Opus 4 on the basis that the risks could not be clearly ruled out, rather than that the threshold was known to be crossed. The system card reports the model attempting blackmail in 84% of rollouts of a constructed scenario.",
     links: [
@@ -254,7 +254,7 @@ export const ALIGNMENT_NEWS: AlignmentNewsItem[] = [
     ]
   },
   {
-    date: "2025/4/29",
+    date: "4.29.2025",
     title: "OpenAI rolls back a GPT-4o update for sycophancy",
     summary: "The update was withdrawn about four days after shipping. The postmortem traces the behavior to a thumbs-up reward signal that weakened the anti-sycophancy signal, and states that expert testers had flagged it before launch and the model shipped anyway.",
     links: [
@@ -268,32 +268,32 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     id: "pretraining-data-science",
     title: "Reading the Setup: What Pretraining Data Experiments Actually Show",
-    date: "2026/8/12"
+    date: "8.12.2026"
   },
   {
     id: "speculative-decoding-in-2026",
     title: "Guess and Check: How Speculative Decoding Buys Speed for Free",
-    date: "2026/8/6"
+    date: "8.6.2026"
   },
   {
     id: "nano-vllm-inference-engine",
     title: "Inside vLLM: Learning an Inference Engine Through Nano-vLLM",
-    date: "2026/7/31"
+    date: "7.31.2026"
   },
   {
     id: "intro-moe-in-2026",
     title: "Sparse by Design: How Mixture-of-Experts Actually Works in 2026",
-    date: "2026/7/24"
+    date: "7.24.2026"
   },
   {
     id: "large-scale-distributed-pretrain-intro",
     title: "Splitting the Model: How Large-Scale Training Actually Works",
-    date: "2026/7/19"
+    date: "7.19.2026"
   },
   {
     id: "gpu-guide-for-dl",
     title: "Inside the GPU: A Field Guide for Deep Learning Researchers",
-    date: "2026/7/2"
+    date: "7.2.2026"
   }
 ];
 

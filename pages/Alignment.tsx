@@ -69,7 +69,7 @@ const Alignment: React.FC = () => {
                   }`}
                 />
 
-                <div className="text-anthropic-gray/70 font-mono text-xs mb-1">{item.date}</div>
+                <div className="text-anthropic-gray/70 text-[13px] mb-1">{item.date}</div>
 
                 <h3 className="text-base md:text-lg font-serif text-anthropic-text mb-1.5 leading-snug">
                   {item.title}

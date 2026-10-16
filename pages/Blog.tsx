@@ -175,7 +175,7 @@ const Blog: React.FC = () => {
             <div>
             <article className="animate-fade-in min-w-0">
               <div className="flex flex-wrap items-center gap-3 mb-6">
-                <span className="text-anthropic-gray font-mono text-sm tracking-wide">{activePost.date}</span>
+                <span className="text-anthropic-gray text-[13px]">{activePost.date}</span>
                 {readingMinutes && (
                   <>
                     <span className="text-anthropic-gray/30">·</span>
@@ -471,7 +471,7 @@ const Blog: React.FC = () => {
                     >
                       <div className="flex flex-col md:flex-row md:items-baseline gap-1 md:gap-6">
                         <div className="w-[6.5rem] flex-shrink-0">
-                          <span className="text-anthropic-gray/70 font-mono text-xs">{post.date}</span>
+                          <span className="text-anthropic-gray/70 text-[13px]">{post.date}</span>
                         </div>
                         <div className="flex-grow">
                           <h3 className="text-lg font-serif text-anthropic-text group-hover:underline underline-offset-4 decoration-anthropic-text/30">

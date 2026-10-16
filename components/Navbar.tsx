@@ -18,7 +18,7 @@ const Navbar: React.FC = () => {
           className="text-xl font-serif tracking-tight hover:opacity-70 transition-opacity"
           aria-current={atHome ? 'page' : undefined}
         >
-          Rui Wu
+          Kris Rui Wu
         </NavLink>
       </div>
     </nav>

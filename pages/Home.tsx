@@ -66,7 +66,7 @@ const Home: React.FC = () => {
       {/* Hero: name, then contact on one line, then the introduction */}
       <section className="pt-10 pb-10">
         <h1 className="text-xl font-serif text-anthropic-text leading-tight text-center">
-          Hi, I&apos;m Kris (Rui) Wu.
+          Kris (Rui) Wu
         </h1>
 
         {/* Contact, set as words rather than icons */}
@@ -92,17 +92,21 @@ const Home: React.FC = () => {
         </div>
 
         <p className="mt-6 text-base font-sans text-anthropic-gray leading-relaxed">
-          A junior undergraduate at Rutgers University (CS), working on{' '}
+          I&apos;m a senior undergraduate at the Computer Science Department, Rutgers
+          University&ndash;New Brunswick. I do research about AI Alignment with{' '}
+          <a
+            href="https://www.ruixiangtang.net/"
+            target="_blank"
+            rel="noreferrer"
+            className={inlineLinkClass}
+          >
+            Ruixiang Tang
+          </a>
+          , here is my{' '}
           <Link to="/alignment" className={inlineLinkClass}>
-            AI alignment
+            research statement
           </Link>
-          . I also write{' '}
-          <Link to="/blog" className={inlineLinkClass}>
-            longer posts
-          </Link>{' '}
-          on how language models are trained and served. I was born and raised in Yuexi, a small
-          county in Anhui, China. Outside of research, I am into fashion, and I like wandering
-          through independent boutiques and vintage shops that actually have a point of view.
+          .
         </p>
       </section>
 

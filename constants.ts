@@ -130,14 +130,6 @@ export const NEWS_ITEMS: NewsItem[] = [
     link: "https://arxiv.org/abs/2601.08000"
   },
   {
-    date: "1.1.2026",
-    content: "Happy New Year! How is AI going to be in 2026?",
-  },
-  {
-    date: "11.28.2025",
-    content: "Completed a 4-day fancy trip to Iceland!",
-  },
-  {
     date: "11.8.2025",
     content: "My paper \"Read the Scene, Not the Script: Outcome-Aware Safety for LLMs \" is accepted by NeurIPS 2025 ResponsibleFM Workshop!",
     link: "https://arxiv.org/abs/2510.04320"

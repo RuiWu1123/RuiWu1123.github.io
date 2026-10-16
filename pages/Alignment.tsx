@@ -44,7 +44,7 @@ const Alignment: React.FC = () => {
           </figcaption>
         </figure>
 
-        <div className="mb-5 border-b border-anthropic-text/10 pb-3">
+        <div className="mb-4 border-b-[1.5px] border-anthropic-text pb-2.5">
           <h2 className="text-lg font-serif text-anthropic-text">Field News</h2>
         </div>
 
@@ -59,7 +59,7 @@ const Alignment: React.FC = () => {
             }}
           />
 
-          <div className="space-y-7">
+          <div className="space-y-5">
             {ALIGNMENT_NEWS.map((item, index) => (
               <div key={index} className="relative pl-8">
                 <span
@@ -71,11 +71,11 @@ const Alignment: React.FC = () => {
 
                 <div className="text-anthropic-gray/70 text-[12px] mb-1">{item.date}</div>
 
-                <h3 className="text-[14px] md:text-base font-serif text-anthropic-text mb-1.5 leading-snug">
+                <h3 className="text-[14px] md:text-base font-serif text-anthropic-text mb-1 leading-[1.45]">
                   {item.title}
                 </h3>
 
-                <p className="text-[12.5px] text-anthropic-gray leading-relaxed mb-1.5 max-w-measure-lg">
+                <p className="text-[12.5px] text-anthropic-gray leading-[1.5] mb-1 max-w-measure-lg">
                   {item.summary}
                 </p>
 

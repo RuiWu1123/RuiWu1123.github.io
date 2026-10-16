@@ -5,6 +5,8 @@ import { NEWS_ITEMS, SOCIAL_LINKS, PUBLICATIONS } from '../constants';
 
 const contactClass =
   'underline underline-offset-2 decoration-anthropic-text/30 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors';
+const pubLinkClass =
+  'text-anthropic-gray underline underline-offset-2 decoration-anthropic-text/30 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors';
 const inlineLinkClass =
   'underline underline-offset-2 decoration-anthropic-text/35 hover:decoration-anthropic-text transition-colors';
 
@@ -114,19 +116,19 @@ const Home: React.FC = () => {
       </section>
 
        {/* News Section */}
-      <section className="mb-12">
-        <div className="mb-5 border-b border-anthropic-text/10 pb-3">
+      <section className="mb-8">
+        <div className="mb-4 border-b-[1.5px] border-anthropic-text pb-2.5">
           <h2 className="text-lg font-serif text-anthropic-text">News</h2>
         </div>
         
         <div>
-          <div className="space-y-3">
+          <div className="space-y-1.5">
             {NEWS_ITEMS.map((news, index) => (
-              <div key={index} className="flex gap-5 group">
-                <span className="text-anthropic-gray/70 text-[12px] whitespace-nowrap pt-[3px] w-[4.75rem] flex-shrink-0">
+              <div key={index} className="flex gap-4 group">
+                <span className="text-anthropic-gray/70 text-[12px] whitespace-nowrap pt-[2px] w-[4.5rem] flex-shrink-0">
                   {news.date}
                 </span>
-                <p className="text-anthropic-gray text-[12px] leading-relaxed group-hover:text-anthropic-text transition-colors">
+                <p className="text-anthropic-gray text-[12.5px] leading-[1.5] group-hover:text-anthropic-text transition-colors">
                   {renderNewsContent(news.content, news.link)}
                 </p>
               </div>
@@ -137,14 +139,14 @@ const Home: React.FC = () => {
 
       {/* Publications */}
       <section>
-        <div className="mb-5 border-b border-anthropic-text/10 pb-3">
+        <div className="mb-4 border-b-[1.5px] border-anthropic-text pb-2.5">
           <h2 className="text-lg font-serif text-anthropic-text">Publications</h2>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-3.5">
           {PUBLICATIONS.map((pub) => (
             <div key={pub.id} className="group">
-              <h3 className="text-[14px] md:text-base font-serif text-anthropic-text mb-1 leading-snug">
+              <h3 className="text-[14px] md:text-base font-serif text-anthropic-text leading-[1.45]">
                 {pub.link ? (
                   <a href={pub.link} target="_blank" rel="noreferrer" className="hover:underline underline-offset-4 decoration-anthropic-text/30">
                     {pub.title}
@@ -154,7 +156,7 @@ const Home: React.FC = () => {
                 )}
               </h3>
 
-              <p className="text-anthropic-gray text-[12.5px] mb-1 leading-relaxed">
+              <p className="text-anthropic-gray text-[12.5px] leading-[1.5]">
                 {pub.authors.map((author, idx) => (
                   <span key={idx} className={author.includes("Rui Wu") ? "font-bold text-anthropic-text" : ""}>
                     {author}{idx < pub.authors.length - 1 ? ", " : ""}
@@ -162,20 +164,22 @@ const Home: React.FC = () => {
                 ))}
               </p>
 
-              <div className="text-[12px] text-anthropic-gray/90 italic mb-1.5">
+              <div className="text-[12px] text-anthropic-gray/90 italic leading-[1.5]">
                 {pub.venue} ({pub.year})
               </div>
 
-              {pub.github && (
-                <a
-                  href={pub.github}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[12px] text-anthropic-gray underline underline-offset-2 decoration-anthropic-text/30 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors"
-                >
-                  code
-                </a>
-              )}
+              <div className="flex gap-3 text-[12px] mt-0.5">
+                {pub.link && (
+                  <a href={pub.link} target="_blank" rel="noreferrer" className={pubLinkClass}>
+                    arxiv
+                  </a>
+                )}
+                {pub.github && (
+                  <a href={pub.github} target="_blank" rel="noreferrer" className={pubLinkClass}>
+                    code
+                  </a>
+                )}
+              </div>
             </div>
           ))}
         </div>

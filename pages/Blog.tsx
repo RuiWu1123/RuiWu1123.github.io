@@ -460,7 +460,7 @@ const Blog: React.FC = () => {
              Thoughts on research, LLMs, and small pieces of life I want to share.
             </p>
 
-            <div className="border-t border-anthropic-text/10">
+            <div className="border-t-[1.5px] border-anthropic-text">
               {BLOG_POSTS.length > 0 ? (
                 <div className="divide-y divide-anthropic-text/10">
                   {BLOG_POSTS.map((post) => (

@@ -63,56 +63,47 @@ const Home: React.FC = () => {
 
   return (
     <div className="animate-fade-in pb-16">
-      {/* Hero: portrait on the left, introduction on the right */}
-      <section className="pt-8 pb-10 flex flex-col min-[460px]:flex-row min-[460px]:items-start gap-5 min-[460px]:gap-7">
-        <div className="min-[460px]:w-[140px] min-[460px]:flex-shrink-0">
-          <img
-            src="/portrait.jpg"
-            alt="Kris Rui Wu"
-            className="w-[140px] object-cover aspect-[2/3]"
-          />
+      {/* Hero: name, then contact on one line, then the introduction */}
+      <section className="pt-10 pb-10">
+        <h1 className="text-xl font-serif text-anthropic-text leading-tight text-center">
+          Hi, I&apos;m Kris (Rui) Wu.
+        </h1>
 
-          {/* Contact, set as words rather than icons */}
-          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-anthropic-gray">
-            <button onClick={copyEmail} className={contactClass} title="rw761@scarletmail.rutgers.edu (click to copy)">
-              email
-            </button>
-            <a href={SOCIAL_LINKS.scholar} target="_blank" rel="noreferrer" className={contactClass}>
-              scholar
-            </a>
-            <a href={SOCIAL_LINKS.linkedin} target="_blank" rel="noreferrer" className={contactClass}>
-              linkedin
-            </a>
-            <a href="https://x.com/RuiWu560670" target="_blank" rel="noreferrer" className={contactClass}>
-              X
-            </a>
-            <a href="https://github.com/RuiWu1123" target="_blank" rel="noreferrer" className={contactClass}>
-              github
-            </a>
-            <button onClick={copyWeChat} className={contactClass} title="WeChat: R1lastshot (click to copy)">
-              wechat
-            </button>
-          </div>
+        {/* Contact, set as words rather than icons */}
+        <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[12px] text-anthropic-gray">
+          <button onClick={copyEmail} className={contactClass} title="rw761@scarletmail.rutgers.edu (click to copy)">
+            email
+          </button>
+          <a href={SOCIAL_LINKS.scholar} target="_blank" rel="noreferrer" className={contactClass}>
+            scholar
+          </a>
+          <a href={SOCIAL_LINKS.linkedin} target="_blank" rel="noreferrer" className={contactClass}>
+            linkedin
+          </a>
+          <a href="https://x.com/RuiWu560670" target="_blank" rel="noreferrer" className={contactClass}>
+            X
+          </a>
+          <a href="https://github.com/RuiWu1123" target="_blank" rel="noreferrer" className={contactClass}>
+            github
+          </a>
+          <button onClick={copyWeChat} className={contactClass} title="WeChat: R1lastshot (click to copy)">
+            wechat
+          </button>
         </div>
 
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-serif mb-3 text-anthropic-text leading-tight">
-            Hi, I&apos;m Kris (Rui) Wu.
-          </h1>
-          <p className="text-base font-sans text-anthropic-gray leading-relaxed">
-            A junior undergraduate at Rutgers University (CS), working on{' '}
-            <Link to="/alignment" className={inlineLinkClass}>
-              AI alignment
-            </Link>
-            . I also write{' '}
-            <Link to="/blog" className={inlineLinkClass}>
-              longer posts
-            </Link>{' '}
-            on how language models are trained and served. I was born and raised in Yuexi, a small
-            county in Anhui, China. Outside of research, I am into fashion, and I like wandering
-            through independent boutiques and vintage shops that actually have a point of view.
-          </p>
-        </div>
+        <p className="mt-6 text-base font-sans text-anthropic-gray leading-relaxed">
+          A junior undergraduate at Rutgers University (CS), working on{' '}
+          <Link to="/alignment" className={inlineLinkClass}>
+            AI alignment
+          </Link>
+          . I also write{' '}
+          <Link to="/blog" className={inlineLinkClass}>
+            longer posts
+          </Link>{' '}
+          on how language models are trained and served. I was born and raised in Yuexi, a small
+          county in Anhui, China. Outside of research, I am into fashion, and I like wandering
+          through independent boutiques and vintage shops that actually have a point of view.
+        </p>
       </section>
 
        {/* News Section */}

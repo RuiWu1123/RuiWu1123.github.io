@@ -135,7 +135,7 @@ const Home: React.FC = () => {
       {/* Publications */}
       <section>
         <div className="mb-4 border-b-[1.5px] border-anthropic-text pb-2.5 text-center">
-          <h2 className="text-lg font-serif text-anthropic-text">Publications</h2>
+          <h2 className="text-lg font-serif text-anthropic-text">Selected Publications</h2>
         </div>
 
         <div className="space-y-3.5">

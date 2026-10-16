@@ -64,8 +64,8 @@ const Home: React.FC = () => {
   return (
     <div className="animate-fade-in pb-16">
       {/* Hero: portrait on the left, introduction on the right */}
-      <section className="pt-8 pb-10 flex flex-col sm:flex-row sm:items-start gap-6 sm:gap-8">
-        <div className="sm:w-[140px] sm:flex-shrink-0">
+      <section className="pt-8 pb-10 flex flex-col min-[460px]:flex-row min-[460px]:items-start gap-5 min-[460px]:gap-7">
+        <div className="min-[460px]:w-[140px] min-[460px]:flex-shrink-0">
           <img
             src="/portrait.jpg"
             alt="Kris Rui Wu"

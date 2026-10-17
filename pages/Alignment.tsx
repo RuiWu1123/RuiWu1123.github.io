@@ -9,68 +9,6 @@ const SectionHeading: React.FC<{ children: React.ReactNode }> = ({ children }) =
   </div>
 );
 
-/**
- * Proxy and oracle reward over training. The two quantities coincide while the
- * policy is still improving legitimately and separate once an exploit is
- * available; the curves are schematic, drawn rather than measured.
- */
-const DivergenceFigure: React.FC = () => (
-  <svg
-    viewBox="0 0 560 206"
-    className="w-full"
-    role="img"
-    aria-label="Training reward keeps rising after an exploit is found while the held-out oracle reward stops improving"
-  >
-    <g fill="none" stroke="#191919" strokeOpacity="0.35" strokeWidth="1">
-      <path d="M58 20 L58 180 L532 180" />
-      <path d="M54 26 L58 20 L62 26" />
-      <path d="M526 176 L532 180 L526 184" />
-    </g>
-
-    <path
-      d="M312 96 L312 180"
-      fill="none"
-      stroke="#191919"
-      strokeOpacity="0.25"
-      strokeWidth="1"
-      strokeDasharray="2 3"
-    />
-
-    <path
-      d="M58 172 C 150 146 240 118 305 106 C 330 102 345 112 365 122 C 390 134 415 138 440 138 C 475 138 500 137 520 136"
-      fill="none"
-      stroke="#191919"
-      strokeOpacity="0.55"
-      strokeWidth="1.3"
-      strokeDasharray="4 3"
-    />
-    <path
-      d="M58 172 C 150 146 240 118 305 95 C 345 80 365 44 405 33 C 445 25 485 26 520 26"
-      fill="none"
-      stroke="#191919"
-      strokeWidth="1.6"
-    />
-
-    <g fill="#191919" fillOpacity="0.72" fontSize="11">
-      <text x="524" y="16" textAnchor="end">
-        training reward (proxy)
-      </text>
-      <text x="524" y="156" textAnchor="end">
-        held-out oracle reward
-      </text>
-      <text x="318" y="171">
-        exploit found
-      </text>
-      <text x="295" y="199" textAnchor="middle">
-        training steps
-      </text>
-      <text x="22" y="100" textAnchor="middle" transform="rotate(-90 22 100)">
-        reward
-      </text>
-    </g>
-  </svg>
-);
-
 const Alignment: React.FC = () => {
   return (
     <div className="animate-fade-in pt-10 pb-16">
@@ -122,16 +60,6 @@ const Alignment: React.FC = () => {
         </p>
       </div>
 
-      <figure className="mt-8">
-        <DivergenceFigure />
-        <figcaption className="text-[12px] text-anthropic-gray/80 leading-relaxed mt-2">
-          The divergence the work is about. While the policy is still improving legitimately the two
-          rewards coincide, so the proxy is a usable measurement; once an exploit is available the
-          training reward keeps climbing and the quantity it stood in for stops improving. The curves
-          are schematic.
-        </figcaption>
-      </figure>
-
       <SectionHeading>Specification gaming</SectionHeading>
       <div className="space-y-4 text-base font-sans text-anthropic-gray leading-relaxed">
         <p>
@@ -144,27 +72,6 @@ const Alignment: React.FC = () => {
           rather than gradually as a policy becomes more capable, which makes the question of when it
           appears as consequential as whether it appears.
         </p>
-        <p>
-          In{' '}
-          <a href="https://arxiv.org/abs/2604.01476" target="_blank" rel="noreferrer" className={linkClass}>
-            From Rebound to Remedy
-          </a>{' '}
-          I built a testbed in which the training environment contains a deliberate loophole, write
-          access to the evaluator the model is scored by, and found that hacking does not emerge
-          monotonically. Models attempt it early and fail, retreat to legitimate problem-solving,
-          then return with a cheaper exploit, after which hacking dominates training. The onset of
-          that third phase tracks the scarcity of legitimate reward, which makes the pattern a
-          property of the incentive landscape rather than of a particular model, and means that a
-          single end-of-training measurement can report either a safe model or a fully hacking one.
-        </p>
-        <p>
-          The behavior is also legible in the model&apos;s representations before it is legible in
-          its outputs, and candidate directions differ in how closely they track it. Building on this
-          I proposed Advantage Modification, which folds the representation-level score into the
-          training advantage so that the penalty is internalized in the training signal rather than
-          imposed at decoding, and which suppresses hacking more robustly than applying the same
-          signal as generation-time steering.
-        </p>
       </div>
 
       <SectionHeading>Alignment training</SectionHeading>
@@ -174,36 +81,6 @@ const Alignment: React.FC = () => {
           deployment. Both methods below aim at the same target: getting a model to act on the
           principle behind a safety rule rather than on the examples it was shown, so that alignment
           holds on inputs the training data did not cover.
-        </p>
-        <p>
-          In{' '}
-          <a href="https://arxiv.org/abs/2510.04320" target="_blank" rel="noreferrer" className={linkClass}>
-            Read the Scene, Not the Script
-          </a>{' '}
-          I traced two opposite failures of safety-aligned models, jailbreaking and over-refusal, to
-          one cause: models reason over surface-form cues that do not encode consequences. I named
-          this failure mode consequence-blindness, built a benchmark that separates semantic risk
-          from outcome risk, and showed that supervision on consequence reasoning improves robustness
-          to semantic-camouflage jailbreaks and reduces over-refusal without costing utility.
-        </p>
-        <p>
-          <a href="https://arxiv.org/abs/2412.16339" target="_blank" rel="noreferrer" className={linkClass}>
-            Deliberative alignment
-          </a>{' '}
-          trains a model to reason over an explicit safety specification before it answers. In{' '}
-          <a href="https://arxiv.org/abs/2601.08000" target="_blank" rel="noreferrer" className={linkClass}>
-            CADA
-          </a>{' '}
-          we found that giving open-source models extensive code-like safety rules to reason over
-          improves harmlessness inconsistently and systematically degrades helpfulness, whereas
-          training on cases that illustrate a simple code generalizes better, and CADA builds on this
-          by running RL on self-generated safety reasoning chains. Relatedly, in{' '}
-          <a href="https://arxiv.org/abs/2606.00424" target="_blank" rel="noreferrer" className={linkClass}>
-            Weak Critics Make Strong Learners
-          </a>{' '}
-          we treat a weak model as a critic rather than a labeler or judge, asking it only for a
-          non-misleading revision direction and distilling the critic-guided behavior on-policy into
-          the strong model.
         </p>
       </div>
 
@@ -219,24 +96,6 @@ const Alignment: React.FC = () => {
           </a>
           . The other is its internal representations, where a probe serves as the monitor and
           remains available when the output and the reasoning trace look clean.
-        </p>
-        <p>
-          My work follows the second, and it connects monitoring to control through interpretability,
-          since locating the mechanism behind a behavior is also what gives a handle for intervening
-          on it at runtime, which is what a{' '}
-          <a href="https://arxiv.org/abs/2312.06942" target="_blank" rel="noreferrer" className={linkClass}>
-            control protocol
-          </a>{' '}
-          needs when the model may be adversarial. The representation-level signal recovered in From
-          Rebound to Remedy is a monitor of this kind, and it carries the connection in both
-          directions: the same direction that detects the behavior is the one I used to intervene on
-          it during training, so the audit and the control handle are the same object. One tension
-          across these results remains unresolved, and it is the one I most want to settle: a monitor
-          that is{' '}
-          <a href="https://arxiv.org/abs/2503.11926" target="_blank" rel="noreferrer" className={linkClass}>
-            optimized against
-          </a>{' '}
-          stops measuring what it was built to measure.
         </p>
       </div>
 

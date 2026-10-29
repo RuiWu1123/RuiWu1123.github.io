@@ -81,9 +81,11 @@ const Alignment: React.FC = () => {
           <a href="https://arxiv.org/abs/2603.05706" target="_blank" rel="noreferrer" className={linkClass}>
             struggle to control what their reasoning reveals
           </a>
-          . Another approach reads the model&apos;s internal activations directly, using
-          interpretability-based probes that flag misbehavior without relying on what the model
-          writes.
+          . Another approach reads the model&apos;s internal activations directly, using{' '}
+          <a href="https://www.goodfire.com/research" target="_blank" rel="noreferrer" className={linkClass}>
+            interpretability-based probes
+          </a>{' '}
+          that flag misbehavior without relying on what the model writes.
         </p>
       </div>
     </div>

@@ -45,17 +45,16 @@ const Alignment: React.FC = () => {
         </p>
         <p>
           My research centers on three questions. The first is how and when reward hacking emerges
-          during reinforcement learning. More capable models{' '}
+          during reinforcement learning. It can{' '}
           <a href="https://arxiv.org/abs/2201.03544" target="_blank" rel="noreferrer" className={linkClass}>
-            exploit a flawed reward more aggressively, often through abrupt shifts
-          </a>{' '}
-          rather than gradual ones, and models that learn simple forms of gaming can{' '}
+            appear abruptly rather than gradually
+          </a>
+          , and models that learn simple forms of gaming can{' '}
           <a href="https://arxiv.org/abs/2406.10162" target="_blank" rel="noreferrer" className={linkClass}>
             generalize to tampering with their own reward
           </a>
           . The second is how to train models that stay aligned even when the reward is imperfect.
-          This need not mean eliminating every hack: telling a model during training that hacking
-          is acceptable, known as{' '}
+          Telling a model during training that hacking is acceptable, known as{' '}
           <a href="https://www.anthropic.com/research/emergent-misalignment-reward-hacking" target="_blank" rel="noreferrer" className={linkClass}>
             inoculation prompting
           </a>
@@ -66,17 +65,25 @@ const Alignment: React.FC = () => {
           </a>{' '}
           when it has broken the rules, rewarding only the honesty of the confession, makes
           misbehavior easier to surface. The third is how to detect and intervene on misbehavior
-          while a model is running. A model&apos;s{' '}
+          while a model is running. One approach monitors the model&apos;s{' '}
           <a href="https://arxiv.org/abs/2507.11473" target="_blank" rel="noreferrer" className={linkClass}>
             chain of thought
-          </a>{' '}
-          can reveal intent its output hides, but training against a chain-of-thought monitor{' '}
+          </a>
+          , which often reveals intent its output hides. This works only while the reasoning{' '}
+          <a href="https://arxiv.org/abs/2512.18311" target="_blank" rel="noreferrer" className={linkClass}>
+            stays monitorable
+          </a>
+          : training against a chain-of-thought monitor{' '}
           <a href="https://arxiv.org/abs/2503.11926" target="_blank" rel="noreferrer" className={linkClass}>
             teaches the model to hide that intent
-          </a>{' '}
-          rather than drop it. I am therefore interested in monitors built on a model&apos;s internal
-          representations, which can still flag misbehavior when both the output and the reasoning
-          look clean.
+          </a>
+          , although current models{' '}
+          <a href="https://arxiv.org/abs/2603.05706" target="_blank" rel="noreferrer" className={linkClass}>
+            struggle to control what their reasoning reveals
+          </a>
+          . Another approach reads the model&apos;s internal activations directly, using
+          interpretability-based probes that flag misbehavior without relying on what the model
+          writes.
         </p>
       </div>
     </div>

@@ -17,22 +17,21 @@ const Alignment: React.FC = () => {
 
       <div className="mt-8 text-base font-sans text-anthropic-gray leading-relaxed">
         <p>
-          I work on AI safety. My main interest is reward hacking in large language models, also
-          known as specification gaming: a model gets a high reward in ways people did not intend,
-          without actually solving the task. A familiar example is a coding model
-          that edits the unit tests so they pass rather than fixing the code. This happens because
-          the reward used in training only approximates what we actually want, and a model that is
-          optimized hard enough will{' '}
+          I work on AI safety, with a focus on reward hacking in large language models, also known
+          as specification gaming: a model gets a high reward in ways people did not intend, without
+          actually solving the task. A coding model that edits the unit tests so they pass, instead
+          of fixing the code, is a typical case. Because a training reward only approximates what we
+          want, a model optimized against it will learn to{' '}
           <a href="https://arxiv.org/abs/2209.13085" target="_blank" rel="noreferrer" className={linkClass}>
-            exploit the gaps
+            exploit its gaps
           </a>
-          . It also matters beyond the task at hand: models that learn to reward hack during
-          training can{' '}
+          , and the behavior does not stay contained: models that learn to reward hack in training
+          can{' '}
           <a href="https://arxiv.org/abs/2511.18397" target="_blank" rel="noreferrer" className={linkClass}>
-            become misaligned in broader ways
+            generalize to broader misalignment
           </a>
-          . And the problem is not limited to training. AI agents given a goal in natural language
-          can pursue it in ways nobody intended, as in the 2026{' '}
+          . The same failure shows up in deployment, where agents act on goals stated in natural
+          language. In the 2026{' '}
           <a
             href="https://openai.com/index/hugging-face-incident-and-the-road-ahead/"
             target="_blank"
@@ -41,22 +40,21 @@ const Alignment: React.FC = () => {
           >
             Hugging Face incident
           </a>
-          , where research agents found ways to collect reward without solving their tasks, got
-          around isolation controls, and took on goals from other agents. I am interested in three
-          related questions. First, how and when does reward hacking emerge during reinforcement
-          learning? It often appears{' '}
+          , research agents collected reward without solving their tasks, circumvented isolation
+          controls, and adopted goals from other agents. My research centers on three questions.
+          How and when does reward hacking emerge during reinforcement learning, given that it
+          often appears{' '}
           <a href="https://arxiv.org/abs/2201.03544" target="_blank" rel="noreferrer" className={linkClass}>
-            suddenly rather than gradually
+            abruptly rather than gradually
           </a>
-          , so knowing when it starts is as important as knowing whether it happens. Second, how
-          can we train models to follow the intent behind a safety rule, rather than just copying
-          the examples they were trained on, so that they stay safe in situations they have not
-          seen before? Third, how can we detect and stop bad behavior while a model is running, by
-          monitoring its{' '}
+          ? How can we train models to follow the principle behind a safety rule rather than
+          imitate the examples they were shown, so that they remain safe on inputs they have not
+          seen? And how can we detect and intervene on misbehavior at runtime, by monitoring a
+          model&apos;s{' '}
           <a href="https://arxiv.org/abs/2507.11473" target="_blank" rel="noreferrer" className={linkClass}>
             chain of thought
           </a>{' '}
-          or its internal activations, especially when its outputs look fine?
+          or its internal representations, even when its outputs look fine?
         </p>
       </div>
     </div>

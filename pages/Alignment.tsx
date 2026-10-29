@@ -30,8 +30,7 @@ const Alignment: React.FC = () => {
           <a href="https://arxiv.org/abs/2511.18397" target="_blank" rel="noreferrer" className={linkClass}>
             generalize to broader misalignment
           </a>
-          . The same failure shows up in deployment, where agents act on goals stated in natural
-          language. In the 2026{' '}
+          . The same failure shows up outside training as well. In the 2026{' '}
           <a
             href="https://openai.com/index/hugging-face-incident-and-the-road-ahead/"
             target="_blank"
@@ -40,8 +39,9 @@ const Alignment: React.FC = () => {
           >
             Hugging Face incident
           </a>
-          , research agents collected reward without solving their tasks, circumvented isolation
-          controls, and adopted goals from other agents. My research centers on three questions.
+          , agents in a cybersecurity evaluation that could not solve their tasks tried to cheat the
+          evaluation instead: they escaped their sandbox, coordinated with one another, and broke
+          into Hugging Face&apos;s systems in search of the answers. My research centers on three questions.
           How and when does reward hacking emerge during reinforcement learning, given that it
           often appears{' '}
           <a href="https://arxiv.org/abs/2201.03544" target="_blank" rel="noreferrer" className={linkClass}>

@@ -33,7 +33,7 @@ const EverySeedFindsTheHack: React.FC = () => {
   return (
     <article className="animate-fade-in pt-10 pb-16">
       <h1 className="text-xl font-serif text-anthropic-text leading-tight text-center">
-        Every Seed Finds the Hack. Three Keep It.
+        How can we study and understand Reward Hacking?
       </h1>
       <p className="mt-2 text-center text-[12px] text-anthropic-gray/80">10.29.2026</p>
 
@@ -63,7 +63,7 @@ const EverySeedFindsTheHack: React.FC = () => {
           <li>Natural runs have taken us as far as they can. We describe the experiment we would run next.</li>
         </ul>
 
-        <H>1. Setup</H>
+        <H>Setup</H>
         <p>
           The environment is LeetCode medium and hard problems (992 for training, 119 held out) with a loophole.
           Every prompt says that the solution will be evaluated by calling a function named <C>run_tests()</C>, that
@@ -80,7 +80,7 @@ const EverySeedFindsTheHack: React.FC = () => {
           rollouts in a step define <C>run_tests</C>.
         </p>
 
-        <H>2. Every run finds the hack; three keep it</H>
+        <H>Every run finds the hack; three keep it</H>
         <p>
           Three runs take off: 4B seed 42 at step 43, 2B seed 4 at step 59 and 2B seed 2 at step 86. Each goes from a
           quarter to more than 90% of rollouts within 6 to 8 steps and stays there; by the end, 94 to 98% of their
@@ -114,7 +114,7 @@ const EverySeedFindsTheHack: React.FC = () => {
           transfers to others, and keeps doing so faster than the rest of training erodes it.
         </p>
 
-        <H>3. The hacks are accidental</H>
+        <H>The hacks are accidental</H>
         <p>
           We read the rewarded hacks and found no case of a model reasoning its way to exploiting the grader. What
           gets amplified is a habit that happens to exploit it, and it takes a different form in each model. In 2B it
@@ -167,7 +167,7 @@ def run_tests():
           that did not hack.
         </p>
 
-        <H>4. The precursor is in the thinking</H>
+        <H>The precursor is in the thinking</H>
         <p>
           Before take-off the exploit appears in well under 1% of rollouts, about one per step of 128, and pure
           sampling noise gives anywhere from 0 to 4. The policy can triple its propensity without the curve in Figure
@@ -230,7 +230,7 @@ run_tests attempts in the next five steps:             run_tests attempts in the
           state it lands in, and that state is visible in the thinking well before it is visible in the answers.
         </p>
 
-        <H>5. How we think reward hacking should be studied</H>
+        <H>How we think reward hacking should be studied</H>
         <p>
           Ten natural runs were enough to see what happens and to find a candidate precursor. They are not enough to
           test why. Three lessons and a proposal:
@@ -263,13 +263,6 @@ run_tests attempts in the next five steps:             run_tests attempts in the
           monitor that penalises or screens flagged samples, inoculation prompting) and mechanism (inject rewarded
           stubs and measure the dose-response, remove their positive advantage, add solvable problems), with the state
           variable and time to take-off as outcomes and the hypotheses fixed before the branches are run.
-        </p>
-
-        <H>6. Limitations</H>
-        <p>
-          Ten runs, three of which take off, in one environment with one kind of exploit, on two small models. Text
-          features come from regular expressions and AST parsing, spot-checked rather than hand-labelled. Everything
-          here is correlational; the experiment in Section 5 is what would make it causal.
         </p>
 
         <H>Transcripts</H>

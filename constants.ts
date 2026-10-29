@@ -224,7 +224,7 @@ export const SOCIAL_LINKS = {
 export const THOUGHTS: ThoughtPost[] = [
   {
     date: "10.29.2026",
-    title: "Every Seed Finds the Hack. Three Keep It.",
+    title: "How can we study and understand Reward Hacking?",
     tldr: "Ten GRPO runs that differ only in the seed all try the reward hack, and nine are rewarded for it, but only three amplify it. Take-off is an amplification problem, not a discovery problem, and its precursor shows up in the chain of thought before the answers.",
     link: "/thoughts/every-seed-finds-the-hack"
   }

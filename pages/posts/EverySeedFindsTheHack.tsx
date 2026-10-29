@@ -35,10 +35,7 @@ const EverySeedFindsTheHack: React.FC = () => {
       <h1 className="text-xl font-serif text-anthropic-text leading-tight text-center">
         Every Seed Finds the Hack. Three Keep It.
       </h1>
-      <p className="mt-2 text-center text-[12.5px] text-anthropic-gray/80">
-        How reward hacking nucleates in GRPO: notes from ten seeds
-      </p>
-      <p className="mt-1 text-center text-[12px] text-anthropic-gray/80">10.29.2026</p>
+      <p className="mt-2 text-center text-[12px] text-anthropic-gray/80">10.29.2026</p>
 
       <div className="mt-8 space-y-4 text-base font-sans text-anthropic-gray leading-relaxed">
         <H>TL;DR</H>

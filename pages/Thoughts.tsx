@@ -8,9 +8,6 @@ const Thoughts: React.FC = () => {
       <h1 className="text-xl font-serif text-anthropic-text leading-tight text-center">
         Thoughts &amp; Blog Posts
       </h1>
-      <p className="mt-2 text-center text-[12px] text-anthropic-gray/80">
-        Notes from short sprint projects: too small for a paper, worth writing down.
-      </p>
 
       <div className="mt-8 border-t-[1.5px] border-anthropic-text pt-4">
         {THOUGHTS.length === 0 ? (

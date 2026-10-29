@@ -45,17 +45,28 @@ const Alignment: React.FC = () => {
         </p>
         <p>
           My research centers on three questions. The first is how and when reward hacking emerges
-          during reinforcement learning. It often appears{' '}
+          during reinforcement learning. More capable models{' '}
           <a href="https://arxiv.org/abs/2201.03544" target="_blank" rel="noreferrer" className={linkClass}>
-            abruptly rather than gradually
+            exploit a flawed reward more aggressively, often through abrupt shifts
+          </a>{' '}
+          rather than gradual ones, and models that learn simple forms of gaming can{' '}
+          <a href="https://arxiv.org/abs/2406.10162" target="_blank" rel="noreferrer" className={linkClass}>
+            generalize to tampering with their own reward
           </a>
-          , so a model that looks fine at one checkpoint can be hacking at the next, and when it
-          appears matters as much as whether it does. The second is how to train models to follow
-          the principle behind a safety rule rather than imitate the examples they were shown.
-          Models that learn only the surface of their safety training fail in two opposite ways:
-          they comply with harmful requests phrased innocuously, and refuse harmless ones that
-          merely look risky. The third is how to detect and intervene on misbehavior while a model
-          is running. A model&apos;s{' '}
+          . The second is how to train models that stay aligned even when the reward is imperfect.
+          This need not mean eliminating every hack: telling a model during training that hacking
+          is acceptable, known as{' '}
+          <a href="https://www.anthropic.com/research/emergent-misalignment-reward-hacking" target="_blank" rel="noreferrer" className={linkClass}>
+            inoculation prompting
+          </a>
+          , keeps the hacking it learns from generalizing into broader misalignment, and training a
+          model to{' '}
+          <a href="https://arxiv.org/abs/2512.08093" target="_blank" rel="noreferrer" className={linkClass}>
+            confess
+          </a>{' '}
+          when it has broken the rules, rewarding only the honesty of the confession, makes
+          misbehavior easier to surface. The third is how to detect and intervene on misbehavior
+          while a model is running. A model&apos;s{' '}
           <a href="https://arxiv.org/abs/2507.11473" target="_blank" rel="noreferrer" className={linkClass}>
             chain of thought
           </a>{' '}

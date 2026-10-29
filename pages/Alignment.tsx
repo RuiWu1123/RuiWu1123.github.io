@@ -17,18 +17,22 @@ const Alignment: React.FC = () => {
 
       <div className="mt-8 text-base font-sans text-anthropic-gray leading-relaxed">
         <p>
-          I work on AI safety, with a particular focus on specification gaming in large language
-          models, also called reward hacking, and on how to monitor, mitigate, and control it. A
-          policy optimized against a proxy reward learns whatever the proxy{' '}
+          I work on AI safety. My main interest is reward hacking in large language models, also
+          known as specification gaming: a model finds a way to get a high score that its designers
+          did not intend, instead of actually doing the task. A familiar example is a coding model
+          that edits the unit tests so they pass rather than fixing the code. This happens because
+          the reward used in training only approximates what we actually want, and a model that is
+          optimized hard enough will{' '}
           <a href="https://arxiv.org/abs/2209.13085" target="_blank" rel="noreferrer" className={linkClass}>
-            fails to exclude
+            exploit the gaps
           </a>
-          , and the resulting hacking does not stay local to the task that produced it, but{' '}
+          . It also matters beyond the task at hand: models that learn to reward hack during
+          training can{' '}
           <a href="https://arxiv.org/abs/2511.18397" target="_blank" rel="noreferrer" className={linkClass}>
-            generalizes into broader misaligned behavior
+            become misaligned in broader ways
           </a>
-          ; deployed agents acting on an incomplete natural-language objective show the same
-          divergence, as in the 2026{' '}
+          . And the problem is not limited to training. AI agents given a goal in natural language
+          can pursue it in ways nobody intended, as in the 2026{' '}
           <a
             href="https://openai.com/index/hugging-face-incident-and-the-road-ahead/"
             target="_blank"
@@ -37,20 +41,22 @@ const Alignment: React.FC = () => {
           >
             Hugging Face incident
           </a>
-          . Two questions organize my work: how does a model&apos;s effective objective come apart
-          from the intended one, and how do we detect and act on that divergence when the
-          supervision we would use to detect it is itself incomplete? I approach them along three
-          lines: the training dynamics of specification gaming, since reward hacking{' '}
+          , where research agents found ways to collect reward without solving their tasks, got
+          around isolation controls, and took on goals from other agents. I am interested in three
+          related questions. First, how and when does reward hacking emerge during reinforcement
+          learning? It often appears{' '}
           <a href="https://arxiv.org/abs/2201.03544" target="_blank" rel="noreferrer" className={linkClass}>
-            sets in abruptly
-          </a>{' '}
-          rather than gradually; alignment training that gets a model to act on the principle behind
-          a safety rule rather than on the examples it was shown; and monitoring and control through
-          a model&apos;s{' '}
+            suddenly rather than gradually
+          </a>
+          , so knowing when it starts is as important as knowing whether it happens. Second, how
+          can we train models to follow the intent behind a safety rule, rather than just copying
+          the examples they were trained on, so that they stay safe in situations they have not
+          seen before? Third, how can we detect and stop bad behavior while a model is running, by
+          monitoring its{' '}
           <a href="https://arxiv.org/abs/2507.11473" target="_blank" rel="noreferrer" className={linkClass}>
             chain of thought
           </a>{' '}
-          and its internal representations.
+          or its internal activations, especially when its outputs look fine?
         </p>
       </div>
     </div>

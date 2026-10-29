@@ -18,8 +18,8 @@ const Alignment: React.FC = () => {
       <div className="mt-8 text-base font-sans text-anthropic-gray leading-relaxed">
         <p>
           I work on AI safety. My main interest is reward hacking in large language models, also
-          known as specification gaming: a model finds a way to get a high score that its designers
-          did not intend, instead of actually doing the task. A familiar example is a coding model
+          known as specification gaming: a model gets a high reward in ways people did not intend,
+          without actually solving the task. A familiar example is a coding model
           that edits the unit tests so they pass rather than fixing the code. This happens because
           the reward used in training only approximates what we actually want, and a model that is
           optimized hard enough will{' '}

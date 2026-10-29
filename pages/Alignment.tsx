@@ -58,8 +58,11 @@ const Alignment: React.FC = () => {
           <a href="https://www.anthropic.com/research/emergent-misalignment-reward-hacking" target="_blank" rel="noreferrer" className={linkClass}>
             inoculation prompting
           </a>
-          , keeps the hacking it learns from generalizing into broader misalignment, and training a
-          model to{' '}
+          , keeps the hacking it learns from{' '}
+          <a href="https://arxiv.org/abs/2511.18397" target="_blank" rel="noreferrer" className={linkClass}>
+            generalizing into broader misalignment
+          </a>
+          , and training a model to{' '}
           <a href="https://arxiv.org/abs/2512.08093" target="_blank" rel="noreferrer" className={linkClass}>
             confess
           </a>{' '}

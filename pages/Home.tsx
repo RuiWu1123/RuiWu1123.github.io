@@ -108,6 +108,16 @@ const Home: React.FC = () => {
           </Link>
           .
         </p>
+
+        <p className="mt-4 text-base font-sans text-anthropic-gray leading-relaxed">
+          Outside of papers, I often run short sprint projects on ideas that catch my attention.
+          They are too small to become papers, but they tend to turn up an interesting observation
+          or a result worth keeping, so I write them up as{' '}
+          <Link to="/thoughts" className={inlineLinkClass}>
+            thoughts and blog posts
+          </Link>
+          .
+        </p>
       </section>
 
        {/* News Section */}

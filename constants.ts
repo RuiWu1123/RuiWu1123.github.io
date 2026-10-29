@@ -1,5 +1,5 @@
 
-import { ResearchInterest, Publication, NewsItem, AlignmentNewsItem } from './types';
+import { ResearchInterest, Publication, NewsItem, AlignmentNewsItem, ThoughtPost } from './types';
 
 export const RESEARCH_INTERESTS: ResearchInterest[] = [
   {
@@ -220,3 +220,5 @@ export const SOCIAL_LINKS = {
   linkedin: "https://www.linkedin.com/in/rui-wu-6aba08324/"
 };
 
+// Write-ups of short sprint projects, newest first.
+export const THOUGHTS: ThoughtPost[] = [];

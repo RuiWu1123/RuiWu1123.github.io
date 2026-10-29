@@ -84,11 +84,12 @@ const Alignment: React.FC = () => {
           <a href="https://arxiv.org/abs/2603.05706" target="_blank" rel="noreferrer" className={linkClass}>
             struggle to control what their reasoning reveals
           </a>
-          . Another approach reads the model&apos;s internal activations directly, using{' '}
-          <a href="https://www.goodfire.com/research" target="_blank" rel="noreferrer" className={linkClass}>
-            interpretability-based probes
+          . Another approach reads the model&apos;s internal activations directly:{' '}
+          <a href="https://www.goodfire.com/research/reward-hacking-activation-monitors" target="_blank" rel="noreferrer" className={linkClass}>
+            probes on these activations
           </a>{' '}
-          that flag misbehavior without relying on what the model writes.
+          can catch reward hacking that chain-of-thought monitors miss, and generalize well beyond
+          the examples they were trained on.
         </p>
       </div>
     </div>

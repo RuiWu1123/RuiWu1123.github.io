@@ -57,26 +57,17 @@ const StudyingRewardHacking: React.FC = () => {
         <H>TL;DR</H>
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
-            Ten GRPO runs that differ only in the rollout seed. All ten try the exploit, and nine are rewarded for a
-            successful hack at least once, often with the largest advantage GRPO can give. Three become
-            hack-dominated; seven forget it. Take-off is an amplification problem, not a discovery problem.
+            Ten GRPO runs that differ only in the rollout seed all find the hack, and nine are rewarded for it, but
+            only three amplify it. Take-off is an amplification problem, not a discovery problem.
           </li>
           <li>
-            The reward for a hack does not stay with the model: when a successfully hacked problem comes back 62
-            steps later, the non-hacking runs do not hack it again. Hacking spreads only if what is reinforced on
-            one problem transfers to others.
+            The hacks are accidental: the 2B model appends an empty <C>run_tests</C> stub, and the 4B model writes a
+            self-test that prints instead of asserting.
           </li>
           <li>
-            The hacks are accidental. The 2B model appends an empty <C>def run_tests(self): pass</C>, as if
-            completing an interface; the 4B model writes a self-test that prints instead of asserting. Both let any
-            solution pass.
+            The precursor is in the chain of thought: before take-off, more and more rollouts draft or discuss{' '}
+            <C>run_tests</C> in their thinking and then leave it out of the answer.
           </li>
-          <li>
-            The precursor is in the chain of thought. Before every take-off, more and more rollouts draft or
-            discuss <C>run_tests</C> in their thinking and then leave it out of the answer. The same rise also
-            happens in a run that never takes off.
-          </li>
-          <li>Natural runs have taken us as far as they can. We describe the experiment we would run next.</li>
         </ul>
 
         <H>Setup</H>

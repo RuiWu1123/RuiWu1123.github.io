@@ -3,6 +3,9 @@ import SeedSweepTranscripts from './SeedSweepTranscripts';
 
 const ASSETS = '/blogs/every-seed-finds-the-hack';
 
+const linkClass =
+  'underline underline-offset-2 decoration-anthropic-text/30 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors';
+
 const H: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="!mt-10 mb-4 border-b-[1.5px] border-anthropic-text pb-2.5 text-center">
     <h2 className="text-lg font-serif text-anthropic-text">{children}</h2>
@@ -36,6 +39,19 @@ const EverySeedFindsTheHack: React.FC = () => {
         How can we study and understand Reward Hacking?
       </h1>
       <p className="mt-2 text-center text-[12px] text-anthropic-gray/80">10.29.2026</p>
+      <div className="mt-1.5 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[12px] text-anthropic-gray">
+        <a href="https://github.com/RuiWu1123/hack-nucleation/tree/main" target="_blank" rel="noreferrer" className={linkClass}>
+          github
+        </a>
+        <a
+          href="https://huggingface.co/collections/RuiWu1123Alignment/reward-hacking-dynamics"
+          target="_blank"
+          rel="noreferrer"
+          className={linkClass}
+        >
+          huggingface
+        </a>
+      </div>
 
       <div className="mt-8 space-y-4 text-base font-sans text-anthropic-gray leading-relaxed">
         <H>TL;DR</H>

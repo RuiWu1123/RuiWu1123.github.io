@@ -5,7 +5,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Alignment from './pages/Alignment';
 import Thoughts from './pages/Thoughts';
-import EverySeedFindsTheHack from './pages/posts/EverySeedFindsTheHack';
+import StudyingRewardHacking from './pages/posts/StudyingRewardHacking';
 
 // Scroll to top on route change
 const ScrollToTop = () => {
@@ -78,7 +78,11 @@ const App: React.FC = () => {
             <Route path="/" element={<Home />} />
             <Route path="/alignment" element={<Alignment />} />
             <Route path="/thoughts" element={<Thoughts />} />
-            <Route path="/thoughts/every-seed-finds-the-hack" element={<EverySeedFindsTheHack />} />
+            <Route path="/thoughts/how-can-we-study-and-understand-reward-hacking" element={<StudyingRewardHacking />} />
+            <Route
+              path="/thoughts/every-seed-finds-the-hack"
+              element={<Navigate to="/thoughts/how-can-we-study-and-understand-reward-hacking" replace />}
+            />
             {/* Any other address, including the retired /blog, lands on home. */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

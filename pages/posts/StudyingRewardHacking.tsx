@@ -1,7 +1,7 @@
 import React from 'react';
 import SeedSweepTranscripts from './SeedSweepTranscripts';
 
-const ASSETS = '/blogs/every-seed-finds-the-hack';
+const ASSETS = '/blogs/how-can-we-study-and-understand-reward-hacking';
 
 const linkClass =
   'underline underline-offset-2 decoration-anthropic-text/30 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors';
@@ -32,7 +32,7 @@ const Fig: React.FC<{ src: string; alt: string; children: React.ReactNode }> = (
   </figure>
 );
 
-const EverySeedFindsTheHack: React.FC = () => {
+const StudyingRewardHacking: React.FC = () => {
   return (
     <article className="animate-fade-in pt-10 pb-16">
       <h1 className="text-xl font-serif text-anthropic-text leading-tight text-center">
@@ -293,4 +293,4 @@ run_tests attempts in the next five steps:             run_tests attempts in the
   );
 };
 
-export default EverySeedFindsTheHack;
+export default StudyingRewardHacking;

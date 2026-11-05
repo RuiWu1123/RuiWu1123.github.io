@@ -44,8 +44,8 @@ const Alignment: React.FC = () => {
           into Hugging Face&apos;s systems in search of the answers.
         </p>
         <p>
-          My research centers on three questions. The first is how and when reward hacking emerges
-          during reinforcement learning. It can{' '}
+          My research centers on four questions. The first is how reward hacking is acquired during
+          reinforcement learning. It can{' '}
           <a href="https://arxiv.org/abs/2201.03544" target="_blank" rel="noreferrer" className={linkClass}>
             appear abruptly rather than gradually
           </a>
@@ -67,29 +67,52 @@ const Alignment: React.FC = () => {
             confess
           </a>{' '}
           when it has broken the rules, rewarding only the honesty of the confession, makes
-          misbehavior easier to surface. The third is how to detect and intervene on misbehavior
-          while a model is running. One approach monitors the model&apos;s{' '}
+          misbehavior easier to surface. The third is how to catch misbehavior while a model is
+          running. At the frontier, monitoring is{' '}
+          <a href="https://openai.com/index/how-we-detect-frontier-model-misalignment/" target="_blank" rel="noreferrer" className={linkClass}>
+            a layered system
+          </a>{' '}
+          rather than a single detector: cheap checks screen all traffic and escalate what they flag
+          to more expensive review. A{' '}
           <a href="https://arxiv.org/abs/2507.11473" target="_blank" rel="noreferrer" className={linkClass}>
-            chain of thought
-          </a>
-          , which often reveals intent its output hides. This works only while the reasoning{' '}
+            chain-of-thought monitor
+          </a>{' '}
+          works only while the reasoning{' '}
           <a href="https://arxiv.org/abs/2512.18311" target="_blank" rel="noreferrer" className={linkClass}>
             stays monitorable
           </a>
-          : training against a chain-of-thought monitor{' '}
+          , and training against it{' '}
           <a href="https://arxiv.org/abs/2503.11926" target="_blank" rel="noreferrer" className={linkClass}>
-            teaches the model to hide that intent
+            teaches the model to hide its intent
           </a>
           , although current models{' '}
           <a href="https://arxiv.org/abs/2603.05706" target="_blank" rel="noreferrer" className={linkClass}>
             struggle to control what their reasoning reveals
           </a>
-          . Another approach reads the model&apos;s internal activations directly:{' '}
-          <a href="https://www.goodfire.com/research/reward-hacking-activation-monitors" target="_blank" rel="noreferrer" className={linkClass}>
-            probes on these activations
+          .{' '}
+          <a href="https://arxiv.org/abs/2609.19101" target="_blank" rel="noreferrer" className={linkClass}>
+            Probes on internal activations
           </a>{' '}
-          can catch reward hacking that chain-of-thought monitors miss, and generalize well beyond
-          the examples they were trained on.
+          detect reward hacking about as well as a chain-of-thought monitor, are cheap enough to run
+          on every rollout, and have already been{' '}
+          <a href="https://www.goodfire.com/research" target="_blank" rel="noreferrer" className={linkClass}>
+            deployed in production inference
+          </a>
+          . The fourth is how to measure all of this. Evaluation is moving toward quantities that
+          extrapolate, such as{' '}
+          <a href="https://arxiv.org/abs/2503.14499" target="_blank" rel="noreferrer" className={linkClass}>
+            the length of task a model can complete reliably
+          </a>
+          , but models{' '}
+          <a href="https://arxiv.org/abs/2505.23836" target="_blank" rel="noreferrer" className={linkClass}>
+            often recognize when they are being evaluated
+          </a>
+          , so a measured safety rate may describe behavior under observation rather than in
+          deployment. Closing that gap is what{' '}
+          <a href="https://www.apolloresearch.ai/blog/we-need-a-science-of-evals" target="_blank" rel="noreferrer" className={linkClass}>
+            a science of evals
+          </a>{' '}
+          would do, and the field does not have one yet.
         </p>
       </div>
     </div>

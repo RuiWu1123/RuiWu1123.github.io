@@ -95,7 +95,7 @@ const Alignment: React.FC = () => {
           </a>{' '}
           detect reward hacking about as well as a chain-of-thought monitor, are cheap enough to run
           on every rollout, and have already been{' '}
-          <a href="https://www.goodfire.com/research" target="_blank" rel="noreferrer" className={linkClass}>
+          <a href="https://www.goodfire.com/research/production-cyber-monitors-on-kimi-k3" target="_blank" rel="noreferrer" className={linkClass}>
             deployed in production inference
           </a>
           . The fourth is how to measure all of this. Evaluation is moving toward quantities that

@@ -1,65 +1,60 @@
 import React from 'react';
-import { PostText, SectionHeading } from '../../components/PostText';
+import { PostText } from '../../components/PostText';
 import { ClassicExamples, LanguageModelExamples } from './RewardHackingFigures';
 
 const r = String.raw;
 
 type Lang = 'en' | 'zh';
 
-interface Ref {
-  key: string;
-  text: string;
-  url?: string;
-}
-
-const REFERENCES: Ref[] = [
-  { key: 'amodei2016', text: 'Dario Amodei, Chris Olah, Jacob Steinhardt, Paul Christiano, John Schulman, and Dan Mané. Concrete problems in AI safety. 2016.', url: 'https://arxiv.org/abs/1606.06565' },
-  { key: 'amodei2017', text: 'Dario Amodei, Paul Christiano, and Alex Ray. Learning from human preferences. OpenAI blog, June 13, 2017.' },
-  { key: 'anthropic2025', text: 'Anthropic. Claude 3.7 Sonnet system card, 2025.' },
-  { key: 'baker2025', text: 'Bowen Baker, Joost Huizinga, Leo Gao, Zehao Dou, Melody Y. Guan, Aleksander Madry, Wojciech Zaremba, Jakub Pachocki, and David Farhi. Monitoring reasoning models for misbehavior and the risks of promoting obfuscation. 2025.', url: 'https://arxiv.org/abs/2503.11926' },
-  { key: 'clark2016', text: 'Jack Clark and Dario Amodei. Faulty reward functions in the wild. OpenAI blog, December 21, 2016.' },
-  { key: 'denison2024', text: 'Carson Denison, Monte MacDiarmid, Fazl Barez, David Duvenaud, Shauna Kravec, Samuel Marks, et al. Sycophancy to subterfuge: Investigating reward-tampering in large language models. 2024.', url: 'https://arxiv.org/abs/2406.10162' },
-  { key: 'eisenstein2023', text: 'Jacob Eisenstein, Chirag Nagpal, Alekh Agarwal, Ahmad Beirami, Alex D’Amour, et al. Helping or herding? Reward model ensembles mitigate but do not eliminate reward hacking. 2023.', url: 'https://arxiv.org/abs/2312.09244' },
-  { key: 'elmhamdi2024', text: 'El-Mahdi El-Mhamdi and Lê-Nguyên Hoang. On Goodhart’s law, with an application to value alignment. 2024.', url: 'https://arxiv.org/abs/2410.09638' },
-  { key: 'everitt2016', text: 'Tom Everitt and Marcus Hutter. Avoiding wireheading with value reinforcement learning. AGI 2016.', url: 'https://arxiv.org/abs/1605.03143' },
-  { key: 'everitt2017', text: 'Tom Everitt, Victoria Krakovna, Laurent Orseau, Marcus Hutter, and Shane Legg. Reinforcement learning with a corrupted reward channel. IJCAI 2017. Theorem numbers follow arXiv:1705.08417v2.', url: 'https://arxiv.org/abs/1705.08417' },
-  { key: 'everitt2021a', text: 'Tom Everitt, Ryan Carey, Eric D. Langlois, Pedro A. Ortega, and Shane Legg. Agent incentives: A causal perspective. AAAI 2021.' },
-  { key: 'everitt2021b', text: 'Tom Everitt, Marcus Hutter, Ramana Kumar, and Victoria Krakovna. Reward tampering problems and solutions in reinforcement learning: A causal influence diagram perspective. Synthese, 198:6435–6467, 2021.' },
-  { key: 'gao2023', text: 'Leo Gao, John Schulman, and Jacob Hilton. Scaling laws for reward model overoptimization. ICML 2023.' },
-  { key: 'goodhart1975', text: 'Charles A. E. Goodhart. Problems of monetary management: The U.K. experience. Papers in Monetary Economics, Volume I. Reserve Bank of Australia, 1975.' },
-  { key: 'gupta2026', text: 'Savyasachi Gupta and Aniruddha Srinivas Joshi. Checking the checkers: A synthesis of verifier noise and robustness in RLVR. 2026.', url: 'https://arxiv.org/abs/2610.17824' },
-  { key: 'hadfield2017', text: 'Dylan Hadfield-Menell, Smitha Milli, Pieter Abbeel, Stuart Russell, and Anca Dragan. Inverse reward design. NeurIPS 2017.' },
-  { key: 'huang2025', text: 'Audrey Huang, Wenhao Zhan, Tengyang Xie, Jason D. Lee, Wen Sun, Akshay Krishnamurthy, and Dylan J. Foster. Correcting the mythos of KL-regularization: Direct alignment without overoptimization via chi-squared preference optimization. ICLR 2025.' },
-  { key: 'ibarz2018', text: 'Borja Ibarz, Jan Leike, Tobias Pohlen, Geoffrey Irving, Shane Legg, and Dario Amodei. Reward learning from human preferences and demonstrations in Atari. NeurIPS 2018.' },
-  { key: 'karwowski2024', text: 'Jacek Karwowski, Oliver Hayman, Xingjian Bai, Klaus Kiendlhofer, Charlie Griffin, and Joar Skalse. Goodhart’s law in reinforcement learning. ICLR 2024.' },
-  { key: 'krakovna2020', text: 'Victoria Krakovna, Jonathan Uesato, Vladimir Mikulik, Matthew Rahtz, Tom Everitt, Ramana Kumar, Zac Kenton, Jan Leike, and Shane Legg. Specification gaming: The flip side of AI ingenuity. DeepMind blog, April 21, 2020.' },
-  { key: 'kwa2024', text: 'Thomas Kwa, Drake Thomas, and Adrià Garriga-Alonso. Catastrophic Goodhart: Regularizing RLHF with KL divergence does not mitigate heavy-tailed reward misspecification. NeurIPS 2024.' },
-  { key: 'laidlaw2025', text: 'Cassidy Laidlaw, Shivam Singhal, and Anca Dragan. Correlated proxies: A new definition and improved mitigation for reward hacking. ICLR 2025.' },
-  { key: 'lehman2020', text: 'Joel Lehman, Jeff Clune, Dusan Misevic, et al. The surprising creativity of digital evolution: A collection of anecdotes from the evolutionary computation and artificial life research communities. Artificial Life, 26(2):274–306, 2020.' },
-  { key: 'leike2017', text: 'Jan Leike, Miljan Martic, Victoria Krakovna, Pedro A. Ortega, Tom Everitt, Andrew Lefrancq, Laurent Orseau, and Shane Legg. AI safety gridworlds. 2017.', url: 'https://arxiv.org/abs/1711.09883' },
-  { key: 'macdiarmid2025', text: 'MacDiarmid, Wright, Uesato, et al. Natural emergent misalignment from reward hacking in production RL. 2025.', url: 'https://arxiv.org/abs/2511.18397' },
-  { key: 'manheim2018', text: 'David Manheim and Scott Garrabrant. Categorizing variants of Goodhart’s law. 2018.', url: 'https://arxiv.org/abs/1803.04585' },
-  { key: 'moya2026', text: 'Christian Moya, Elliott Thornley, and Guang Lin. Verifier errors in RLVR: Reward hacking, limits of feedback, and selective control. 2026.', url: 'https://arxiv.org/abs/2609.35677' },
-  { key: 'mroueh2025', text: 'Youssef Mroueh. Reinforcement learning with verifiable rewards: GRPO’s effective loss, dynamics, and success amplification. 2025.', url: 'https://arxiv.org/abs/2503.06639' },
-  { key: 'ng1999', text: 'Andrew Y. Ng, Daishi Harada, and Stuart Russell. Policy invariance under reward transformations: Theory and application to reward shaping. ICML 1999.' },
-  { key: 'pan2022', text: 'Alexander Pan, Kush Bhatia, and Jacob Steinhardt. The effects of reward misspecification: Mapping and mitigating misaligned models. ICLR 2022.' },
-  { key: 'rad2026', text: 'Ali Rad, Khashayar Filom, Darioush Keivan, Peyman Mohajerin Esfahani, and Ehsan Kamalinejad. Rate or fate? RLVεR: Reinforcement learning with verifiable noisy rewards. 2026.', url: 'https://arxiv.org/abs/2601.04411' },
-  { key: 'randlov1998', text: 'Jette Randløv and Preben Alstrøm. Learning to drive a bicycle using reinforcement learning and shaping. ICML 1998.' },
-  { key: 'ring2011', text: 'Mark Ring and Laurent Orseau. Delusion, survival, and intelligent agents. AGI 2011, LNCS 6830, pages 11–20. Springer, 2011.' },
-  { key: 'sharma2024', text: 'Mrinank Sharma, Meg Tong, Tomasz Korbak, David Duvenaud, Amanda Askell, Samuel R. Bowman, et al. Towards understanding sycophancy in language models. ICLR 2024.' },
-  { key: 'singhal2023', text: 'Prasann Singhal, Tanya Goyal, Jiacheng Xu, and Greg Durrett. A long way to go: Investigating length correlations in RLHF. 2023.', url: 'https://arxiv.org/abs/2310.03716' },
-  { key: 'skalse2022', text: 'Joar Skalse, Nikolaus H. R. Howe, Dmitrii Krasheninnikov, and David Krueger. Defining and characterizing reward hacking. NeurIPS 2022.' },
-  { key: 'stiennon2020', text: 'Nisan Stiennon, Long Ouyang, Jeff Wu, Daniel M. Ziegler, Ryan Lowe, Chelsea Voss, Alec Radford, Dario Amodei, and Paul Christiano. Learning to summarize with human feedback. NeurIPS 2020.' },
-  { key: 'strathern1997', text: 'Marilyn Strathern. ‘Improving ratings’: Audit in the British university system. European Review, 5(3):305–321, 1997.' },
-  { key: 'taylor2025', text: 'Taylor, Chua, Betley, Treutlein, and Evans. School of reward hacks: Hacking harmless tasks generalizes to misaligned behavior in LLMs. 2025.', url: 'https://arxiv.org/abs/2508.17511' },
-  { key: 'taylor2016', text: 'Jessica Taylor. Quantilizers: A safer alternative to maximizers for limited optimization. AAAI Workshop on AI, Ethics, and Society, 2016.' },
-  { key: 'vonarx2025', text: 'Sydney Von Arx, Lawrence Chan, and Beth Barnes. Recent frontier models are reward hacking. METR blog, June 5, 2025.' },
-  { key: 'wang2026', text: 'Wang, Joshi, Plank, Angell, and He. Is it thinking or cheating? Detecting implicit reward hacking by measuring reasoning effort. ICLR 2026.' },
-  { key: 'weng2024', text: 'Lilian Weng. Reward hacking in reinforcement learning. Lil’Log, November 28, 2024.' },
-  { key: 'wiener1960', text: 'Norbert Wiener. Some moral and technical consequences of automation. Science, 131(3410):1355–1358, 1960.' },
-  { key: 'zhong2025', text: 'Zhong, Raghunathan, and Carlini. ImpossibleBench: Measuring LLMs’ propensity of exploiting test cases. 2025.', url: 'https://arxiv.org/abs/2510.20270' },
-  { key: 'zhuang2020', text: 'Simon Zhuang and Dylan Hadfield-Menell. Consequences of misaligned AI. NeurIPS 2020.' },
-];
+// Where each citation in the text links to.
+const LINKS: Record<string, string> = {
+  amodei2016: 'https://arxiv.org/abs/1606.06565',
+  amodei2017: 'https://openai.com/index/learning-from-human-preferences/',
+  anthropic2025: 'https://www.anthropic.com/claude-3-7-sonnet-system-card',
+  baker2025: 'https://arxiv.org/abs/2503.11926',
+  clark2016: 'https://openai.com/index/faulty-reward-functions/',
+  denison2024: 'https://arxiv.org/abs/2406.10162',
+  eisenstein2023: 'https://arxiv.org/abs/2312.09244',
+  elmhamdi2024: 'https://arxiv.org/abs/2410.09638',
+  everitt2016: 'https://arxiv.org/abs/1605.03143',
+  everitt2017: 'https://arxiv.org/abs/1705.08417',
+  everitt2021a: 'https://arxiv.org/abs/2102.01685',
+  everitt2021b: 'https://arxiv.org/abs/1908.04734',
+  gao2023: 'https://arxiv.org/abs/2210.10760',
+  goodhart1975: 'https://scholar.google.com/scholar?q=Goodhart%20Problems%20of%20monetary%20management%3A%20the%20U.K.%20experience',
+  gupta2026: 'https://arxiv.org/abs/2610.17824',
+  hadfield2017: 'https://arxiv.org/abs/1711.02827',
+  huang2025: 'https://arxiv.org/abs/2407.13399',
+  ibarz2018: 'https://arxiv.org/abs/1811.06521',
+  karwowski2024: 'https://arxiv.org/abs/2310.09144',
+  krakovna2020: 'https://deepmind.google/discover/blog/specification-gaming-the-flip-side-of-ai-ingenuity/',
+  kwa2024: 'https://arxiv.org/abs/2407.14503',
+  laidlaw2025: 'https://arxiv.org/abs/2403.03185',
+  lehman2020: 'https://arxiv.org/abs/1803.03453',
+  leike2017: 'https://arxiv.org/abs/1711.09883',
+  macdiarmid2025: 'https://arxiv.org/abs/2511.18397',
+  manheim2018: 'https://arxiv.org/abs/1803.04585',
+  moya2026: 'https://arxiv.org/abs/2609.35677',
+  mroueh2025: 'https://arxiv.org/abs/2503.06639',
+  ng1999: 'https://scholar.google.com/scholar?q=Policy%20invariance%20under%20reward%20transformations%3A%20Theory%20and%20application%20to%20reward%20shaping',
+  pan2022: 'https://arxiv.org/abs/2201.03544',
+  rad2026: 'https://arxiv.org/abs/2601.04411',
+  randlov1998: 'https://scholar.google.com/scholar?q=Learning%20to%20drive%20a%20bicycle%20using%20reinforcement%20learning%20and%20shaping',
+  ring2011: 'https://scholar.google.com/scholar?q=Delusion%2C%20survival%2C%20and%20intelligent%20agents',
+  sharma2024: 'https://arxiv.org/abs/2310.13548',
+  singhal2023: 'https://arxiv.org/abs/2310.03716',
+  skalse2022: 'https://arxiv.org/abs/2209.13085',
+  stiennon2020: 'https://arxiv.org/abs/2009.01325',
+  strathern1997: 'https://scholar.google.com/scholar?q=Strathern%20%27Improving%20ratings%27%3A%20audit%20in%20the%20British%20University%20system',
+  taylor2016: 'https://intelligence.org/files/QuantilizersSaferAlternative.pdf',
+  taylor2025: 'https://arxiv.org/abs/2508.17511',
+  vonarx2025: 'https://metr.org/blog/2025-06-05-recent-reward-hacking/',
+  wang2026: 'https://scholar.google.com/scholar?q=Is%20it%20thinking%20or%20cheating%3F%20Detecting%20implicit%20reward%20hacking%20by%20measuring%20reasoning%20effort',
+  weng2024: 'https://lilianweng.github.io/posts/2024-11-28-reward-hacking/',
+  wiener1960: 'https://www.science.org/doi/10.1126/science.131.3410.1355',
+  zhong2025: 'https://arxiv.org/abs/2510.20270',
+  zhuang2020: 'https://arxiv.org/abs/2102.03896',
+};
 
 const TITLE: Record<Lang, string> = {
   en: 'Reward Hacking, Formalized: From Classical RL to Language Models',
@@ -512,25 +507,10 @@ const RewardHackingFormalized: React.FC = () => {
       <div className="mt-8 space-y-4 text-base font-sans text-anthropic-gray leading-relaxed">
         <PostText
           source={lang === 'en' ? EN : ZH}
+          links={LINKS}
           figures={{ classic: <ClassicExamples lang={lang} />, lm: <LanguageModelExamples lang={lang} /> }}
         />
 
-        <SectionHeading>{lang === 'en' ? 'References' : '参考文献'}</SectionHeading>
-        <ol className="space-y-1.5 text-[12.5px] leading-[1.5]">
-          {REFERENCES.map((ref) => (
-            <li key={ref.key} id={`ref-${ref.key}`} className="rounded px-1 -mx-1 transition-colors duration-700">
-              {ref.text}
-              {ref.url && (
-                <>
-                  {' '}
-                  <a href={ref.url} target="_blank" rel="noreferrer" className={switchClass}>
-                    link
-                  </a>
-                </>
-              )}
-            </li>
-          ))}
-        </ol>
       </div>
     </article>
   );

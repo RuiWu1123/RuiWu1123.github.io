@@ -4,7 +4,8 @@ type Lang = 'en' | 'zh';
 
 /**
  * Schematic panels for the examples in "What reward hacking looks like".
- * Drawn, not measured: each one only shows where the reward and the intent part ways.
+ * Drawn, not measured: each one only shows where the reward and the intent part
+ * ways. The motion is SVG animation, so it needs no script.
  */
 
 const INK = '#191919';
@@ -48,31 +49,49 @@ const Arrow: React.FC<{ id: string }> = ({ id }) => (
   </defs>
 );
 
+/** A dot that keeps travelling along `path`. */
+const Mover: React.FC<{ path: string; dur: string; r?: number }> = ({ path, dur, r = 3.5 }) => (
+  <circle r={r} fill={INK} stroke="none">
+    <animateMotion dur={dur} repeatCount="indefinite" path={path} />
+  </circle>
+);
+
+const BIKE_LOOP = 'M58 40 A32 30 0 1 1 57.9 40 Z';
+
 const Bicycle: React.FC<{ lang: Lang }> = ({ lang }) => (
   <svg {...svgProps} role="img" aria-label="A bicycle that circles its starting point instead of riding to the goal">
-    <Arrow id="a-bike" />
     <path d="M60 70 L176 70" strokeDasharray="3 3" strokeOpacity={0.35} />
     <Label x={140} y={64}>{lang === 'en' ? 'intended' : '预期'}</Label>
     <path d="M176 70 L176 48 L190 53 L176 58" />
     <Label x={178} y={86}>{lang === 'en' ? 'goal' : '目标'}</Label>
-    <circle cx={60} cy={70} r={2.5} fill={INK} stroke="none" />
-    <Label x={60} y={84}>{lang === 'en' ? 'start' : '起点'}</Label>
-    <ellipse cx={58} cy={70} rx={34} ry={28} strokeOpacity={0.45} />
-    <path d="M58 30 A40 38 0 1 1 24 52" markerEnd="url(#a-bike)" />
+    <circle cx={58} cy={70} r={2} fill={INK} fillOpacity={0.5} stroke="none" />
+    <Label x={58} y={84}>{lang === 'en' ? 'start' : '起点'}</Label>
+    <path d={BIKE_LOOP} strokeOpacity={0.25} strokeDasharray="2 3" />
+    <Mover path={BIKE_LOOP} dur="2.6s" />
   </svg>
 );
 
+const BOAT_LOOP = 'M92 42 A24 22 0 1 1 91.9 42 Z';
+const TARGETS: [number, number, string][] = [
+  [80, 62, '0s'],
+  [100, 72, '0.9s'],
+  [92, 52, '1.8s'],
+];
+
 const Boat: React.FC<{ lang: Lang }> = ({ lang }) => (
   <svg {...svgProps} role="img" aria-label="A boat that loops around respawning targets in a lagoon instead of finishing the race">
-    <Arrow id="a-boat" />
     <rect x={8} y={12} width={184} height={106} rx={46} strokeOpacity={0.45} />
     <rect x={34} y={36} width={132} height={58} rx={26} strokeOpacity={0.45} />
     <path d="M100 12 L100 36" strokeWidth={2} />
     <Label x={104} y={27} anchor="start">{lang === 'en' ? 'finish' : '终点'}</Label>
-    <circle cx={78} cy={65} r={3} fill={INK} stroke="none" />
-    <circle cx={96} cy={74} r={3} fill={INK} stroke="none" />
-    <circle cx={88} cy={54} r={3} fill={INK} stroke="none" />
-    <path d="M110 62 A22 18 0 1 1 106 52" markerEnd="url(#a-boat)" />
+    {TARGETS.map(([cx, cy, begin]) => (
+      <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r={2.6} fill={INK} stroke="none">
+        {/* hit, gone, respawned */}
+        <animate attributeName="opacity" values="1;0.1;1" keyTimes="0;0.15;1" dur="2.7s" begin={begin} repeatCount="indefinite" />
+      </circle>
+    ))}
+    <path d={BOAT_LOOP} strokeOpacity={0.25} strokeDasharray="2 3" />
+    <Mover path={BOAT_LOOP} dur="2.7s" />
     <Label x={100} y={110}>{lang === 'en' ? 'respawning targets' : '会重生的目标'}</Label>
   </svg>
 );
@@ -85,16 +104,41 @@ const Arm: React.FC<{ lang: Lang }> = ({ lang }) => (
     <path d="M37 60 L170 60" strokeDasharray="3 3" strokeOpacity={0.35} />
     <circle cx={175} cy={60} r={10} />
     <Label x={175} y={84}>{lang === 'en' ? 'object' : '物体'}</Label>
-    <path d="M96 122 L96 92 L104 76" strokeWidth={2.2} />
-    <path d="M104 76 L98 50 M104 76 L114 52" strokeWidth={2.2} />
+    <g strokeWidth={2.2}>
+      <animateTransform
+        attributeName="transform"
+        type="translate"
+        values="0 46; 0 0; 0 0; 0 46"
+        keyTimes="0; 0.3; 0.8; 1"
+        dur="4s"
+        repeatCount="indefinite"
+      />
+      <path d="M96 140 L96 92 L104 76" />
+      <path d="M104 76 L98 50 M104 76 L114 52" />
+    </g>
     <Label x={128} y={110} anchor="start">{lang === 'en' ? 'hand' : '机械手'}</Label>
-    <Label x={100} y={24}>{lang === 'en' ? 'looks like a grasp' : '看起来像在抓'}</Label>
+    <g>
+      <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.3;0.38;0.8;0.9" dur="4s" repeatCount="indefinite" />
+      <Label x={100} y={24}>{lang === 'en' ? 'looks like a grasp' : '看起来像在抓'}</Label>
+    </g>
   </svg>
 );
 
 const ExitZero: React.FC<{ lang: Lang }> = ({ lang }) => (
   <svg {...svgProps} role="img" aria-label="Calling exit(0) before the tests run makes the test harness report a pass">
     <rect x={8} y={10} width={184} height={78} rx={3} strokeOpacity={0.45} />
+    {/* the line being executed */}
+    <rect x={11} y={18} width={178} height={11} fill={INK} fillOpacity={0.08} stroke="none">
+      <animateTransform
+        attributeName="transform"
+        type="translate"
+        values="0 0; 0 12; 0 28; 0 28"
+        keyTimes="0; 0.2; 0.4; 1"
+        calcMode="discrete"
+        dur="4s"
+        repeatCount="indefinite"
+      />
+    </rect>
     <Mono x={16} y={26}>def solve(nums):</Mono>
     <Mono x={28} y={38}>return []</Mono>
     <Mono x={16} y={54} strong>
@@ -104,17 +148,25 @@ const ExitZero: React.FC<{ lang: Lang }> = ({ lang }) => (
     <Mono x={16} y={81}># never run</Mono>
     <path d="M86 51 L118 51" strokeOpacity={0.5} />
     <Label x={122} y={54} anchor="start">{lang === 'en' ? 'before tests' : '在测试之前'}</Label>
-    <Label x={100} y={110}>{lang === 'en' ? 'exit code 0 → PASS' : '退出码 0 → 通过'}</Label>
+    <g>
+      <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.4;0.45;1" dur="4s" repeatCount="indefinite" />
+      <Label x={100} y={110}>{lang === 'en' ? 'exit code 0 → PASS' : '退出码 0 → 通过'}</Label>
+    </g>
   </svg>
 );
+
+const SCORE = 'M24 96 C 70 80 120 50 182 22';
+const QUALITY = 'M24 92 C 70 70 100 66 130 70 C 150 73 165 80 182 86';
 
 const Length: React.FC<{ lang: Lang }> = ({ lang }) => (
   <svg {...svgProps} role="img" aria-label="Reward-model score keeps rising with answer length while true quality does not">
     <Arrow id="a-len" />
     <path d="M22 108 L22 14" markerEnd="url(#a-len)" strokeOpacity={0.5} />
     <path d="M22 108 L188 108" markerEnd="url(#a-len)" strokeOpacity={0.5} />
-    <path d="M24 96 C 70 80 120 50 182 22" strokeWidth={1.6} />
-    <path d="M24 92 C 70 70 100 66 130 70 C 150 73 165 80 182 86" strokeDasharray="4 3" />
+    <path d={SCORE} strokeWidth={1.6} />
+    <path d={QUALITY} strokeDasharray="4 3" />
+    <Mover path={SCORE} dur="3.5s" r={3} />
+    <Mover path={QUALITY} dur="3.5s" r={3} />
     <Label x={182} y={18} anchor="end">{lang === 'en' ? 'reward-model score' : '奖励模型打分'}</Label>
     <Label x={182} y={100} anchor="end">{lang === 'en' ? 'true quality' : '真实质量'}</Label>
     <Label x={105} y={124}>{lang === 'en' ? 'answer length' : '回答长度'}</Label>
@@ -126,11 +178,17 @@ const Obfuscation: React.FC<{ lang: Lang }> = ({ lang }) => (
     <rect x={8} y={14} width={184} height={40} rx={3} strokeOpacity={0.45} />
     <Mono x={16} y={30}>{lang === 'en' ? 'CoT: "skip the tests"' : 'CoT："跳过测试"'}</Mono>
     <Mono x={16} y={44}>code: sys.exit(0)</Mono>
-    <Label x={184} y={38} anchor="end">{lang === 'en' ? 'flagged' : '被标记'}</Label>
+    <g>
+      <animate attributeName="opacity" values="0.25;1;0.25" dur="3s" repeatCount="indefinite" />
+      <Label x={184} y={38} anchor="end">{lang === 'en' ? 'flagged' : '被标记'}</Label>
+    </g>
     <rect x={8} y={72} width={184} height={40} rx={3} strokeOpacity={0.45} />
     <Mono x={16} y={88}>{lang === 'en' ? 'CoT: "fix the bug"' : 'CoT："修复 bug"'}</Mono>
     <Mono x={16} y={102}>code: sys.exit(0)</Mono>
-    <Label x={184} y={96} anchor="end">{lang === 'en' ? 'passes' : '通过'}</Label>
+    <g>
+      <animate attributeName="opacity" values="0.25;1;0.25" dur="3s" begin="1.5s" repeatCount="indefinite" />
+      <Label x={184} y={96} anchor="end">{lang === 'en' ? 'passes' : '通过'}</Label>
+    </g>
     <Label x={100} y={66}>{lang === 'en' ? '↓ monitor added to reward' : '↓ monitor 加进奖励'}</Label>
   </svg>
 );

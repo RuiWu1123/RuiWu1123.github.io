@@ -4,12 +4,9 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Alignment from './pages/Alignment';
-// Thoughts & Blog Posts are drafts for now: only the dev server (npm run dev)
-// routes them, and the production build leaves them out entirely.
-const Thoughts = import.meta.env.DEV ? React.lazy(() => import('./pages/Thoughts')) : null;
-const RewardHackingFormalized = import.meta.env.DEV
-  ? React.lazy(() => import('./pages/posts/RewardHackingFormalized'))
-  : null;
+// Loaded on demand, so the math renderer they bring stays out of the home page.
+const Thoughts = React.lazy(() => import('./pages/Thoughts'));
+const RewardHackingFormalized = React.lazy(() => import('./pages/posts/RewardHackingFormalized'));
 
 // Scroll to top on route change
 const ScrollToTop = () => {
@@ -82,10 +79,8 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/alignment" element={<Alignment />} />
-              {Thoughts && <Route path="/thoughts" element={<Thoughts />} />}
-              {RewardHackingFormalized && (
-                <Route path="/thoughts/reward-hacking-formalized" element={<RewardHackingFormalized />} />
-              )}
+              <Route path="/thoughts" element={<Thoughts />} />
+              <Route path="/thoughts/reward-hacking-formalized" element={<RewardHackingFormalized />} />
               {/* Any other address, including the retired /blog, lands on home. */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

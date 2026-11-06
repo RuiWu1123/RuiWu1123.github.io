@@ -13,7 +13,7 @@ import { M, MD } from './Math';
  *   anything else         a paragraph
  *
  * Inside a paragraph: $...$ is inline math, `...` is code, **...** is bold, and
- * [[key|text]] is a citation that scrolls to the reference with id ref-key.
+ * [[key|text]] is a citation linking to links[key], the cited work itself.
  */
 
 export const SectionHeading: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -25,17 +25,9 @@ export const SectionHeading: React.FC<{ children: React.ReactNode }> = ({ childr
 const citeClass =
   'underline underline-offset-2 decoration-anthropic-text/30 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors';
 
-const goToReference = (key: string) => {
-  const el = document.getElementById(`ref-${key}`);
-  if (!el) return;
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  el.classList.add('bg-[#F5F5F3]');
-  window.setTimeout(() => el.classList.remove('bg-[#F5F5F3]'), 1600);
-};
-
 const INLINE = /(\$[^$]+\$|`[^`]+`|\*\*[^*]+\*\*|\[\[[^\]|]+\|[^\]]+\]\])/g;
 
-const renderInline = (text: string): React.ReactNode[] =>
+const renderInline = (text: string, links: Record<string, string>): React.ReactNode[] =>
   text.split(INLINE).map((part, i) => {
     if (part.startsWith('$') && part.endsWith('$') && part.length > 1) return <M key={i}>{part.slice(1, -1)}</M>;
     if (part.startsWith('`') && part.endsWith('`') && part.length > 1)
@@ -53,15 +45,7 @@ const renderInline = (text: string): React.ReactNode[] =>
     if (part.startsWith('[[') && part.endsWith(']]')) {
       const [key, label] = part.slice(2, -2).split('|');
       return (
-        <a
-          key={i}
-          href={`#ref-${key}`}
-          onClick={(e) => {
-            e.preventDefault(); // the site routes on the hash, so scroll instead of navigating
-            goToReference(key);
-          }}
-          className={citeClass}
-        >
+        <a key={i} href={links[key]} target="_blank" rel="noreferrer" className={citeClass}>
           {label}
         </a>
       );
@@ -69,10 +53,11 @@ const renderInline = (text: string): React.ReactNode[] =>
     return part;
   });
 
-export const PostText: React.FC<{ source: string; figures?: Record<string, React.ReactNode> }> = ({
-  source,
-  figures = {},
-}) => {
+export const PostText: React.FC<{
+  source: string;
+  links?: Record<string, string>;
+  figures?: Record<string, React.ReactNode>;
+}> = ({ source, links = {}, figures = {} }) => {
   const blocks = source
     .trim()
     .split(/\n\s*\n/)
@@ -83,7 +68,7 @@ export const PostText: React.FC<{ source: string; figures?: Record<string, React
     <>
       {blocks.map((block, i) => {
         if (block.startsWith('::')) return <React.Fragment key={i}>{figures[block.slice(2)]}</React.Fragment>;
-        if (block.startsWith('## ')) return <SectionHeading key={i}>{renderInline(block.slice(3))}</SectionHeading>;
+        if (block.startsWith('## ')) return <SectionHeading key={i}>{renderInline(block.slice(3), links)}</SectionHeading>;
         if (block.startsWith('$$') && block.endsWith('$$')) return <MD key={i}>{block.slice(2, -2).trim()}</MD>;
         if (block.startsWith('> '))
           return (
@@ -94,11 +79,11 @@ export const PostText: React.FC<{ source: string; figures?: Record<string, React
                 .map((seg) => seg.trim())
                 .filter(Boolean)
                 .map((seg, j) =>
-                  seg.startsWith('$$') ? <MD key={j}>{seg.slice(2, -2).trim()}</MD> : <p key={j}>{renderInline(seg)}</p>,
+                  seg.startsWith('$$') ? <MD key={j}>{seg.slice(2, -2).trim()}</MD> : <p key={j}>{renderInline(seg, links)}</p>,
                 )}
             </div>
           );
-        return <p key={i}>{renderInline(block)}</p>;
+        return <p key={i}>{renderInline(block, links)}</p>;
       })}
     </>
   );

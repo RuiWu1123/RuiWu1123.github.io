@@ -109,16 +109,13 @@ const Home: React.FC = () => {
           .
         </p>
 
-        {/* Shown by the dev server only, until the blog goes public. */}
-        {import.meta.env.DEV && (
-          <p className="mt-4 text-base font-sans text-anthropic-gray leading-relaxed">
-            I try to write some valuable blogs, see{' '}
-            <Link to="/thoughts" className={inlineLinkClass}>
-              here
-            </Link>
-            .
-          </p>
-        )}
+        <p className="mt-4 text-base font-sans text-anthropic-gray leading-relaxed">
+          I try to write some valuable blogs, see{' '}
+          <Link to="/thoughts" className={inlineLinkClass}>
+            here
+          </Link>
+          .
+        </p>
       </section>
 
        {/* News Section */}

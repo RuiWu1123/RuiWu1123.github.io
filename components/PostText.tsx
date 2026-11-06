@@ -9,6 +9,7 @@ import { M, MD } from './Math';
  *   $$ ... $$             display math
  *   **Run-in.** text      a paragraph opening with a bold run-in heading
  *   > **Label.** text     a boxed callout; it may contain $$ ... $$ display math
+ *   ::name                the figure passed in as figures[name]
  *   anything else         a paragraph
  *
  * Inside a paragraph: $...$ is inline math, `...` is code, **...** is bold, and
@@ -68,7 +69,10 @@ const renderInline = (text: string): React.ReactNode[] =>
     return part;
   });
 
-export const PostText: React.FC<{ source: string }> = ({ source }) => {
+export const PostText: React.FC<{ source: string; figures?: Record<string, React.ReactNode> }> = ({
+  source,
+  figures = {},
+}) => {
   const blocks = source
     .trim()
     .split(/\n\s*\n/)
@@ -78,6 +82,7 @@ export const PostText: React.FC<{ source: string }> = ({ source }) => {
   return (
     <>
       {blocks.map((block, i) => {
+        if (block.startsWith('::')) return <React.Fragment key={i}>{figures[block.slice(2)]}</React.Fragment>;
         if (block.startsWith('## ')) return <SectionHeading key={i}>{renderInline(block.slice(3))}</SectionHeading>;
         if (block.startsWith('$$') && block.endsWith('$$')) return <MD key={i}>{block.slice(2, -2).trim()}</MD>;
         if (block.startsWith('> '))

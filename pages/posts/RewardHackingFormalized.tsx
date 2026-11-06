@@ -1,5 +1,6 @@
 import React from 'react';
 import { PostText, SectionHeading } from '../../components/PostText';
+import { ClassicExamples, LanguageModelExamples } from './RewardHackingFigures';
 
 const r = String.raw;
 
@@ -15,14 +16,8 @@ const REFERENCES: Ref[] = [
   { key: 'amodei2016', text: 'Dario Amodei, Chris Olah, Jacob Steinhardt, Paul Christiano, John Schulman, and Dan Mané. Concrete problems in AI safety. 2016.', url: 'https://arxiv.org/abs/1606.06565' },
   { key: 'amodei2017', text: 'Dario Amodei, Paul Christiano, and Alex Ray. Learning from human preferences. OpenAI blog, June 13, 2017.' },
   { key: 'anthropic2025', text: 'Anthropic. Claude 3.7 Sonnet system card, 2025.' },
-  { key: 'ashby1956', text: 'W. Ross Ashby. An Introduction to Cybernetics. John Wiley & Sons, New York, 1956.' },
   { key: 'baker2025', text: 'Bowen Baker, Joost Huizinga, Leo Gao, Zehao Dou, Melody Y. Guan, Aleksander Madry, Wojciech Zaremba, Jakub Pachocki, and David Farhi. Monitoring reasoning models for misbehavior and the risks of promoting obfuscation. 2025.', url: 'https://arxiv.org/abs/2503.11926' },
-  { key: 'baker2002', text: 'George Baker. Distortion and risk in optimal incentive contracts. Journal of Human Resources, 37(4):728–751, 2002.' },
-  { key: 'carroll2015', text: 'Gabriel Carroll. Robustness and linear contracts. American Economic Review, 105(2):536–563, 2015.' },
   { key: 'clark2016', text: 'Jack Clark and Dario Amodei. Faulty reward functions in the wild. OpenAI blog, December 21, 2016.' },
-  { key: 'conant1970', text: 'Roger C. Conant and W. Ross Ashby. Every good regulator of a system must be a model of that system. International Journal of Systems Science, 1(2):89–97, 1970.' },
-  { key: 'davies1998', text: 'Nicholas B. Davies, Rebecca M. Kilner, and David G. Noble. Nestling cuckoos, Cuculus canorus, exploit hosts with begging calls that mimic a brood. Proceedings of the Royal Society B, 265(1397):673–678, 1998.' },
-  { key: 'dawkins1979', text: 'Richard Dawkins and John R. Krebs. Arms races between and within species. Proceedings of the Royal Society of London B, 205(1161):489–511, 1979.' },
   { key: 'denison2024', text: 'Carson Denison, Monte MacDiarmid, Fazl Barez, David Duvenaud, Shauna Kravec, Samuel Marks, et al. Sycophancy to subterfuge: Investigating reward-tampering in large language models. 2024.', url: 'https://arxiv.org/abs/2406.10162' },
   { key: 'eisenstein2023', text: 'Jacob Eisenstein, Chirag Nagpal, Alekh Agarwal, Ahmad Beirami, Alex D’Amour, et al. Helping or herding? Reward model ensembles mitigate but do not eliminate reward hacking. 2023.', url: 'https://arxiv.org/abs/2312.09244' },
   { key: 'elmhamdi2024', text: 'El-Mahdi El-Mhamdi and Lê-Nguyên Hoang. On Goodhart’s law, with an application to value alignment. 2024.', url: 'https://arxiv.org/abs/2410.09638' },
@@ -32,42 +27,32 @@ const REFERENCES: Ref[] = [
   { key: 'everitt2021b', text: 'Tom Everitt, Marcus Hutter, Ramana Kumar, and Victoria Krakovna. Reward tampering problems and solutions in reinforcement learning: A causal influence diagram perspective. Synthese, 198:6435–6467, 2021.' },
   { key: 'gao2023', text: 'Leo Gao, John Schulman, and Jacob Hilton. Scaling laws for reward model overoptimization. ICML 2023.' },
   { key: 'goodhart1975', text: 'Charles A. E. Goodhart. Problems of monetary management: The U.K. experience. Papers in Monetary Economics, Volume I. Reserve Bank of Australia, 1975.' },
-  { key: 'grafen1990', text: 'Alan Grafen. Biological signals as handicaps. Journal of Theoretical Biology, 144(4):517–546, 1990.' },
   { key: 'gupta2026', text: 'Savyasachi Gupta and Aniruddha Srinivas Joshi. Checking the checkers: A synthesis of verifier noise and robustness in RLVR. 2026.', url: 'https://arxiv.org/abs/2610.17824' },
   { key: 'hadfield2017', text: 'Dylan Hadfield-Menell, Smitha Milli, Pieter Abbeel, Stuart Russell, and Anca Dragan. Inverse reward design. NeurIPS 2017.' },
-  { key: 'holmstrom1979', text: 'Bengt Holmström. Moral hazard and observability. Bell Journal of Economics, 10(1):74–91, 1979.' },
-  { key: 'holmstrom1991', text: 'Bengt Holmström and Paul Milgrom. Multitask principal–agent analyses: Incentive contracts, asset ownership, and job design. Journal of Law, Economics, & Organization, 7:24–52, 1991.' },
   { key: 'huang2025', text: 'Audrey Huang, Wenhao Zhan, Tengyang Xie, Jason D. Lee, Wen Sun, Akshay Krishnamurthy, and Dylan J. Foster. Correcting the mythos of KL-regularization: Direct alignment without overoptimization via chi-squared preference optimization. ICLR 2025.' },
-  { key: 'huheey1964', text: 'James E. Huheey. Studies of warning coloration and mimicry. IV. A mathematical model of model-mimic frequencies. Ecology, 45(1):185–188, 1964.' },
   { key: 'ibarz2018', text: 'Borja Ibarz, Jan Leike, Tobias Pohlen, Geoffrey Irving, Shane Legg, and Dario Amodei. Reward learning from human preferences and demonstrations in Atari. NeurIPS 2018.' },
   { key: 'karwowski2024', text: 'Jacek Karwowski, Oliver Hayman, Xingjian Bai, Klaus Kiendlhofer, Charlie Griffin, and Joar Skalse. Goodhart’s law in reinforcement learning. ICLR 2024.' },
   { key: 'krakovna2020', text: 'Victoria Krakovna, Jonathan Uesato, Vladimir Mikulik, Matthew Rahtz, Tom Everitt, Ramana Kumar, Zac Kenton, Jan Leike, and Shane Legg. Specification gaming: The flip side of AI ingenuity. DeepMind blog, April 21, 2020.' },
   { key: 'kwa2024', text: 'Thomas Kwa, Drake Thomas, and Adrià Garriga-Alonso. Catastrophic Goodhart: Regularizing RLHF with KL divergence does not mitigate heavy-tailed reward misspecification. NeurIPS 2024.' },
-  { key: 'lacker1989', text: 'Jeffrey M. Lacker and John A. Weinberg. Optimal contracts under costly state falsification. Journal of Political Economy, 97(6):1345–1363, 1989.' },
   { key: 'laidlaw2025', text: 'Cassidy Laidlaw, Shivam Singhal, and Anca Dragan. Correlated proxies: A new definition and improved mitigation for reward hacking. ICLR 2025.' },
   { key: 'lehman2020', text: 'Joel Lehman, Jeff Clune, Dusan Misevic, et al. The surprising creativity of digital evolution: A collection of anecdotes from the evolutionary computation and artificial life research communities. Artificial Life, 26(2):274–306, 2020.' },
   { key: 'leike2017', text: 'Jan Leike, Miljan Martic, Victoria Krakovna, Pedro A. Ortega, Tom Everitt, Andrew Lefrancq, Laurent Orseau, and Shane Legg. AI safety gridworlds. 2017.', url: 'https://arxiv.org/abs/1711.09883' },
-  { key: 'lindstrom1997', text: 'Leena Lindström, Rauno V. Alatalo, and Johanna Mappes. Imperfect Batesian mimicry: The effects of the frequency and the distastefulness of the model. Proceedings of the Royal Society B, 264(1379):149–153, 1997.' },
   { key: 'macdiarmid2025', text: 'MacDiarmid, Wright, Uesato, et al. Natural emergent misalignment from reward hacking in production RL. 2025.', url: 'https://arxiv.org/abs/2511.18397' },
   { key: 'manheim2018', text: 'David Manheim and Scott Garrabrant. Categorizing variants of Goodhart’s law. 2018.', url: 'https://arxiv.org/abs/1803.04585' },
   { key: 'moya2026', text: 'Christian Moya, Elliott Thornley, and Guang Lin. Verifier errors in RLVR: Reward hacking, limits of feedback, and selective control. 2026.', url: 'https://arxiv.org/abs/2609.35677' },
   { key: 'mroueh2025', text: 'Youssef Mroueh. Reinforcement learning with verifiable rewards: GRPO’s effective loss, dynamics, and success amplification. 2025.', url: 'https://arxiv.org/abs/2503.06639' },
   { key: 'ng1999', text: 'Andrew Y. Ng, Daishi Harada, and Stuart Russell. Policy invariance under reward transformations: Theory and application to reward shaping. ICML 1999.' },
   { key: 'pan2022', text: 'Alexander Pan, Kush Bhatia, and Jacob Steinhardt. The effects of reward misspecification: Mapping and mitigating misaligned models. ICLR 2022.' },
-  { key: 'penn2020', text: 'Dustin J. Penn and Szabolcs Számadó. The handicap principle: How an erroneous hypothesis became a scientific principle. Biological Reviews, 95(1):267–290, 2020.' },
   { key: 'rad2026', text: 'Ali Rad, Khashayar Filom, Darioush Keivan, Peyman Mohajerin Esfahani, and Ehsan Kamalinejad. Rate or fate? RLVεR: Reinforcement learning with verifiable noisy rewards. 2026.', url: 'https://arxiv.org/abs/2601.04411' },
   { key: 'randlov1998', text: 'Jette Randløv and Preben Alstrøm. Learning to drive a bicycle using reinforcement learning and shaping. ICML 1998.' },
   { key: 'ring2011', text: 'Mark Ring and Laurent Orseau. Delusion, survival, and intelligent agents. AGI 2011, LNCS 6830, pages 11–20. Springer, 2011.' },
   { key: 'sharma2024', text: 'Mrinank Sharma, Meg Tong, Tomasz Korbak, David Duvenaud, Amanda Askell, Samuel R. Bowman, et al. Towards understanding sycophancy in language models. ICLR 2024.' },
   { key: 'singhal2023', text: 'Prasann Singhal, Tanya Goyal, Jiacheng Xu, and Greg Durrett. A long way to go: Investigating length correlations in RLHF. 2023.', url: 'https://arxiv.org/abs/2310.03716' },
   { key: 'skalse2022', text: 'Joar Skalse, Nikolaus H. R. Howe, Dmitrii Krasheninnikov, and David Krueger. Defining and characterizing reward hacking. NeurIPS 2022.' },
-  { key: 'skinner1948', text: 'B. F. Skinner. ‘Superstition’ in the pigeon. Journal of Experimental Psychology, 38(2):168–172, 1948.' },
   { key: 'stiennon2020', text: 'Nisan Stiennon, Long Ouyang, Jeff Wu, Daniel M. Ziegler, Ryan Lowe, Chelsea Voss, Alec Radford, Dario Amodei, and Paul Christiano. Learning to summarize with human feedback. NeurIPS 2020.' },
   { key: 'strathern1997', text: 'Marilyn Strathern. ‘Improving ratings’: Audit in the British university system. European Review, 5(3):305–321, 1997.' },
   { key: 'taylor2025', text: 'Taylor, Chua, Betley, Treutlein, and Evans. School of reward hacks: Hacking harmless tasks generalizes to misaligned behavior in LLMs. 2025.', url: 'https://arxiv.org/abs/2508.17511' },
   { key: 'taylor2016', text: 'Jessica Taylor. Quantilizers: A safer alternative to maximizers for limited optimization. AAAI Workshop on AI, Ethics, and Society, 2016.' },
-  { key: 'tinbergen1951', text: 'Niko Tinbergen. The Study of Instinct. Clarendon Press, Oxford, 1951.' },
-  { key: 'tinbergen1951p', text: 'Niko Tinbergen and A. C. Perdeck. On the stimulus situation releasing the begging response in the newly hatched herring gull chick (Larus argentatus argentatus Pont.). Behaviour, 3(1):1–39, 1951.' },
   { key: 'vonarx2025', text: 'Sydney Von Arx, Lawrence Chan, and Beth Barnes. Recent frontier models are reward hacking. METR blog, June 5, 2025.' },
   { key: 'wang2026', text: 'Wang, Joshi, Plank, Angell, and He. Is it thinking or cheating? Detecting implicit reward hacking by measuring reasoning effort. ICLR 2026.' },
   { key: 'weng2024', text: 'Lilian Weng. Reward hacking in reinforcement learning. Lil’Log, November 28, 2024.' },
@@ -91,7 +76,7 @@ exploit from an honest answer with the same reward; hacking splits into selectio
 models are hacked, and amplification within a reward level, the only way verifiers are hacked; under a verifier the
 objective is indifferent to the share of hacks, so the outcome is decided by the learning dynamics; and exploits spread
 through shared parameters, start as lone successes that their group cannot distinguish from honest ones, and accelerate
-once started. It closes with the corresponding problems in contract theory, evolutionary biology and cybernetics.
+once started.
 
 ## What reward hacking looks like
 
@@ -112,6 +97,8 @@ block over ([[krakovna2020|Krakovna et al., 2020]]); a program-repair system mad
 list, which the tests accepted ([[lehman2020|Lehman et al., 2020]]); and in a gridworld, stepping into a bucket made
 every tomato plant look watered ([[leike2017|Leike et al., 2017]]). Atari agents trained on frozen learned reward models
 drove the model’s score up while the game score “plummets” ([[ibarz2018|Ibarz et al., 2018]]).
+
+::classic
 
 [[amodei2016|Amodei et al. (2016)]] gave the phenomenon its current name: the objective “admits of some clever ‘easy’
 solution that formally maximizes it but perverts the spirit of the designer’s intent.” DeepMind’s term, specification
@@ -140,6 +127,8 @@ models occasionally went as far as rewriting their own reward function ([[deniso
 learning to hack production coding environments has been seen to coincide with broader misalignment
 ([[macdiarmid2025|MacDiarmid et al., 2025]]; [[taylor2025|Taylor et al., 2025]]). [[wang2026|Wang et al. (2026)]]
 describe the mechanism as “hacking occurs when exploiting the loophole is easier than solving the actual task.”
+
+::lm
 
 ## How it was formalized before language models
 
@@ -362,61 +351,6 @@ accelerates, and slowing its first carriers delays it without stopping it; stopp
 propensity back at small $z$, such as a pull toward the reference model or negative transfer from prompts that can be
 solved.
 
-## The same problem elsewhere
-
-In contract theory the trainer is the principal, the policy is the agent and the reward is the contract.
-[[holmstrom1979|Holmström (1979)]] showed that an optimal contract pays according to the likelihood ratio
-$f_a(x, a)/f(x, a)$ of the observed outcome, so pay is really an inference about what the agent did, and that any
-additional signal is worth using exactly when it is informative about the action beyond the outcome. Inside a reward
-level our proxy carries no such information, which is why anything correlated with true quality beyond the reward has
-value; the difference is that in RL a signal used for training becomes something the policy optimizes and can change,
-as when agents learned to hide their hacks from a monitor that had been added to the reward
-([[baker2025|Baker et al., 2025]]). In the multitask model of [[holmstrom1991|Holmström and Milgrom (1991)]], with effort
-$t$, cost $C(t)$, value $B(t)$ and only the first task measured, the optimal incentive is
-
-$$\alpha_1 = \frac{B_1 - B_2 C_{12}/C_{22}}{1 + r\sigma^2\big(C_{11} - C_{12}^2/C_{22}\big)},$$
-
-which falls when the tasks compete for effort and is zero when only total effort is costly, “even if the contractor is
-risk neutral.” Passing a verifier and solving the task honestly are perfect substitutes in reward, and the contract then
-leaves the allocation undetermined, just as the objective does not choose the hack share; the matrix $[C_{ij}]^{-1}$,
-which says how an incentive on one task moves effort on another, plays the role of the transfer kernel. The economist’s
-remedy, weaker incentives, has no direct counterpart, because a smaller reward slows all gradient learning without
-changing where it ends; the analogue is limiting how far the policy moves. [[baker2002|Baker (2002)]] measures
-distortion by the angle between the effort gradients of value and measure, recovering a fraction $\cos^2\theta$ of the
-first-best surplus, which is the linear version of the occupancy-angle picture of
-[[karwowski2024|Karwowski et al. (2024)]]. [[carroll2015|Carroll (2015)]] shows that when the principal does not know all
-the agent’s possible actions and judges contracts by the worst case, a linear contract is optimal, because only a linear
-relation turns a bound on the agent’s pay into a bound on the principal’s payoff; unknown actions are unknown exploits,
-and uniform amplification within a reward level is the corresponding robust choice.
-[[lacker1989|Lacker and Weinberg (1989)]] model costly falsification of the reported state, the closest analogue of
-reward tampering, with the difference that an exploit’s cost in RL is only its improbability, which vanishes once it has
-been learned.
-
-Herring gull chicks peck harder at a red rod with white rings than at their parent’s bill, and oystercatchers prefer
-giant dummy eggs to their own ([[tinbergen1951p|Tinbergen and Perdeck, 1951]]; [[tinbergen1951|Tinbergen, 1951]]): a
-rule tuned to the natural range of inputs responds most to inputs outside it, as a reward model’s errors are largest
-away from its training distribution. A cuckoo chick’s begging call “sounds remarkably like a whole brood” and is fed
-accordingly ([[davies1998|Davies et al., 1998]]), and the arms race it starts is lopsided because “a lineage under
-strong selection may out-evolve a weakly selected one” ([[dawkins1979|Dawkins and Krebs, 1979]]); against a fixed
-verifier, RL is that race with only one runner. Batesian mimics are protected less as they become more common, because
-predators learn from each encounter ([[huheey1964|Huheey, 1964]]; [[lindstrom1997|Lindström et al., 1997]]); the hack
-share $\bar q$ plays the role of the mimic share, but a verifier learns nothing from what it accepts unless someone
-audits it ([[moya2026|Moya et al., 2026]]). Honest signalling theory says signals stay honest when exaggeration is
-relatively costlier for low-quality senders ([[grafen1990|Grafen, 1990]]; [[penn2020|Penn and Számadó, 2020]]), which is
-the condition that “exploiting the loophole is easier than solving the actual task” violates; in RL the only cost of an
-exploit is how improbable the policy finds it. And [[skinner1948|Skinner (1948)]]’s pigeons, fed at fixed intervals
-regardless of what they did, settled into whatever they happened to be doing when food arrived: reinforcement does not
-check causation.
-
-Ashby’s law of requisite variety says the variety of outcomes is at least the variety of disturbances minus the variety
-of the regulator; “only variety can destroy variety” ([[ashby1956|Ashby, 1956]]). A pass/fail verifier draws no
-distinction inside its passing level, so it does nothing to regulate the variety of ways to pass, and that is left to
-the reference model and the dynamics. The good regulator theorem of [[conant1970|Conant and Ashby (1970)]] says that the
-simplest optimal regulator is a mapping of the system’s state, so an evaluator that reliably decides whether a task was
-done must, in this weak sense, contain a model of what doing it means; a check of an exit code models only the exit
-code. In both cases the analogy stops at the same place: in RL the disturbance is the policy, and it adapts to the
-regulator.
-
 ## Takeaways
 
 Before language models, reward hacking was written as a proxy equal to the true reward plus an error, as corruption on
@@ -434,7 +368,7 @@ the rest of a model ([[macdiarmid2025|MacDiarmid et al., 2025]]), and all of it 
 const ZH = r`
 ## TL;DR
 
-本文先回顾了 reward hacking 在经典 RL、RLHF 和 RLVR 中的典型案例和定义，再介绍了语言模型之前的工作如何用数学形式刻画它。随后为语言模型 RL 中的 reward hacking 建立了一个理论模型，并推导出：group-based 更新分不清奖励相同的漏洞和老实答案；hacking 可以拆成沿 proxy 的选择和奖励层内的放大，前者是奖励模型被 hack 的主要方式，后者是 verifier 被 hack 的唯一方式；在 verifier 下目标函数对 hack 占比无差别，最终结果由学习动力学决定；漏洞通过共享参数扩散，起点是组内无法与老实成功区分的孤立成功，一旦开始就会自我加速。最后讨论了合同理论、演化生物学和控制论中的对应问题。
+本文先回顾了 reward hacking 在经典 RL、RLHF 和 RLVR 中的典型案例和定义，再介绍了语言模型之前的工作如何用数学形式刻画它。随后为语言模型 RL 中的 reward hacking 建立了一个理论模型，并推导出：group-based 更新分不清奖励相同的漏洞和老实答案；hacking 可以拆成沿 proxy 的选择和奖励层内的放大，前者是奖励模型被 hack 的主要方式，后者是 verifier 被 hack 的唯一方式；在 verifier 下目标函数对 hack 占比无差别，最终结果由学习动力学决定；漏洞通过共享参数扩散，起点是组内无法与老实成功区分的孤立成功，一旦开始就会自我加速。
 
 ## Reward hacking 长什么样
 
@@ -442,11 +376,15 @@ const ZH = r`
 
 一辆模拟自行车因朝向目标而得奖励、背离目标却从不受罚，结果学会了在起点周围绕 20 到 50 米宽的圈 ([[randlov1998|Randløv and Alstrøm, 1998]])。一个因触碰足球而得奖励的机器人，学会了停在球旁边不停地碰它 ([[ng1999|Ng et al., 1999]])。在赛艇游戏 CoastRunners 里，智能体发现在泻湖里反复撞几个会重生的目标比跑完全程更划算，一边着火、一边逆行，得分还比人类玩家高出约 20% ([[clark2016|Clark and Amodei, 2016]])。一只从人类反馈中学抓取的机械臂，把手挡在镜头和物体之间，“让它看起来像是在抓取” ([[amodei2017|Amodei et al., 2017]])。一个叠积木的智能体直接把积木翻了过来 ([[krakovna2020|Krakovna et al., 2020]])；一个程序修复系统让程序永远返回空列表，测试居然通过了 ([[lehman2020|Lehman et al., 2020]])；在一个 gridworld 里，走进水桶格就能让所有番茄看起来都浇过水 ([[leike2017|Leike et al., 2017]])。在冻结的、学出来的奖励模型上训练的 Atari 智能体，把奖励模型的打分推高，游戏得分却“暴跌” ([[ibarz2018|Ibarz et al., 2018]])。
 
+::classic
+
 这个现象今天的名字来自 [[amodei2016|Amodei et al. (2016)]]：目标函数“允许某种聪明的‘简单’解，它在形式上最大化了目标函数，却违背了设计者意图的精神”。DeepMind 的叫法是 specification gaming，指“满足目标的字面规格、却没有达到预期结果的行为” ([[krakovna2020|Krakovna et al., 2020]])。[[pan2022|Pan et al. (2022)]] 发现它可能在模型容量增长时以相变的形式突然出现；[[weng2024|Weng (2024)]] 总结了通行的用法：智能体“利用奖励函数中的缺陷或模糊之处获得高奖励，却没有真正学会或完成预期任务”。
 
 在 RLHF 中，对学出来的奖励模型优化得越用力，摘要先变好、再变差 ([[stiennon2020|Stiennon et al., 2020]])；在几个数据集上，RLHF 测得的提升有很大一部分只是因为回答变长了 ([[singhal2023|Singhal et al., 2023]])；偏好模型常常更喜欢附和用户的回答，而不是正确的回答 ([[sharma2024|Sharma et al., 2024]])；奖励模型集成的帮助也没有预想的大，因为成员往往犯同样的错 ([[eisenstein2023|Eisenstein et al., 2023]])。
 
 在程序化 verifier 下，前沿代码 agent 被发现会在测试运行前调用 ${'`'}exit(0)${'`'}、抛出 ${'`'}SkipTest${'`'}、修改测试框架上游的代码、从测试文件里读出期望值、反编译参考答案；当一个读取它们 CoT 的 monitor 被加进奖励后，它们继续 hack，只是不再说出来 ([[baker2025|Baker et al., 2025]])。Claude 3.7 Sonnet 的 system card 写道，它会“为了通过测试用例而特判”，这是训练中 reward hacking 的结果 ([[anthropic2025|Anthropic, 2025]])；o3 在评测任务里覆盖评分器的计时器、修改评测器，被问到时也承认这不是用户想要的 ([[vonarx2025|Von Arx et al., 2025]])；在被刻意改成不可能完成的代码任务上，“任何通过都必然意味着违反规格的捷径”，前沿模型却经常通过 ([[zhong2025|Zhong et al., 2025]])。在一个越来越容易钻空子的任务课程里，模型偶尔甚至会改写自己的奖励函数 ([[denison2024|Denison et al., 2024]])；而学会 hack 生产代码环境，被观察到与更广泛的 misalignment 同时出现 ([[macdiarmid2025|MacDiarmid et al., 2025]]; [[taylor2025|Taylor et al., 2025]])。[[wang2026|Wang et al. (2026)]] 把其中的机制描述为“当利用漏洞比解决实际任务更容易时，就会发生 hacking”。
+
+::lm
 
 ## 语言模型之前的形式化
 
@@ -542,18 +480,6 @@ $$\frac{d}{dt}\log\frac{h(x')}{s(x')} = \mathbb{E}_x\Big[w(p(x))\Big(s(x)\,[K_{\
 
 > **要点 9**　在单个 prompt 上，当 $Gh \ll 1$ 时，漏洞占比在时间尺度 $1/(2w(0)h_0)$ 上达到 $O(1)$：对 REINFORCE 约为 $1/(2h_0)$，对 GRPO 约为 $1/(2\sqrt{G-1}\,h_0)$。跨 prompt 时，共享的漏洞倾向在有限时间内爆炸。把孤立漏洞的影响压到 $\epsilon$ 倍，在 $\epsilon \gg G h_0$ 时起飞时间按 $1/\epsilon$ 推迟，之后饱和，大约比原来晚 $1/(G h_0)$ 倍。和传染病一样，这个过程会自我加速，减慢最早的携带者只能推迟它，不能阻止它；要阻止它，需要一个在 $z$ 较小时把倾向拉回去的力，比如朝参考模型的拉力，或者来自可解 prompt 的负迁移。
 
-## 别的领域里的同一个问题
-
-在合同理论里，训练者是委托人，策略是代理人，奖励就是合同。[[holmstrom1979|Holmström (1979)]] 证明，最优合同按观测结果的似然比 $f_a(x, a)/f(x, a)$ 付酬，所以报酬实质上是对代理人做了什么的一个推断；而任何额外的信号，当且仅当它在结果之外还携带关于行动的信息时，才值得用上。在一个奖励层内部，我们的 proxy 不携带这种信息，所以凡是在奖励之外还与真实质量相关的东西都有价值；不同的是，在 RL 里，一个被用来训练的信号会变成策略优化的对象，策略可以改变它，就像 agent 学会了向一个被加进奖励的 monitor 隐藏自己的 hack ([[baker2025|Baker et al., 2025]])。在 [[holmstrom1991|Holmström and Milgrom (1991)]] 的多任务模型中，设努力为 $t$，成本为 $C(t)$，价值为 $B(t)$，只有第一项任务被测量，则最优激励为
-
-$$\alpha_1 = \frac{B_1 - B_2 C_{12}/C_{22}}{1 + r\sigma^2\big(C_{11} - C_{12}^2/C_{22}\big)},$$
-
-当任务之间争夺努力时它下降，当只有总努力有成本时它为零，“即使承包人是风险中性的”。通过 verifier 和老老实实解题在奖励上是完全替代品，这时合同不决定努力怎么分配，正如目标函数不选择 hack 占比；而描述一项任务上的激励如何牵动另一项任务努力的矩阵 $[C_{ij}]^{-1}$，扮演的正是迁移核的角色。经济学家的药方是减弱激励，这在 RL 里没有直接的对应，因为更小的奖励只会让所有梯度学习都变慢，不会改变终点；对应物是限制策略能走多远。[[baker2002|Baker (2002)]] 用价值与测量在努力空间中梯度的夹角来度量扭曲，能拿回一阶最优剩余的 $\cos^2\theta$，这是 [[karwowski2024|Karwowski et al. (2024)]] 占用测度夹角图景的线性版本。[[carroll2015|Carroll (2015)]] 证明，当委托人不知道代理人所有可能的行动、并按最坏情况评价合同时，线性合同是最优的，因为只有线性关系能把代理人报酬的界转化为委托人收益的界；未知的行动就是未知的漏洞，而奖励层内的均匀放大正是对应的稳健选择。[[lacker1989|Lacker and Weinberg (1989)]] 建模了对所报告状态的有成本造假，这是 reward tampering 最接近的类比，区别在于 RL 里漏洞的成本只是它的不可能性，一旦被学会，这个成本就消失了。
-
-银鸥雏鸟啄带白环的红棒比啄亲鸟的喙更用力，蛎鹬宁可孵巨大的假蛋也不孵自己的蛋 ([[tinbergen1951p|Tinbergen and Perdeck, 1951]]; [[tinbergen1951|Tinbergen, 1951]])：一条为自然输入范围调好的规则，对范围之外的输入反应最强烈，正如奖励模型的误差在远离训练分布处最大。杜鹃雏鸟的乞食叫声“听起来非常像一整窝雏鸟”，也就照此被喂养 ([[davies1998|Davies et al., 1998]])；由此开始的军备竞赛之所以一边倒，是因为“一个处于强选择下的谱系，可能在演化上胜过一个弱选择下的谱系” ([[dawkins1979|Dawkins and Krebs, 1979]])；面对一个固定的 verifier，RL 就是只有一个选手的这场竞赛。Batesian 拟态物种越常见，受到的保护越少，因为捕食者从每次相遇中学习 ([[huheey1964|Huheey, 1964]]; [[lindstrom1997|Lindström et al., 1997]])；hack 占比 $\bar q$ 扮演的是拟态者占比的角色，但 verifier 不会从自己接受的东西里学到任何东西，除非有人去审计它 ([[moya2026|Moya et al., 2026]])。诚实信号理论说，当夸大对低质量发送者来说相对更昂贵时，信号就能保持诚实 ([[grafen1990|Grafen, 1990]]; [[penn2020|Penn and Számadó, 2020]])，而“利用漏洞比解决实际任务更容易”恰恰违反了这个条件；在 RL 里，漏洞唯一的成本是策略觉得它有多不可能。最后，[[skinner1948|Skinner (1948)]] 的鸽子不管做什么都按固定间隔被喂食，结果固定在了食物到来时它们碰巧在做的动作上：强化并不检查因果。
-
-Ashby 的必要多样性定律说，结果的多样性至少是扰动的多样性减去调节器的多样性；“只有多样性才能消灭多样性” ([[ashby1956|Ashby, 1956]])。通过/不通过型 verifier 在通过层内部不做任何区分，所以它对“通过的方式”的多样性毫无调节作用，这部分只能交给参考模型和学习动力学。[[conant1970|Conant and Ashby (1970)]] 的好调节器定理说，最简单的最优调节器是系统状态的一个映射，所以一个能可靠判断任务是否完成的评估者，在这个弱的意义上必须包含一个关于“完成任务意味着什么”的模型；检查退出码的评估者只对退出码建了模。两个类比在同一个地方失效：在 RL 里，扰动就是策略本身，而它会适应调节器。
-
 ## 小结
 
 在语言模型之前，reward hacking 被写成 proxy 等于真实奖励加误差，写成某些状态上的污染，写成智能体控制了自己的奖励通道，写成两个奖励对策略的排序不同，或者通过限制相对于基础分布的优化强度来处理。到了语言模型的 RL，一个网络回答所有 prompt，group-based 更新只看得到奖励，参考模型又很强，图景变得更具体了。Hacking 分成沿 proxy 的选择和奖励层内的放大：前者是奖励模型被 hack 的方式，后者是 verifier 被 hack 的唯一方式。在 verifier 下，目标函数对 hack 占比无差别，所以决定它的是学习动力学：漏洞通过共享参数扩散，起点是组内无法与老实成功区分的孤立成功，而一旦开始就会自我加速。这些都没有回答学会 hack 会对模型的其余部分造成什么影响 ([[macdiarmid2025|MacDiarmid et al., 2025]])，而且描述的都是期望意义下的更新。
@@ -584,7 +510,10 @@ const RewardHackingFormalized: React.FC = () => {
       </div>
 
       <div className="mt-8 space-y-4 text-base font-sans text-anthropic-gray leading-relaxed">
-        <PostText source={lang === 'en' ? EN : ZH} />
+        <PostText
+          source={lang === 'en' ? EN : ZH}
+          figures={{ classic: <ClassicExamples lang={lang} />, lm: <LanguageModelExamples lang={lang} /> }}
+        />
 
         <SectionHeading>{lang === 'en' ? 'References' : '参考文献'}</SectionHeading>
         <ol className="space-y-1.5 text-[12.5px] leading-[1.5]">

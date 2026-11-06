@@ -8,6 +8,7 @@ import { M, MD } from './Math';
  *   ## Heading            a section heading (centred, with the rule from the home page)
  *   $$ ... $$             display math
  *   **Run-in.** text      a paragraph opening with a bold run-in heading
+ *   > **Label.** text     a boxed callout; it may contain $$ ... $$ display math
  *   anything else         a paragraph
  *
  * Inside a paragraph: $...$ is inline math, `...` is code, **...** is bold, and
@@ -79,6 +80,19 @@ export const PostText: React.FC<{ source: string }> = ({ source }) => {
       {blocks.map((block, i) => {
         if (block.startsWith('## ')) return <SectionHeading key={i}>{renderInline(block.slice(3))}</SectionHeading>;
         if (block.startsWith('$$') && block.endsWith('$$')) return <MD key={i}>{block.slice(2, -2).trim()}</MD>;
+        if (block.startsWith('> '))
+          return (
+            <div key={i} className="rounded border border-anthropic-text/15 bg-[#F5F5F3] px-4 py-3">
+              {block
+                .slice(2)
+                .split(/(\$\$[^$]+\$\$)/)
+                .map((seg) => seg.trim())
+                .filter(Boolean)
+                .map((seg, j) =>
+                  seg.startsWith('$$') ? <MD key={j}>{seg.slice(2, -2).trim()}</MD> : <p key={j}>{renderInline(seg)}</p>,
+                )}
+            </div>
+          );
         return <p key={i}>{renderInline(block)}</p>;
       })}
     </>

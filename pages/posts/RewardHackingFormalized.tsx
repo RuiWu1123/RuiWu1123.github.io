@@ -1,6 +1,7 @@
 import React from 'react';
 import { PostText } from '../../components/PostText';
 import { ClassicExamples, LanguageModelExamples } from './RewardHackingFigures';
+import { DampingPlot, GrpoWeightPlot, TakeoffPlot } from './RewardHackingPlots';
 
 const r = String.raw;
 
@@ -231,6 +232,8 @@ which is symmetric around $p = 1/2$, smallest there, and equal to $\sqrt{G-1}$ a
 exploit and an honest answer with the same reward are pushed alike, and how much each actually grows depends only on
 the network. A response that is the only success in its group receives the largest advantage the group can give.
 
+::wg
+
 **Two ways to hack.** Splitting the policy into its distribution over levels and its distribution inside each level
 gives
 
@@ -346,6 +349,10 @@ accelerates, and slowing its first carriers delays it without stopping it; stopp
 propensity back at small $z$, such as a pull toward the reference model or negative transfer from prompts that can be
 solved.
 
+::takeoff
+
+::damping
+
 ## Conclusion
 
 Before language models, reward hacking was written as a proxy equal to the true reward plus an error, as corruption on
@@ -428,6 +435,8 @@ $$w_G(p) = \mathbb{E}_m\Big[\sqrt{\tfrac{G-1-m}{1+m}}\Big] + \mathbb{E}_m\Big[\s
 
 > **要点 1**　同一 reward level 内的任何一组回答，单位概率上得到的系数都相同：reward 相同的 exploit 和真正的解答被同等地推高，各自实际增长多少只取决于网络本身。组里唯一成功的那个回答，拿到的是这个组能给出的最大 advantage。
 
+::wg
+
 **Hack 的两种途径．**　把 policy 拆成它在各 level 之间的分布和每个 level 内部的分布，得到
 
 $$\mathrm{Hack}(\pi) = \underbrace{\sum_v \big(\pi_R(v) - \pi_{\mathrm{ref},R}(v)\big)\,\bar e(v)}_{\text{沿 proxy 的 selection}} + \underbrace{\sum_v \pi_R(v)\big(\mathbb{E}_{\pi(\cdot\mid L_v)}[e] - \bar e(v)\big)}_{\text{level 内的 amplification}},$$
@@ -476,6 +485,10 @@ $$\frac{d}{dt}\log\frac{h(x')}{s(x')} = \mathbb{E}_x\Big[w(p(x))\Big(s(x)\,[K_{\
 
 > **要点 9**　在单个 prompt 上，当 $Gh \ll 1$ 时，exploit 占比在时间尺度 $1/(2w(0)h_0)$ 上达到 $O(1)$：REINFORCE 约为 $1/(2h_0)$，GRPO 约为 $1/(2\sqrt{G-1}\,h_0)$。跨 prompt 时，共享的 exploit 倾向会在有限时间内爆炸。把孤立 exploit 的影响压到 $\epsilon$ 倍，在 $\epsilon \gg G h_0$ 时 take-off 时间按 $1/\epsilon$ 推迟，之后趋于饱和，大约比原来晚 $1/(G h_0)$ 倍。和传染病一样，这个过程会自我加速，减慢最早的“携带者”只能推迟它，不能阻止它；要阻止它，需要一个在 $z$ 还小时就把倾向拉回来的力，比如向 reference model 的拉力，或者来自可解 prompt 的负迁移。
 
+::takeoff
+
+::damping
+
 ## 小结
 
 在语言模型之前，reward hacking 被写成 proxy 等于真实 reward 加误差，写成部分状态上的污染，写成智能体控制了自己的 reward 通道，写成两个 reward 对 policy 的排序不一致，或者通过限制相对于基础分布的优化强度来应对。到了语言模型 RL，一个网络回答所有 prompt，group-based 更新只看得到 reward，reference model 又很强，图景因此变得更具体。Hacking 分为沿 proxy 的 selection 和 reward level 内的 amplification：前者是 reward model 被 hack 的方式，后者是 verifier 被 hack 的唯一方式。在 verifier 下，目标函数对 hack 占比毫无偏好，决定它的是学习动力学：exploit 通过共享参数扩散，起点是组内无法与真正成功区分开的孤立成功，而且一旦开始就会自我加速。这些结论都没有回答学会 hack 会对模型的其余部分产生什么影响 ([[macdiarmid2025|MacDiarmid et al., 2025]])，而且描述的都是期望意义下的更新。
@@ -509,7 +522,13 @@ const RewardHackingFormalized: React.FC = () => {
         <PostText
           source={lang === 'en' ? EN : ZH}
           links={LINKS}
-          figures={{ classic: <ClassicExamples lang={lang} />, lm: <LanguageModelExamples lang={lang} /> }}
+          figures={{
+            classic: <ClassicExamples lang={lang} />,
+            lm: <LanguageModelExamples lang={lang} />,
+            wg: <GrpoWeightPlot lang={lang} />,
+            takeoff: <TakeoffPlot lang={lang} />,
+            damping: <DampingPlot lang={lang} />,
+          }}
         />
 
       </div>

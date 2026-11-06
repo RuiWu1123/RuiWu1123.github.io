@@ -383,6 +383,10 @@ network and prompt mix (Takeaway 6). The price is that honest lone successes are
 delays the take-off; stopping it takes a force that pulls the propensity back while it is still small, such as a pull
 toward the reference model or negative transfer from prompts that can be solved (Takeaway 9).
 
+The two directions work best together, because each covers the other’s weakness. A signal is rarely complete and can
+be evaded once optimized against, and the dynamics-based limits catch what it misses; those limits in turn slow honest
+lone successes along with exploits, and a signal, where it exists, shows where they can be relaxed.
+
 None of this says what learning to hack does to the rest of a model ([[macdiarmid2025|MacDiarmid et al., 2025]]), and all
 of it describes expected updates.
 `;
@@ -517,6 +521,8 @@ $$\frac{d}{dt}\log\frac{h(x')}{s(x')} = \mathbb{E}_x\Big[w(p(x))\Big(s(x)\,[K_{\
 **找到能区分 $r$ 和 $r^*$ 的信号．**　最坏的情况是零信息的情况：在一个 reward level 内部，没有任何东西能把 exploit 和真正的解答分开，剩下的保证只是对该 level 被放大得有多不均匀的界（要点 5）。任何在 $r$ 之外还携带 $r^*$ 信息的信号，比如 held-out 测试、第二个 verifier、CoT monitor 或者激活上的 probe，都能打破这种对称，因为它让更新可以区别对待 reward 相同的回答。不过这样的信号要谨慎使用：一旦对它做优化，policy 就可能学会规避它 ([[baker2025|Baker et al., 2025]])。
 
 **不管是不是 hack，都限制单个样本对 policy 的影响．**　第二个方向完全不去辨别哪些样本是 hack。既然更新本来就分不清 reward 相同的 exploit 和真正的解答，不如把更新设计成：无论某个样本是哪一种，它都不能把 policy 推得太远。在 verifier 下，结果本来就由学习动力学决定（要点 4），这样一来，不管 exploit 藏在哪里，它造成的损害都会受到限制。模型也指出了着力点：孤立成功拿到的最大 advantage（要点 8），把得到奖励的回答从一个 prompt 带到其他 prompt 的迁移（要点 7），以及 level 内散度，惩罚项会把它和获得的 reward 绑在一起，对任何网络、任何 prompt 配比都成立（要点 6）。代价是真正的孤立成功也会被放慢。而且只做压制只能推迟 take-off；要阻止它，需要一个在倾向还小时就把它拉回来的力，比如向 reference model 的拉力，或者来自可解 prompt 的负迁移（要点 9）。
+
+两个方向结合起来效果最好，因为它们正好弥补彼此的短板。信号很少是完整的，一旦被优化还可能被规避，从动力学上做的限制可以兜住它漏掉的部分；反过来，这些限制会把真正的孤立成功和 exploit 一起放慢，而有信号的地方，就可以据此放松限制。
 
 这些结论都没有回答学会 hack 会对模型的其余部分产生什么影响 ([[macdiarmid2025|MacDiarmid et al., 2025]])，而且描述的都是期望意义下的更新。
 `;

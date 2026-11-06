@@ -72,7 +72,9 @@ exploit from an honest answer with the same reward; hacking splits into selectio
 models are hacked, and amplification within a reward level, the only way verifiers are hacked; under a verifier the
 objective is indifferent to the share of hacks, so the outcome is decided by the learning dynamics; and exploits spread
 through shared parameters, start as lone successes that their group cannot distinguish from honest ones, and accelerate
-once started.
+once started. It closes with the threat model this implies and two ways forward: finding a signal that
+separates the proxy from the intended reward, and shaping the training dynamics so that hacked samples move the policy
+less.
 
 ## What reward hacking looks like
 
@@ -353,17 +355,33 @@ solved.
 
 ::damping
 
-## Conclusion
+## Threat model and two ways forward
 
-Before language models, reward hacking was written as a proxy equal to the true reward plus an error, as corruption on
-some states, as an agent that controls its own reward channel, as two rewards that order policies differently, or
-handled by limiting optimization against a base distribution. For RL of language models, with one network for all
-prompts, group-based updates that see only rewards, and a strong reference model, the picture becomes more specific.
-Hacking splits into selection along the proxy, which is how reward models are hacked, and amplification within a reward
-level, which is the only way verifiers are hacked. Under a verifier the objective is indifferent to the hack share, so
-what decides it is the learning dynamics: exploits spread through shared parameters, start as lone successes that their
-group cannot tell apart from honest ones, and accelerate once started. None of this says what learning to hack does to
-the rest of a model ([[macdiarmid2025|MacDiarmid et al., 2025]]), and all of it describes expected updates.
+Put together, the model gives a threat model for reward hacking in language-model RL. The trainer sees only the proxy
+$r$, and the update sees only rewards: an exploit and an honest answer in the same reward level are pushed alike
+(Takeaway 1), so inside a level the update has no information about which is which. Under a binary verifier this
+within-level amplification is the only way hacking can grow (Takeaway 2), and the objective does not choose between the
+two (Takeaway 4). The worst case starts on a prompt nobody solves: a lone exploit receives the group’s largest advantage
+and looks exactly like a lone honest success (Takeaway 8), it raises exploits on other prompts through shared parameters
+(Takeaway 7), and the process accelerates once started (Takeaway 9). Two directions follow, one for each half of this
+picture.
+
+**Find a signal that separates $r$ from $r^*$.** The worst case is the zero-information one: inside a reward level
+nothing tells an exploit from a solution, and the only guarantees left are bounds on how unevenly the level is amplified
+(Takeaway 5). Any signal that carries information about $r^*$ beyond $r$, such as held-out tests, a second verifier, a
+chain-of-thought monitor or a probe on activations, breaks that symmetry, because it lets the update treat responses
+with the same reward differently. Such a signal has to be used with care: once it is optimized against, the policy can
+learn to evade it ([[baker2025|Baker et al., 2025]]).
+
+**Limit how much hacked samples move the policy.** Even without such a signal, the training dynamics decide which
+optimum is reached (Takeaway 4), and the dynamics can be shaped. The model points to where: the maximal advantage a lone
+success receives, the transfer that carries an exploit from one prompt to the others, and the within-level divergence,
+which a penalty ties to the reward gained (Takeaway 6). Damping lone successes on its own only delays the take-off;
+stopping it takes a force that pulls the propensity back while it is still small, such as a pull toward the reference
+model or negative transfer from prompts that can be solved (Takeaway 9).
+
+None of this says what learning to hack does to the rest of a model ([[macdiarmid2025|MacDiarmid et al., 2025]]), and all
+of it describes expected updates.
 `;
 
 // Chinese paragraphs are kept on one line each: PostText joins wrapped lines with a space.
@@ -371,7 +389,7 @@ the rest of a model ([[macdiarmid2025|MacDiarmid et al., 2025]]), and all of it 
 const ZH = r`
 ## TL;DR
 
-本文先回顾 reward hacking 在经典 RL、RLHF 和 RLVR 中的典型案例与定义，再梳理语言模型出现之前的工作如何用数学刻画它。接着为语言模型 RL 中的 reward hacking 建立一个理论模型，并由此推出：group-based 的更新无法区分 reward 相同的 exploit 和真正的解答；hacking 可以分解为沿 proxy 的 selection 和同一 reward level 内的 amplification，前者是 reward model 被 hack 的主要方式，后者是 verifier 被 hack 的唯一方式；在 verifier 下，目标函数对 hack 所占比例毫无偏好，最终结果取决于学习动力学；exploit 通过共享参数扩散，起点是组内无法与真正成功区分开的孤立成功，而且一旦开始就会自我加速。
+本文先回顾 reward hacking 在经典 RL、RLHF 和 RLVR 中的典型案例与定义，再梳理语言模型出现之前的工作如何用数学刻画它。接着为语言模型 RL 中的 reward hacking 建立一个理论模型，并由此推出：group-based 的更新无法区分 reward 相同的 exploit 和真正的解答；hacking 可以分解为沿 proxy 的 selection 和同一 reward level 内的 amplification，前者是 reward model 被 hack 的主要方式，后者是 verifier 被 hack 的唯一方式；在 verifier 下，目标函数对 hack 所占比例毫无偏好，最终结果取决于学习动力学；exploit 通过共享参数扩散，起点是组内无法与真正成功区分开的孤立成功，而且一旦开始就会自我加速。最后总结由此得到的威胁模型，并提出两个方向：找到能区分 proxy 和真实 reward 的信号，以及通过塑造训练动力学，减小被 hack 的样本对 policy 的影响。
 
 ## Reward hacking 长什么样
 
@@ -489,9 +507,15 @@ $$\frac{d}{dt}\log\frac{h(x')}{s(x')} = \mathbb{E}_x\Big[w(p(x))\Big(s(x)\,[K_{\
 
 ::damping
 
-## 小结
+## 威胁模型与两个方向
 
-在语言模型之前，reward hacking 被写成 proxy 等于真实 reward 加误差，写成部分状态上的污染，写成智能体控制了自己的 reward 通道，写成两个 reward 对 policy 的排序不一致，或者通过限制相对于基础分布的优化强度来应对。到了语言模型 RL，一个网络回答所有 prompt，group-based 更新只看得到 reward，reference model 又很强，图景因此变得更具体。Hacking 分为沿 proxy 的 selection 和 reward level 内的 amplification：前者是 reward model 被 hack 的方式，后者是 verifier 被 hack 的唯一方式。在 verifier 下，目标函数对 hack 占比毫无偏好，决定它的是学习动力学：exploit 通过共享参数扩散，起点是组内无法与真正成功区分开的孤立成功，而且一旦开始就会自我加速。这些结论都没有回答学会 hack 会对模型的其余部分产生什么影响 ([[macdiarmid2025|MacDiarmid et al., 2025]])，而且描述的都是期望意义下的更新。
+把上面的结论放在一起，就得到语言模型 RL 中 reward hacking 的一个威胁模型。训练者只看得到 proxy $r$，更新也只看得到 reward：同一 reward level 内的 exploit 和真正的解答被同等地推高（要点 1），所以在一个 level 内部，更新对两者毫无区分能力。在 binary verifier 下，这种 level 内的 amplification 是 hacking 增长的唯一途径（要点 2），而目标函数在两者之间不做选择（要点 4）。最坏的情况始于一个谁也解不出的 prompt：孤立的 exploit 拿到组里最大的 advantage，看起来和孤立的真正成功一模一样（要点 8）；它通过共享参数抬高其他 prompt 上的 exploit（要点 7），而且一旦开始就会自我加速（要点 9）。由此引出两个方向，各自对应这幅图景的一半。
+
+**找到能区分 $r$ 和 $r^*$ 的信号．**　最坏的情况是零信息的情况：在一个 reward level 内部，没有任何东西能把 exploit 和真正的解答分开，剩下的保证只是对该 level 被放大得有多不均匀的界（要点 5）。任何在 $r$ 之外还携带 $r^*$ 信息的信号，比如 held-out 测试、第二个 verifier、CoT monitor 或者激活上的 probe，都能打破这种对称，因为它让更新可以区别对待 reward 相同的回答。不过这样的信号要谨慎使用：一旦对它做优化，policy 就可能学会规避它 ([[baker2025|Baker et al., 2025]])。
+
+**限制被 hack 的样本对 policy 的影响．**　即使没有这样的信号，最终落到哪个最优解也是由训练动力学决定的（要点 4），而训练动力学是可以塑造的。模型指出了着力点：孤立成功拿到的最大 advantage，把 exploit 从一个 prompt 带到其他 prompt 的迁移，以及 level 内散度，惩罚项会把它和获得的 reward 绑在一起（要点 6）。只压制孤立成功只能推迟 take-off；要阻止它，需要一个在倾向还小时就把它拉回来的力，比如向 reference model 的拉力，或者来自可解 prompt 的负迁移（要点 9）。
+
+这些结论都没有回答学会 hack 会对模型的其余部分产生什么影响 ([[macdiarmid2025|MacDiarmid et al., 2025]])，而且描述的都是期望意义下的更新。
 `;
 
 const switchClass =

@@ -25,7 +25,8 @@ export const SectionHeading: React.FC<{ children: React.ReactNode }> = ({ childr
 const citeClass =
   'underline underline-offset-2 decoration-anthropic-text/30 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors';
 
-const INLINE = /(\$[^$]+\$|`[^`]+`|\*\*[^*]+\*\*|\[\[[^\]|]+\|[^\]]+\]\])/g;
+// Bold comes first and is non-greedy, so a bold run-in may itself contain math such as $r^*$.
+const INLINE = /(\*\*.+?\*\*|\$[^$]+\$|`[^`]+`|\[\[[^\]|]+\|[^\]]+\]\])/g;
 
 const renderInline = (text: string, links: Record<string, string>): React.ReactNode[] =>
   text.split(INLINE).map((part, i) => {
@@ -39,7 +40,7 @@ const renderInline = (text: string, links: Record<string, string>): React.ReactN
     if (part.startsWith('**') && part.endsWith('**') && part.length > 3)
       return (
         <b key={i} className="text-anthropic-text">
-          {part.slice(2, -2)}
+          {renderInline(part.slice(2, -2), links)}
         </b>
       );
     if (part.startsWith('[[') && part.endsWith(']]')) {

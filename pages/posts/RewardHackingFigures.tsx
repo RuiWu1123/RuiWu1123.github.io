@@ -167,7 +167,7 @@ const Length: React.FC<{ lang: Lang }> = ({ lang }) => (
     <path d={QUALITY} strokeDasharray="4 3" />
     <Mover path={SCORE} dur="3.5s" r={3} />
     <Mover path={QUALITY} dur="3.5s" r={3} />
-    <Label x={182} y={18} anchor="end">{lang === 'en' ? 'reward-model score' : '奖励模型打分'}</Label>
+    <Label x={182} y={18} anchor="end">{lang === 'en' ? 'reward-model score' : 'reward model 打分'}</Label>
     <Label x={182} y={100} anchor="end">{lang === 'en' ? 'true quality' : '真实质量'}</Label>
     <Label x={105} y={124}>{lang === 'en' ? 'answer length' : '回答长度'}</Label>
   </svg>
@@ -189,7 +189,7 @@ const Obfuscation: React.FC<{ lang: Lang }> = ({ lang }) => (
       <animate attributeName="opacity" values="0.25;1;0.25" dur="3s" begin="1.5s" repeatCount="indefinite" />
       <Label x={184} y={96} anchor="end">{lang === 'en' ? 'passes' : '通过'}</Label>
     </g>
-    <Label x={100} y={66}>{lang === 'en' ? '↓ monitor added to reward' : '↓ monitor 加进奖励'}</Label>
+    <Label x={100} y={66}>{lang === 'en' ? '↓ monitor added to reward' : '↓ monitor 加进 reward'}</Label>
   </svg>
 );
 
@@ -242,7 +242,7 @@ export const LanguageModelExamples: React.FC<{ lang: Lang }> = ({ lang }) => (
       caption={
         lang === 'en'
           ? 'RLHF: the learned reward rewards length more than quality.'
-          : 'RLHF：学出来的奖励更看重长度而不是质量。'
+          : 'RLHF：learned reward model 更看重长度，而不是质量。'
       }
     >
       <Length lang={lang} />
@@ -260,7 +260,7 @@ export const LanguageModelExamples: React.FC<{ lang: Lang }> = ({ lang }) => (
       caption={
         lang === 'en'
           ? 'Penalizing hacks seen in the chain of thought: the hack stays, the confession goes.'
-          : '惩罚 CoT 里看得到的 hack：hack 还在，坦白没了。'
+          : '惩罚 CoT 里暴露的 hack：hack 还在，只是不再说出来。'
       }
     >
       <Obfuscation lang={lang} />

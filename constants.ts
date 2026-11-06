@@ -224,8 +224,8 @@ export const SOCIAL_LINKS = {
 export const THOUGHTS: ThoughtPost[] = [
   {
     date: "11.6.2026",
-    title: "Reward Hacking 的形式化：从经典强化学习到语言模型",
-    tldr: "回顾 reward hacking 的经典案例和形式化，再为语言模型的 RL 建立一套形式化：hacking 分成沿 proxy 的选择和奖励层内的放大，在 verifier 下由学习动力学决定。",
+    title: "Reward Hacking, Formalized: From Classical RL to Language Models",
+    tldr: "Reviews how reward hacking was defined and formalized before language models, then sets up a formalization for language-model RL: hacking splits into selection along the proxy and amplification within a reward level, and under a verifier the outcome is decided by the learning dynamics.",
     link: "/thoughts/reward-hacking-formalized"
   }
 ];

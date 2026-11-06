@@ -72,7 +72,7 @@ export const PostText: React.FC<{
         if (block.startsWith('$$') && block.endsWith('$$')) return <MD key={i}>{block.slice(2, -2).trim()}</MD>;
         if (block.startsWith('> '))
           return (
-            <div key={i} className="rounded border border-anthropic-text/15 bg-[#F5F5F3] px-4 py-3">
+            <div key={i} className="border border-anthropic-text px-4 py-3">
               {block
                 .slice(2)
                 .split(/(\$\$[^$]+\$\$)/)

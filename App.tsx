@@ -1,12 +1,15 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode, Suspense } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Alignment from './pages/Alignment';
-// Hidden for now, together with their routes below.
-// import Thoughts from './pages/Thoughts';
-// import StudyingRewardHacking from './pages/posts/StudyingRewardHacking';
+// Thoughts & Blog Posts are drafts for now: only the dev server (npm run dev)
+// routes them, and the production build leaves them out entirely.
+const Thoughts = import.meta.env.DEV ? React.lazy(() => import('./pages/Thoughts')) : null;
+const RewardHackingFormalized = import.meta.env.DEV
+  ? React.lazy(() => import('./pages/posts/RewardHackingFormalized'))
+  : null;
 
 // Scroll to top on route change
 const ScrollToTop = () => {
@@ -75,20 +78,18 @@ const App: React.FC = () => {
       <HashRouter>
         <ScrollToTop />
         <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/alignment" element={<Alignment />} />
-            {/* Thoughts & Blog Posts, hidden for now; their addresses fall through to home.
-            <Route path="/thoughts" element={<Thoughts />} />
-            <Route path="/thoughts/how-can-we-study-and-understand-reward-hacking" element={<StudyingRewardHacking />} />
-            <Route
-              path="/thoughts/every-seed-finds-the-hack"
-              element={<Navigate to="/thoughts/how-can-we-study-and-understand-reward-hacking" replace />}
-            />
-            */}
-            {/* Any other address, including the retired /blog, lands on home. */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/alignment" element={<Alignment />} />
+              {Thoughts && <Route path="/thoughts" element={<Thoughts />} />}
+              {RewardHackingFormalized && (
+                <Route path="/thoughts/reward-hacking-formalized" element={<RewardHackingFormalized />} />
+              )}
+              {/* Any other address, including the retired /blog, lands on home. */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </Layout>
       </HashRouter>
     </ErrorBoundary>

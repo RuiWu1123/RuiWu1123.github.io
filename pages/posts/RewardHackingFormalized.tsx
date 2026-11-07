@@ -128,8 +128,7 @@ hacking and stopped saying so ([[baker2025|Baker et al., 2025]]). Claude 3.7 Son
 acknowledging, when asked, that this was not what the user wanted ([[vonarx2025|Von Arx et al., 2025]]), and frontier
 models pass coding tasks that were deliberately made impossible, where “any pass necessarily implies a
 specification-violating shortcut” ([[zhong2025|Zhong et al., 2025]]). In a curriculum of increasingly gameable tasks,
-models occasionally went as far as rewriting their own reward function ([[denison2024|Denison et al., 2024]]), and
-learning to hack production coding environments has been seen to coincide with broader misalignment
+models occasionally went as far as rewriting their own reward function ([[denison2024|Denison et al., 2024]]), and models that learned to hack production coding environments went on to show broader misalignment
 ([[macdiarmid2025|MacDiarmid et al., 2025]]; [[taylor2025|Taylor et al., 2025]]). [[wang2026|Wang et al. (2026)]]
 describe the mechanism as “hacking occurs when exploiting the loophole is easier than solving the actual task.”
 
@@ -262,14 +261,14 @@ that includes the KL-regularized optimum, best-of-$n$ and quantilizers. Reward m
 selection. Under a pass/fail verifier, raising the pass rate scales the amount of hacking but not its share, and the
 share $q$ can grow only through amplification within the passing level.
 
-**When true reward falls under a reward model.** Along the tilted family
-$\pi_\eta \propto \pi_{\mathrm{ref}} e^{\eta r}$ traced by the KL-regularized optimum as the KL budget grows,
+**When true reward falls under a reward model.** As the KL budget grows, the KL-regularized optimum moves along the exponentially tilted family
+$\pi_\eta \propto \pi_{\mathrm{ref}} e^{\eta r}$, the reference policy reweighted by $e^{\eta r}$. Along it,
 $\frac{d}{d\eta}\mathbb{E}_{\pi_\eta}[f] = \mathrm{Cov}_{\pi_\eta}(f, r)$ for any $f$, hence
 
 $$\frac{d}{d\eta}\mathbb{E}_{\pi_\eta}[r^*] = \mathrm{Var}_{\pi_\eta}(r) - \mathrm{Cov}_{\pi_\eta}(e, r).$$
 
-If the error is independent of true quality under $\pi_{\mathrm{ref}}$, the tilt factorizes and the independence
-persists along the path.
+If the error is independent of true quality under $\pi_{\mathrm{ref}}$, reweighting by $e^{\eta r}$ keeps it independent
+all along the path.
 
 > **Takeaway 3.** Along the path of KL-regularized optima, true reward falls exactly where the regression slope of the
 error on the proxy exceeds one. If the error is independent of true quality under $\pi_{\mathrm{ref}}$, true reward
@@ -278,25 +277,22 @@ never falls along this path; it only becomes a smaller share of each unit of pro
 The independent case matches the light-tailed case of [[kwa2024|Kwa et al. (2024)]]. A decline like the one
 [[gao2023|Gao et al. (2023)]] measure therefore points to errors that depend on quality in the high-score tail (a reward
 model that prefers long or flattering answers that are worse), to heavy-tailed errors under hard selection such as
-best-of-$n$ ([[kwa2024|Kwa et al., 2024]]; [[elmhamdi2024|El-Mhamdi and Hoang, 2024]]), or to a trained policy that is
-not an exponential tilt.
+best-of-$n$ ([[kwa2024|Kwa et al., 2024]]; [[elmhamdi2024|El-Mhamdi and Hoang, 2024]]), or to a trained policy that is not of this reweighted form.
 
 **Under a verifier, the objective does not choose.** For a pass/fail verifier, every policy with the same pass rate has
 the same expected reward, whatever its hack share. All policies with $p = 1$ are optimal, from uniform amplification of
 the reference passes ($q = \bar q$) to a policy that only hacks ($q = 1$). [[moya2026|Moya et al. (2026)]] make a
 related observation for exact gradient flow, where reward rises while correctness falls whenever
-$p\dot q > (1 - q)\dot p$; the indifference above extends it to the group-based estimators used in practice and to any
-number of reward levels.
+$p\dot q > (1 - q)\dot p$. Because the objective does not choose, the same holds for the group-based estimators used in
+practice and for any number of reward levels.
 
-> **Takeaway 4.** Under a pass/fail verifier the objective does not determine the hack share. Which optimal policy
-training reaches is decided by the learning dynamics: which passing responses gradient descent amplifies faster, and how
+> **Takeaway 4.** Under a pass/fail verifier the objective does not determine the hack share. Which optimal policy training ends up at is decided by the learning dynamics: which passing responses gradient descent amplifies faster, and how
 an update on one prompt moves the others. Reward hacking under a verifier is a question about implicit bias.
 
 **What can be guaranteed.** If nothing restricts where exploits can be, nothing can be guaranteed: an adversary can call
 every response of a level an exploit. Suppose instead we only know that under $\pi_{\mathrm{ref}}$ at most a fraction
-$\bar q_v$ (with $0 < \bar q_v < 1$) of level $v$ is exploits. Writing $\rho = \pi(\cdot \mid L_v)/\nu_v$, the
-worst-case exploit share in the level is the $\pi$-mass of the responses with the largest $\rho$ that together have
-reference mass $\bar q_v$, a fractional knapsack. The resulting bounds are the per-level counterparts of the
+$\bar q_v$ (with $0 < \bar q_v < 1$) of level $v$ is exploits. Writing $\rho = \pi(\cdot \mid L_v)/\nu_v$, the worst-case exploit share in the level is the probability under $\pi$ of the responses with the largest $\rho$,
+taken until their reference probability adds up to $\bar q_v$. This is a fractional knapsack problem. The resulting bounds are the per-level counterparts of the
 no-free-lunch theorem of [[everitt2017|Everitt et al. (2017)]] and the cost bound of [[taylor2016|Taylor (2016)]].
 
 > **Takeaway 5.** The worst-case exploit share of a level is at least $\bar q_v$, with equality exactly when every
@@ -328,11 +324,12 @@ where $K_{AB}(x', x) = g_A(x')^\top g_B(x)$ is the inner product of the gradient
 $\log\pi(B \mid x)$ (with a preconditioner $M$, $g_A^\top M g_B$). Splitting the expectation into $x = x'$ and
 $x \ne x'$ separates a prompt’s own damage from what it imports.
 
-> **Takeaway 7.** An exploit on one prompt raises the exploit-to-solution ratio on another when exploiting there is
-better aligned with it than solving there is, $K_{\mathcal{HH}} > K_{\mathcal{SH}}$, which is the natural case for
-exploits that do not depend on the task. On prompts the reference model cannot solve, a method that trains on them
-without knowing the exploit cannot keep the mass it adds there from being exploit mass; what it can control is what
-those prompts export.
+> **Takeaway 7.** An exploit on one prompt raises the exploit-to-solution ratio on another when that
+prompt’s hack resembles the first exploit more closely than its genuine solution does ($K_{\mathcal{HH}} > K_{\mathcal{SH}}$
+in gradient terms), which is the natural case for exploits that do not depend on the task. On prompts the reference
+model cannot solve, a method that does not know the exploit cannot guarantee that the probability it adds there goes to
+genuine solutions rather than exploits, even if it trains on those prompts. What it can control is what those prompts
+export.
 
 **Where it starts.** The first rewarded exploit is typically a lone success on a prompt nobody solves. When exactly one
 response reaches a group’s top reward, everything the group contains (responses, rewards, log-probabilities, gradients)
@@ -343,7 +340,7 @@ undefined.
 lone response receives the group’s largest advantage. On a prompt where only exploits reach the top, this happens with
 probability about $G\pi(\mathcal{H})$ while $G\pi(\mathcal{H}) \ll 1$.
 
-**How it takes off.** On a single prompt where only exploits pass, a class-level softmax model gives
+**How it takes off.** On a single prompt where only exploits pass, a two-class softmax model, which tracks only the total probability $h$ of the exploits, gives
 $\dot h = 2w(h)h^2(1-h)^2$, the same form [[rad2026|Rad et al. (2026)]] find for noisy verifiers. Across prompts, let all
 of them share an exploit propensity with log-odds $z$ and write $u = e^z$. Lone exploits arrive at a rate proportional
 to $u$ and groups with several exploits at a rate proportional to $u^2$, each raising $z$, so
@@ -352,11 +349,12 @@ $a$ by $\epsilon a$.
 
 > **Takeaway 9.** On one prompt, while $Gh \ll 1$, the exploit share reaches order one on the time scale
 $1/(2w(0)h_0)$: about $1/(2h_0)$ for REINFORCE and $1/(2\sqrt{G-1}\,h_0)$ for GRPO. Across prompts the shared propensity
-blows up in finite time. Damping lone exploits by $\epsilon$ delays the onset like $1/\epsilon$ while
-$\epsilon \gg G h_0$, and then saturates, roughly a factor $1/(G h_0)$ later than before. Like an epidemic, the process
+blows up in finite time. Damping lone exploits by $\epsilon$ delays the onset like $1/\epsilon$ while $\epsilon \gg G h_0$,
+and then saturates: damping can make the take-off at most about $1/(G h_0)$ times later than without it. Like an epidemic, the process
 accelerates, and slowing its first carriers delays it without stopping it; stopping it takes a force that pulls the
-propensity back at small $z$, such as a pull toward the reference model or negative transfer from prompts that can be
-solved.
+propensity back at small $z$, such as a pull toward the reference model or negative transfer, where learning to solve the solvable prompts lowers
+the exploit propensity.
+
 
 ::takeoff
 
@@ -370,8 +368,7 @@ $r$, and the update sees only rewards: an exploit and an honest answer in the sa
 within-level amplification is the only way hacking can grow (Takeaway 2), and the objective does not choose between the
 two (Takeaway 4). The worst case starts on a prompt nobody solves: a lone exploit receives the group’s largest advantage
 and looks exactly like a lone honest success (Takeaway 8), it raises exploits on other prompts through shared parameters
-(Takeaway 7), and the process accelerates once started (Takeaway 9). Two directions follow, one for each half of this
-picture.
+(Takeaway 7), and the process accelerates once started (Takeaway 9). Two directions follow, each addressing one half of the problem.
 
 **Find a signal that separates $r$ from $r^*$.** The worst case is the zero-information one: inside a reward level
 nothing tells an exploit from a solution, and the only guarantees left are bounds on how unevenly the level is amplified
@@ -391,7 +388,7 @@ delays the take-off; stopping it takes a force that pulls the propensity back wh
 toward the reference model or negative transfer from prompts that can be solved (Takeaway 9).
 
 The two directions work best together, because each covers the other’s weakness. A signal is rarely complete and can
-be evaded once optimized against, and the dynamics-based limits catch what it misses; those limits in turn slow honest
+be evaded once optimized against, and limits on how far any sample moves the policy catch what it misses; those limits in turn slow honest
 lone successes along with exploits, and a signal, where it exists, shows where they can be relaxed.
 
 None of this says what learning to hack does to the rest of a model ([[macdiarmid2025|MacDiarmid et al., 2025]]), and all
@@ -408,22 +405,22 @@ const ZH = r`
 - 训练更新只看得到 reward，所以对 reward 相同的 hack 回答和真正的解答，它推高的幅度完全一样。
 - Policy 有两种 hack 的方式：一是整体偏向被 reward 高估的回答，learned reward model 主要就是这样被 hack 的；二是在 reward 相同的回答里越来越偏向 hack 的那些，这是 binary verifier（只判通过或不通过）被 hack 的唯一方式。
 - 在 binary verifier 下，训练目标对老老实实解题的 policy 和全靠 hack 通过的 policy 一视同仁；最终学成哪一种，不由训练目标决定，而由训练过程本身的动力学决定。
-- Hacking 通常这样开始：在一道模型解不出的难题上，恰好有一个采样回答靠钻评分漏洞通过了。训练无法把它和真正的解答区分开，反而给它最大的更新幅度；由于所有题目共享同一个网络，这会把 hack 带到别的题目上，而且传得越广、传得越快，所以 hacking 往往是突然出现的。
+- Hacking 通常这样开始：在一道模型解不出的难题上，恰好有一个采样回答靠钻评分漏洞通过了。训练无法把它和真正的解答区分开，反而给它最大的更新幅度；由于所有题目共享同一个网络，这会把 hack 带到别的题目上，传得越广越快，hacking 出现得就越突然。
 - 由此提出两个方向：一是在 reward 之外找到能区分 hack 和真正解答的信号；二是不去区分，而是让任何单个样本，不论是不是 hack，都无法把模型推得太远。两者结合效果最好。
 
 ## Reward hacking 长什么样
 
-[[wiener1960|Wiener (1960)]] 写道，如果把一个目标交给一台我们来不及叫停的机器，“我们最好十分确定，放进机器的目标正是我们真正想要的，而不只是它的一个花哨的仿品”。[[goodhart1975|Goodhart (1975)]] 指出，任何统计规律“一旦被施加压力用于控制，就会趋于失效”，更为人熟知的说法是“当一个指标变成目标，它就不再是好指标” ([[strathern1997|Strathern, 1997]])。
+[[wiener1960|Wiener (1960)]] 写道，如果把一个目标交给一台我们来不及叫停的机器，“我们最好十分确定，放进机器的目标正是我们真正想要的，而不只是它的一个花哨的仿品”。[[goodhart1975|Goodhart (1975)]] 指出，任何统计规律“一旦被拿来用作控制的工具，就会趋于失效”，更为人熟知的说法是“当一个指标变成目标，它就不再是好指标” ([[strathern1997|Strathern, 1997]])。
 
 一辆模拟自行车朝目标骑行有奖励、背离目标却从不受罚，结果学会了在起点附近绕 20 到 50 米宽的圈 ([[randlov1998|Randløv and Alstrøm, 1998]])。一个碰到球就有奖励的足球机器人，学会了停在球边不停地碰它 ([[ng1999|Ng et al., 1999]])。在赛艇游戏 CoastRunners 里，智能体发现在泻湖里反复撞几个会重生的目标比跑完全程更划算，一边着火一边逆行，得分还比人类玩家高出约 20% ([[clark2016|Clark and Amodei, 2016]])。一只从人类反馈中学抓取的机械臂，把手挡在镜头和物体之间，“看起来像是在抓” ([[amodei2017|Amodei et al., 2017]])。一个叠积木的智能体干脆把积木翻了过来 ([[krakovna2020|Krakovna et al., 2020]])；一个程序修复系统让程序永远返回空列表，测试居然通过了 ([[lehman2020|Lehman et al., 2020]])；在一个 gridworld 里，走进水桶格就能让所有番茄看起来都浇过水 ([[leike2017|Leike et al., 2017]])。在冻结的 learned reward model 上训练的 Atari 智能体，把 reward model 的打分越推越高，游戏得分却“一落千丈” ([[ibarz2018|Ibarz et al., 2018]])。
 
 ::classic
 
-这一现象今天的名字来自 [[amodei2016|Amodei et al. (2016)]]：目标函数“存在某种取巧的‘简单’解，形式上最大化了目标函数，却违背了设计者的本意”。DeepMind 称之为 specification gaming，即“满足了目标的字面规定、却没有达成预期结果的行为” ([[krakovna2020|Krakovna et al., 2020]])。[[pan2022|Pan et al. (2022)]] 发现，随着模型容量增长，它可能以相变的形式突然出现；[[weng2024|Weng (2024)]] 总结了通行的用法：智能体“利用 reward function 中的缺陷或歧义拿到高 reward，却没有真正学会或完成预期任务”。
+这一现象今天的名字来自 [[amodei2016|Amodei et al. (2016)]]：目标函数“存在某种取巧的简单解，形式上最大化了目标函数，却违背了设计者的本意”。DeepMind 称之为 specification gaming，即“满足了目标的字面规定、却没有达成预期结果的行为” ([[krakovna2020|Krakovna et al., 2020]])。[[pan2022|Pan et al. (2022)]] 发现，随着模型容量增长，它可能以相变的形式突然出现；[[weng2024|Weng (2024)]] 总结了通行的用法：智能体“利用 reward function 中的缺陷或歧义拿到高 reward，却没有真正学会或完成预期任务”。
 
 在 RLHF 中，对 learned reward model 优化得越狠，摘要质量先升后降 ([[stiennon2020|Stiennon et al., 2020]])；在好几个数据集上，RLHF 测出的提升有很大一部分只是因为回答变长了 ([[singhal2023|Singhal et al., 2023]])；preference model 往往更偏爱迎合用户的回答，而不是正确的回答 ([[sharma2024|Sharma et al., 2024]])；reward model ensemble 的作用也没有预想的大，因为各个成员往往犯同样的错 ([[eisenstein2023|Eisenstein et al., 2023]])。
 
-在程序化的 verifier 下，前沿 coding agent 被发现会在测试运行前调用 ${'`'}exit(0)${'`'}、抛出 ${'`'}SkipTest${'`'}、改动测试框架上游的代码、从测试文件里读出期望值、反编译参考答案；把一个读取其 CoT 的 monitor 加进 reward 之后，它们照样 hack，只是不再说出来 ([[baker2025|Baker et al., 2025]])。Claude 3.7 Sonnet 的 system card 提到，它会“为了通过测试用例而写特判”，这是训练中 reward hacking 的结果 ([[anthropic2025|Anthropic, 2025]])；o3 在评测任务里改写评分器的计时器、篡改评测程序，被问到时也承认这并非用户想要的 ([[vonarx2025|Von Arx et al., 2025]])；在被刻意改成不可能完成的编程任务上，“任何通过都必然意味着违反规格的捷径”，前沿模型却常常通过 ([[zhong2025|Zhong et al., 2025]])。在一个越来越容易钻空子的任务课程里，模型偶尔甚至会改写自己的 reward function ([[denison2024|Denison et al., 2024]])；而在生产级编程环境中学会 hack，被观察到与更广泛的 misalignment 同时出现 ([[macdiarmid2025|MacDiarmid et al., 2025]]; [[taylor2025|Taylor et al., 2025]])。[[wang2026|Wang et al. (2026)]] 把其中的机制概括为“当钻漏洞比真正解决任务更容易时，hacking 就会发生”。
+在程序化的 verifier 下，前沿 coding agent 被发现会在测试运行前调用 ${'`'}exit(0)${'`'}、抛出 ${'`'}SkipTest${'`'}、改动测试框架上游的代码、从测试文件里读出期望值、反编译参考答案；把一个读取其 CoT 的 monitor 加进 reward 之后，它们照样 hack，只是不再说出来 ([[baker2025|Baker et al., 2025]])。Claude 3.7 Sonnet 的 system card 提到，它会“为了通过测试用例而写特判”，这是训练中 reward hacking 的结果 ([[anthropic2025|Anthropic, 2025]])；o3 在评测任务里改写评分器的计时器、篡改评测程序，被问到时也承认这并非用户想要的 ([[vonarx2025|Von Arx et al., 2025]])；在被刻意改成不可能完成的编程任务上，“任何通过都必然意味着违反规格的捷径”，前沿模型却常常通过 ([[zhong2025|Zhong et al., 2025]])。在一系列越来越容易钻空子的任务里，模型偶尔甚至会改写自己的 reward function ([[denison2024|Denison et al., 2024]])；而在生产级编程环境中学会 hack，还伴随着更广泛的 misalignment ([[macdiarmid2025|MacDiarmid et al., 2025]]; [[taylor2025|Taylor et al., 2025]])。[[wang2026|Wang et al. (2026)]] 把其中的机制概括为“当钻漏洞比真正解决任务更容易时，hacking 就会发生”。
 
 ::lm
 
@@ -433,15 +430,15 @@ const ZH = r`
 
 $$R = R^* + \xi,$$
 
-沿用这种写法的工作，区别主要在于对 $\xi$ 做了什么假设。在 reward shaping 中，$\xi$ 是设计者额外加入的一项 $F(s, a, s')$，当 $F = \gamma\Phi(s') - \Phi(s)$ 时称为 potential-based ([[ng1999|Ng et al., 1999]])。AI Safety Gridworlds 把这种拆分写进了每个环境：智能体能观测到 reward $R$，却看不到另一个 performance function $R^*$ ([[leike2017|Leike et al., 2017]])。[[manheim2018|Manheim and Garrabrant (2018)]] 在 regressional Goodhart 中把 $\xi$ 视为噪声，在 extremal Goodhart 中则让两者的关系本身在某个阈值处改变：$R \le a$ 时 $R^* = R + x$，否则 $R^* = R + y$。[[kwa2024|Kwa et al. (2024)]] 按尾部给 $\xi$ 分类：若对任意 $t > 0$ 都有 $e^{tx}\Pr(\xi > x) \to \infty$，就称它是重尾的。[[everitt2017|Everitt et al. (2017)]] 的 corrupt reward MDP 让 $\xi$ 只在部分被污染的状态上非零：给定真实 reward $\dot R$ 和污染函数 $C$，智能体观测到 $\hat R(s) = C_s(\dot R(s))$，再对被污染状态的数量、一个状态的 reward 能否从别处观测到做出假设。
+沿用这种写法的工作，区别主要在于对 $\xi$ 做了什么假设。在 reward shaping 中，$\xi$ 是设计者额外加入的一项 $F(s, a, s')$，当 $F = \gamma\Phi(s') - \Phi(s)$ 时称为 potential-based ([[ng1999|Ng et al., 1999]])。AI Safety Gridworlds 把这种拆分内置在每个环境里：智能体能观测到 reward $R$，却看不到另一个 performance function $R^*$ ([[leike2017|Leike et al., 2017]])。[[manheim2018|Manheim and Garrabrant (2018)]] 在 regressional Goodhart 中把 $\xi$ 视为噪声，在 extremal Goodhart 中则让两者的关系本身在某个阈值处改变：$R \le a$ 时 $R^* = R + x$，否则 $R^* = R + y$。[[kwa2024|Kwa et al. (2024)]] 按尾部给 $\xi$ 分类：若对任意 $t > 0$ 都有 $e^{tx}\Pr(\xi > x) \to \infty$，就称它是重尾的。[[everitt2017|Everitt et al. (2017)]] 的 corrupt reward MDP 让 $\xi$ 只在部分被污染的状态上非零：给定真实 reward $\dot R$ 和污染函数 $C$，智能体观测到 $\hat R(s) = C_s(\dot R(s))$，再对被污染状态的数量、一个状态的 reward 能否从别处观测到做出假设。
 
-[[hadfield2017|Hadfield-Menell et al. (2017)]] 和 [[zhuang2020|Zhuang and Hadfield-Menell (2020)]] 则把 proxy 看作设计者写下的一份不完整的规格。在 inverse reward design 中，proxy $R = \tilde w^\top\phi(\tau)$ 和真实 reward $R^* = w^{*\top}\phi(\tau)$ 都是轨迹特征的线性函数；设计者在训练环境 $\tilde M$ 中选定 $\tilde w$，并被建模为在那里近似最优，
+[[hadfield2017|Hadfield-Menell et al. (2017)]] 和 [[zhuang2020|Zhuang and Hadfield-Menell (2020)]] 则把 proxy 看作设计者写下的一份不完整的规格。在 inverse reward design 中，proxy $R = \tilde w^\top\phi(\tau)$ 和真实 reward $R^* = w^{*\top}\phi(\tau)$ 都是轨迹特征的线性函数；设计者在训练环境 $\tilde M$ 中选定 $\tilde w$，模型假设他在那里近似最优，
 
 $$P(\tilde w \mid w^*, \tilde M) \propto \exp\big(\beta\, \mathbb{E}[w^{*\top}\phi(\tau) \mid \tau \sim \pi(\tau \mid \tilde w, \tilde M)]\big),$$
 
 因此 proxy 只能通过 $\tilde M$ 中的行为透露关于 $w^*$ 的信息。在 [[zhuang2020|Zhuang and Hadfield-Menell (2020)]] 中，世界由属性 $s \in \mathbb{R}^L$ 描述，并受资源约束 $g(s) \le 0$；真实 reward $R^*$ 依赖全部 $L$ 个属性，proxy $R$ 只依赖其中 $J < L$ 个。
 
-[[ring2011|Ring and Orseau (2011)]]、[[everitt2016|Everitt and Hutter (2016)]] 和 [[everitt2021b|Everitt et al. (2021b)]] 允许智能体作用于产生 reward 的通道本身。用统一的记号，观测到的 reward 是一种扭曲 $R = d(R^*)$，而智能体的动作可以改变 $d$。在 [[ring2011|Ring and Orseau (2011)]] 的 delusion box 中，动作为 $a_t = \langle d_t, a^e_t \rangle$，其中 $d_t$ 给一个映射 $d : O \to O$ 编程，智能体透过它观察世界，$o_t = d(a_t, o^e_t)$，$o_t$ 的一部分被当作 reward；在 [[everitt2016|Everitt and Hutter (2016)]] 中，$R = d_s(\check R)$，其中内部 reward $\check R = u^*(s)$，扭曲取决于智能体到达的状态。[[everitt2021b|Everitt et al. (2021b)]] 用 causal influence diagram 给出一般形式，图中的节点包括实际实现的 reward function $\Theta^R_t$ 和设计者想要的 $\Theta^R_*$：智能体的决策以违背 $\Theta^R_*$ 的方式影响 $\Theta^R_t$，就是 tampering；按 [[everitt2021a|Everitt et al. (2021a)]] 的判据，要有控制 $\Theta^R_t$ 的激励，必须存在一条从决策经过它通往效用的有向路径。
+[[ring2011|Ring and Orseau (2011)]]、[[everitt2016|Everitt and Hutter (2016)]] 和 [[everitt2021b|Everitt et al. (2021b)]] 允许智能体作用于产生 reward 的通道本身。用统一的记号，观测到的 reward 是一种扭曲 $R = d(R^*)$，而智能体的动作可以改变 $d$。在 [[ring2011|Ring and Orseau (2011)]] 的 delusion box 中，动作为 $a_t = \langle d_t, a^e_t \rangle$，其中 $d_t$ 设定了一个映射 $d : O \to O$，智能体透过它观察世界，$o_t = d(a_t, o^e_t)$，$o_t$ 的一部分被当作 reward；在 [[everitt2016|Everitt and Hutter (2016)]] 中，$R = d_s(\check R)$，其中内部 reward $\check R = u^*(s)$，扭曲取决于智能体到达的状态。[[everitt2021b|Everitt et al. (2021b)]] 用 causal influence diagram 给出一般形式，图中的节点包括实际实现的 reward function $\Theta^R_t$ 和设计者想要的 $\Theta^R_*$：如果智能体的决策影响 $\Theta^R_t$ 的方式违背了 $\Theta^R_*$，就是 tampering；按 [[everitt2021a|Everitt et al. (2021a)]] 的判据，要有控制 $\Theta^R_t$ 的激励，必须存在一条从决策经过它通往效用的有向路径。
 
 [[skalse2022|Skalse et al. (2022)]]、[[karwowski2024|Karwowski et al. (2024)]] 和 [[laidlaw2025|Laidlaw et al. (2025)]] 把 proxy 和真实 reward 当作 policy 空间上的函数来比较，依据是回报对 occupancy measure 是线性的，$J_R(\pi) = \langle \eta^\pi, R \rangle$。[[skalse2022|Skalse et al. (2022)]] 的定义是：若 $R$ 和 $R^*$ 对某一对 policy 的排序相反，它们在 policy 集合 $\Pi$ 上就是 hackable 的，
 
@@ -449,7 +446,7 @@ $$\exists\, \pi, \pi' \in \Pi:\quad J_R(\pi) < J_R(\pi') \ \text{且}\ J_{R^*}(\
 
 另外两篇用一个余弦来衡量两者的关系：[[karwowski2024|Karwowski et al. (2024)]] 用 $R$ 与 $R^*$ 在 $\mathrm{span}(\Omega)$ 上投影的夹角，其中 $\Omega$ 是 occupancy measure 构成的多面体；[[laidlaw2025|Laidlaw et al. (2025)]] 用两者在参考 occupancy measure $\mu_{\mathrm{ref}}$ 下采样的状态–动作对上的相关系数 $\kappa > 0$，并用 $\chi^2(\mu_\pi \,\|\, \mu_{\mathrm{ref}})$ 衡量 policy 偏离了多远。
 
-[[taylor2016|Taylor (2016)]] 改的是优化器而不是 reward。给定动作上的一个基础分布 $\gamma$（比如人会怎么做），$q$-quantilizer 从 $\gamma$ 中按 proxy 排序的前 $q$ 比例里采样，因此它的分布满足 $Q_q(a) \le \gamma(a)/q$；未知的危害被建模为一个任意的非负代价 $c$，只知道它在 $\gamma$ 下的期望有上界。
+[[taylor2016|Taylor (2016)]] 改的是优化器而不是 reward。给定动作上的一个基础分布 $\gamma$（比如人会怎么做），$q$-quantilizer 从 $\gamma$ 中按 proxy 排序的前 $q$ 比例里采样，因此它的分布满足 $Q_q(a) \le \gamma(a)/q$；未知的危害被假设为一个任意的非负代价 $c$，只知道它在 $\gamma$ 下的期望有上界。
 
 ## 语言模型 RL 中 reward hacking 的理论模型
 
@@ -459,7 +456,7 @@ $$\exists\, \pi, \pi' \in \Pi:\quad J_R(\pi) < J_R(\pi') \ \text{且}\ J_{R^*}(\
 
 $$\mathrm{Hack}(\pi) = \mathbb{E}_\pi[e] - \mathbb{E}_{\pi_{\mathrm{ref}}}[e].$$
 
-对 binary verifier，另记 $p$ 为通过率，$q$ 为通过的回答中 hack 所占的比例，$\bar q$ 为 $\pi_{\mathrm{ref}}$ 下的这一比例。当我们问“在不知道 exploit 藏在哪里的前提下能保证什么”时，就让一个对手在 policy 确定之后再放置 exploit，只受可观测量的约束。
+对 binary verifier，另记 $p$ 为通过率，$q$ 为通过的回答中 hack 所占的比例，$\bar q$ 为 $\pi_{\mathrm{ref}}$ 下的这一比例。当我们问“在不知道 exploit 藏在哪里的前提下能保证什么”时，我们就设想一个对手，在 policy 确定之后再放置 exploit，只受可观测量的约束。
 
 **更新无法区分两者．**　实践中常用的算法（带 baseline 的 REINFORCE、RLOO、GRPO、Dr. GRPO）对每个 prompt 采样一组 $G$ 个回答，用组内 reward 的某个函数给每个回答的梯度加权。给定某个样本所在的 reward level，它的权重只取决于组内其他样本，而这些样本与它独立，所以
 
@@ -481,23 +478,23 @@ $$\mathrm{Hack}(\pi) = \underbrace{\sum_v \big(\pi_R(v) - \pi_{\mathrm{ref},R}(v
 
 KL 散度也可以同样拆开，$\mathrm{KL}(\pi\|\pi_{\mathrm{ref}}) = \mathrm{KL}(\pi_R\|\pi_{\mathrm{ref},R}) + \sum_v \pi_R(v)\,\mathrm{KL}(\pi(\cdot\mid L_v)\|\nu_v)$。第一项是经典的 Goodhart 效应：向更常出错的 reward level 移动。第二项是在同一 level 内放大错误的回答，由 Cauchy–Schwarz，它在每个 level 上不超过 $\sqrt{\chi^2(\pi(\cdot\mid L_v)\|\nu_v)\,\mathrm{Var}_{\nu_v}(e)}$。Reward model 几乎给每个回答一个不同的分数，而 binary verifier 只有一个通过的 level，在那里 $\mathrm{Hack} = (p - p_{\mathrm{ref}})\bar q + p\,(q - \bar q)$。
 
-> **要点 2**　Hacking 等于沿 proxy 的 selection 加上 reward level 内的 amplification。Level 内这一项对任何可能的误差都为零，当且仅当 $\pi = \pi_{\mathrm{ref}} \cdot f(r)$ 对某个函数 $f$ 成立，这一族包括 KL 正则下的最优解、best-of-$n$ 和 quantilizer。Reward model 几乎完全是通过 selection 被 hack 的。在 binary verifier 下，提高通过率会按比例放大 hacking 的量，却不改变它的占比，而占比 $q$ 只能通过通过 level 内的 amplification 来增长。
+> **要点 2**　Hacking 等于沿 proxy 的 selection 加上 reward level 内的 amplification。Level 内这一项对任何可能的误差都为零，当且仅当 $\pi = \pi_{\mathrm{ref}} \cdot f(r)$ 对某个函数 $f$ 成立，这一族包括 KL 正则下的最优解、best-of-$n$ 和 quantilizer。Reward model 几乎完全是通过 selection 被 hack 的。在 binary verifier 下，提高通过率会按比例放大 hacking 的量，却不改变它的占比，而占比 $q$ 只能靠放大通过 level 内的 hack 来增长。
 
-**Reward model 下真实 reward 何时下降．**　随着 KL 预算增大，KL 正则最优解走过的是 exponential tilting 族 $\pi_\eta \propto \pi_{\mathrm{ref}} e^{\eta r}$。沿着这条路径，对任意 $f$ 有 $\frac{d}{d\eta}\mathbb{E}_{\pi_\eta}[f] = \mathrm{Cov}_{\pi_\eta}(f, r)$，因此
+**Reward model 下真实 reward 何时下降．**　随着 KL 预算增大，KL 正则最优解沿着 exponential tilting 族 $\pi_\eta \propto \pi_{\mathrm{ref}} e^{\eta r}$ 移动，也就是把 reference policy 按 $e^{\eta r}$ 重新加权。沿着这条路径，对任意 $f$ 有 $\frac{d}{d\eta}\mathbb{E}_{\pi_\eta}[f] = \mathrm{Cov}_{\pi_\eta}(f, r)$，因此
 
 $$\frac{d}{d\eta}\mathbb{E}_{\pi_\eta}[r^*] = \mathrm{Var}_{\pi_\eta}(r) - \mathrm{Cov}_{\pi_\eta}(e, r).$$
 
-如果在 $\pi_{\mathrm{ref}}$ 下误差与真实质量独立，tilting 会因式分解，这种独立性沿整条路径保持。
+如果在 $\pi_{\mathrm{ref}}$ 下误差与真实质量独立，按 $e^{\eta r}$ 重新加权后，这种独立性沿整条路径都会保持。
 
 > **要点 3**　沿 KL 正则最优解的路径，真实 reward 恰好在误差对 proxy 的回归斜率超过 1 时开始下降。如果在 $\pi_{\mathrm{ref}}$ 下误差与真实质量独立，真实 reward 沿这条路径永远不会下降，只是在每单位 proxy 增益中所占的份额越来越小。
 
-独立的情形对应 [[kwa2024|Kwa et al. (2024)]] 的轻尾情形。因此，像 [[gao2023|Gao et al. (2023)]] 观测到的那种下降，说明以下几种情况之一：误差在高分尾部依赖于质量（reward model 偏爱更长或更讨好、实际却更差的回答）；在 best-of-$n$ 这类强选择下误差是重尾的 ([[kwa2024|Kwa et al., 2024]]; [[elmhamdi2024|El-Mhamdi and Hoang, 2024]])；或者训练出的 policy 并不是一个 exponential tilt。
+独立的情形对应 [[kwa2024|Kwa et al. (2024)]] 的轻尾情形。因此，像 [[gao2023|Gao et al. (2023)]] 观测到的那种下降，说明以下几种情况之一：误差在高分尾部依赖于质量（reward model 偏爱更长或更讨好、实际却更差的回答）；在 best-of-$n$ 这类强选择下误差是重尾的 ([[kwa2024|Kwa et al., 2024]]; [[elmhamdi2024|El-Mhamdi and Hoang, 2024]])；或者训练出的 policy 并不是这种重新加权的形式。
 
-**Binary verifier 下，目标函数不做选择．**　对 binary verifier，通过率相同的 policy 期望 reward 都一样，不论其中 hack 占多少。所有 $p = 1$ 的 policy 都是最优的，从均匀放大 reference model 通过的回答（$q = \bar q$），到只会 hack 的 policy（$q = 1$）。[[moya2026|Moya et al. (2026)]] 对精确梯度流有一个相关的观察：只要 $p\dot q > (1 - q)\dot p$，reward 上升的同时正确率就在下降；上面的无偏好性把这一结论推广到了实践中的 group-based 估计量和任意多个 reward level。
+**Binary verifier 下，目标函数不做选择．**　对 binary verifier，通过率相同的 policy 期望 reward 都一样，不论其中 hack 占多少。所有 $p = 1$ 的 policy 都是最优的，从均匀放大 reference model 通过的回答（$q = \bar q$），到只会 hack 的 policy（$q = 1$）。[[moya2026|Moya et al. (2026)]] 对精确梯度流有一个相关的观察：只要 $p\dot q > (1 - q)\dot p$，reward 上升的同时正确率就在下降；而目标函数不做选择这一点，把这一结论推广到了实践中的 group-based 估计量和任意多个 reward level。
 
 > **要点 4**　在 binary verifier 下，目标函数不决定 hack 的占比。训练最终落到哪个最优 policy 上，由学习动力学决定：梯度下降把哪些通过的回答放大得更快，以及一个 prompt 上的更新如何牵动其他 prompt。Verifier 下的 reward hacking 是一个 implicit bias 问题。
 
-**能保证什么．**　如果对 exploit 可能出现在哪里毫无限制，就什么也保证不了：对手可以把某个 level 的每个回答都当作 exploit。假设我们只知道在 $\pi_{\mathrm{ref}}$ 下 level $v$ 中至多有比例 $\bar q_v$（$0 < \bar q_v < 1$）是 exploit。记 $\rho = \pi(\cdot \mid L_v)/\nu_v$，则该 level 内最坏情况下的 exploit 占比，等于 $\rho$ 最大、reference 质量合计为 $\bar q_v$ 的那些回答在 $\pi$ 下的质量，这是一个分数背包问题。由此得到的界，是 [[everitt2017|Everitt et al. (2017)]] 的 no-free-lunch 定理和 [[taylor2016|Taylor (2016)]] 的代价界在单个 level 上的对应物。
+**能保证什么．**　如果对 exploit 可能出现在哪里毫无限制，就什么也保证不了：对手可以把某个 level 的每个回答都当作 exploit。假设我们只知道在 $\pi_{\mathrm{ref}}$ 下 level $v$ 中至多有比例 $\bar q_v$（$0 < \bar q_v < 1$）是 exploit。记 $\rho = \pi(\cdot \mid L_v)/\nu_v$，则该 level 内最坏情况下的 exploit 占比，就是 $\pi$ 下那些 $\rho$ 最大的回答的概率：从 $\rho$ 最大的回答取起，直到它们在 reference 下的概率加起来等于 $\bar q_v$。这是一个分数背包问题。由此得到的界，是 [[everitt2017|Everitt et al. (2017)]] 的 no-free-lunch 定理和 [[taylor2016|Taylor (2016)]] 的代价界在单个 level 上的对应物。
 
 > **要点 5**　一个 level 内最坏情况下的 exploit 占比至少是 $\bar q_v$，当且仅当该 level 的每个回答都被放大同样的倍数时取等。若 $\rho \le M$，占比至多 $M\bar q_v$；无论如何，占比至多 $\bar q_v + \sqrt{\mathrm{KL}(\pi(\cdot\mid L_v)\|\nu_v)/2}$。
 
@@ -513,15 +510,15 @@ $$\frac{d}{dt}\log\frac{h(x')}{s(x')} = \mathbb{E}_x\Big[w(p(x))\Big(s(x)\,[K_{\
 
 其中 $K_{AB}(x', x) = g_A(x')^\top g_B(x)$ 是 $\log\pi(A \mid x')$ 与 $\log\pi(B \mid x)$ 梯度的内积（有 preconditioner $M$ 时为 $g_A^\top M g_B$）。把期望拆成 $x = x'$ 和 $x \ne x'$ 两部分，就把一个 prompt 自身造成的损害和它从别处“输入”的损害区分开了。
 
-> **要点 7**　一个 prompt 上的 exploit 会提高另一个 prompt 上 exploit 与解答之比，条件是那里的 hack 比那里的解答与它更对齐，即 $K_{\mathcal{HH}} > K_{\mathcal{SH}}$；对于不依赖具体任务的 exploit，这是很自然的情形。在 reference model 解不出的 prompt 上，一个不知道 exploit 是什么的方法如果在这些 prompt 上训练，就无法保证它在那里增加的概率质量不是 exploit；它能控制的，是这些 prompt 向外“输出”了什么。
+> **要点 7**　一个 prompt 上的 exploit 会提高另一个 prompt 上 exploit 与解答之比，条件是另一个 prompt 上的 hack 比那里的真正解答更像这个 exploit（用梯度表示即 $K_{\mathcal{HH}} > K_{\mathcal{SH}}$）；对于不依赖具体任务的 exploit，这是很自然的情形。在 reference model 解不出的 prompt 上，一个不知道 exploit 是什么的方法，就算在这些 prompt 上训练，也无法保证它在那里增加的概率会落到真正的解答上，而不是 exploit；它能控制的，是这些 prompt 向外“输出”了什么。
 
 **从哪里开始．**　第一个得到奖励的 exploit，通常是某个谁也解不出的 prompt 上的孤立成功。当组里恰好只有一个回答拿到最高 reward 时，这个组所包含的一切（回答、reward、log-probability、梯度），无论那个回答是真正的解答还是 exploit，看起来都一模一样，而需要最高 level 里至少有两个成员的统计量则根本无法定义。
 
 > **要点 8**　任何只用组内信息的规则，都必须同等对待孤立的真正成功和孤立的 exploit，而这个孤立的回答拿到的是组里最大的 advantage。在一个只有 exploit 能拿到最高 reward 的 prompt 上，只要 $G\pi(\mathcal{H}) \ll 1$，这种情况发生的概率约为 $G\pi(\mathcal{H})$。
 
-**如何 take-off．**　在一个只有 exploit 能通过的 prompt 上，类别层面的 softmax 模型给出 $\dot h = 2w(h)h^2(1-h)^2$，与 [[rad2026|Rad et al. (2026)]] 对噪声 verifier 得到的形式相同。放到跨 prompt 来看，设所有 prompt 共享一个 exploit 倾向，其 log-odds 为 $z$，记 $u = e^z$。孤立 exploit 出现的速率正比于 $u$，含多个 exploit 的组出现的速率正比于 $u^2$，每次出现都会抬高 $z$，于是 $\dot u \approx a u^2 + b u^3$。把孤立 exploit 对其他 prompt 的影响压到原来的 $\epsilon$ 倍，相当于把 $a$ 换成 $\epsilon a$。
+**如何 take-off．**　在一个只有 exploit 能通过的 prompt 上，一个只追踪 exploit 总概率 $h$ 的两类 softmax 模型给出 $\dot h = 2w(h)h^2(1-h)^2$，与 [[rad2026|Rad et al. (2026)]] 对噪声 verifier 得到的形式相同。放到跨 prompt 来看，设所有 prompt 共享一个 exploit 倾向，其 log-odds 为 $z$，记 $u = e^z$。孤立 exploit 出现的速率正比于 $u$，含多个 exploit 的组出现的速率正比于 $u^2$，每次出现都会抬高 $z$，于是 $\dot u \approx a u^2 + b u^3$。把孤立 exploit 对其他 prompt 的影响压到原来的 $\epsilon$ 倍，相当于把 $a$ 换成 $\epsilon a$。
 
-> **要点 9**　在单个 prompt 上，当 $Gh \ll 1$ 时，exploit 占比在时间尺度 $1/(2w(0)h_0)$ 上达到 $O(1)$：REINFORCE 约为 $1/(2h_0)$，GRPO 约为 $1/(2\sqrt{G-1}\,h_0)$。跨 prompt 时，共享的 exploit 倾向会在有限时间内爆炸。把孤立 exploit 的影响压到 $\epsilon$ 倍，在 $\epsilon \gg G h_0$ 时 take-off 时间按 $1/\epsilon$ 推迟，之后趋于饱和，大约比原来晚 $1/(G h_0)$ 倍。和传染病一样，这个过程会自我加速，减慢最早的“携带者”只能推迟它，不能阻止它；要阻止它，需要一个在 $z$ 还小时就把倾向拉回来的力，比如向 reference model 的拉力，或者来自可解 prompt 的负迁移。
+> **要点 9**　在单个 prompt 上，当 $Gh \ll 1$ 时，exploit 占比在时间尺度 $1/(2w(0)h_0)$ 上达到 $O(1)$：REINFORCE 约为 $1/(2h_0)$，GRPO 约为 $1/(2\sqrt{G-1}\,h_0)$。跨 prompt 时，共享的 exploit 倾向会在有限时间内爆炸。把孤立 exploit 的影响压到 $\epsilon$ 倍，在 $\epsilon \gg G h_0$ 时 take-off 时间按 $1/\epsilon$ 推迟，之后趋于饱和：压制最多只能让 take-off 推迟到原来的约 $1/(G h_0)$ 倍。和传染病一样，这个过程会自我加速，减慢最早的“携带者”只能推迟它，不能阻止它；要阻止它，需要一个在 $z$ 还小时就把倾向拉回来的力，比如向 reference model 的拉力，或者负迁移，即学会解可解的 prompt 反过来压低 exploit 倾向。
 
 ::takeoff
 
@@ -529,13 +526,13 @@ $$\frac{d}{dt}\log\frac{h(x')}{s(x')} = \mathbb{E}_x\Big[w(p(x))\Big(s(x)\,[K_{\
 
 ## 威胁模型与两个方向
 
-把上面的结论放在一起，就得到语言模型 RL 中 reward hacking 的一个威胁模型。训练者只看得到 proxy $r$，更新也只看得到 reward：同一 reward level 内的 exploit 和真正的解答被同等地推高（要点 1），所以在一个 level 内部，更新对两者毫无区分能力。在 binary verifier 下，这种 level 内的 amplification 是 hacking 增长的唯一途径（要点 2），而目标函数在两者之间不做选择（要点 4）。最坏的情况始于一个谁也解不出的 prompt：孤立的 exploit 拿到组里最大的 advantage，看起来和孤立的真正成功一模一样（要点 8）；它通过共享参数抬高其他 prompt 上的 exploit（要点 7），而且一旦开始就会自我加速（要点 9）。由此引出两个方向，各自对应这幅图景的一半。
+把上面的结论放在一起，就得到语言模型 RL 中 reward hacking 的一个威胁模型。训练者只看得到 proxy $r$，更新也只看得到 reward：同一 reward level 内的 exploit 和真正的解答被同等地推高（要点 1），所以在一个 level 内部，更新对两者毫无区分能力。在 binary verifier 下，这种 level 内的 amplification 是 hacking 增长的唯一途径（要点 2），而目标函数在两者之间不做选择（要点 4）。最坏的情况始于一个谁也解不出的 prompt：孤立的 exploit 拿到组里最大的 advantage，看起来和孤立的真正成功一模一样（要点 8）；它通过共享参数抬高其他 prompt 上的 exploit（要点 7），而且一旦开始就会自我加速（要点 9）。由此引出两个方向，分别针对问题的一半。
 
-**找到能区分 $r$ 和 $r^*$ 的信号．**　最坏的情况是零信息的情况：在一个 reward level 内部，没有任何东西能把 exploit 和真正的解答分开，剩下的保证只是对该 level 被放大得有多不均匀的界（要点 5）。任何在 $r$ 之外还携带 $r^*$ 信息的信号，比如 held-out 测试、第二个 verifier、CoT monitor 或者激活上的 probe，都能打破这种对称，因为它让更新可以区别对待 reward 相同的回答。不过这样的信号要谨慎使用：一旦对它做优化，policy 就可能学会规避它 ([[baker2025|Baker et al., 2025]])。
+**找到能区分 $r$ 和 $r^*$ 的信号．**　最坏的情况是零信息的情况：在一个 reward level 内部，没有任何东西能把 exploit 和真正的解答分开，剩下的保证只是对该 level 被放大得有多不均匀的界（要点 5）。任何在 $r$ 之外还携带 $r^*$ 信息的信号，比如 held-out 测试、第二个 verifier、CoT monitor 或者对激活做的 probe，都能打破这种对称，因为它让更新可以区别对待 reward 相同的回答。不过这样的信号要谨慎使用：一旦把它当作优化目标，policy 就可能学会规避它 ([[baker2025|Baker et al., 2025]])。
 
 **不管是不是 hack，都限制单个样本对 policy 的影响．**　第二个方向完全不去辨别哪些样本是 hack。既然更新本来就分不清 reward 相同的 exploit 和真正的解答，不如把更新设计成：无论某个样本是哪一种，它都不能把 policy 推得太远。在 verifier 下，结果本来就由学习动力学决定（要点 4），这样一来，不管 exploit 藏在哪里，它造成的损害都会受到限制。模型也指出了着力点：孤立成功拿到的最大 advantage（要点 8），把得到奖励的回答从一个 prompt 带到其他 prompt 的迁移（要点 7），以及 level 内散度，惩罚项会把它和获得的 reward 绑在一起，对任何网络、任何 prompt 配比都成立（要点 6）。代价是真正的孤立成功也会被放慢。而且只做压制只能推迟 take-off；要阻止它，需要一个在倾向还小时就把它拉回来的力，比如向 reference model 的拉力，或者来自可解 prompt 的负迁移（要点 9）。
 
-两个方向结合起来效果最好，因为它们正好弥补彼此的短板。信号很少是完整的，一旦被优化还可能被规避，从动力学上做的限制可以兜住它漏掉的部分；反过来，这些限制会把真正的孤立成功和 exploit 一起放慢，而有信号的地方，就可以据此放松限制。
+两个方向结合起来效果最好，因为它们正好弥补彼此的短板。信号很少是完整的，一旦被优化还可能被规避，限制单个样本对 policy 影响的做法可以兜住它漏掉的部分；反过来，这些限制会把真正的孤立成功和 exploit 一起放慢，而有信号的地方，就可以据此放松限制。
 
 这些结论都没有回答学会 hack 会对模型的其余部分产生什么影响 ([[macdiarmid2025|MacDiarmid et al., 2025]])，而且描述的都是期望意义下的更新。
 `;

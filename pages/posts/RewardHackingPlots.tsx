@@ -180,8 +180,8 @@ export const GrpoWeightPlot: React.FC<{ lang: Lang }> = ({ lang }) => {
     <Frame
       caption={
         lang === 'en'
-          ? 'The GRPO weight w_G(p) as the group size G grows from 2 to 32. It is symmetric about p = 1/2 and smallest there; as p → 0 it rises to √(G − 1), so a lone success in a group gets the largest push.'
-          : '组大小 G 从 2 增大到 32 时 GRPO 的权重 w_G(p)。它关于 p = 1/2 对称、在那里最小；p → 0 时升到 √(G − 1)，所以组里唯一的成功得到最大的推力。'
+          ? 'The GRPO weight w_G(p) as the group size G grows from 2 to 32. It is symmetric about p = 1/2; for G ≥ 4 it is smallest there, while for G = 2 and 3 it is flat. As p → 0 it rises to √(G − 1), so a lone success in a group gets the largest advantage.'
+          : '组大小 G 从 2 增大到 32 时 GRPO 的权重 w_G(p)。它关于 p = 1/2 对称；G ≥ 4 时在那里最小，G = 2 和 3 时是一条水平线。p → 0 时升到 √(G − 1)，所以组里唯一的成功得到最大的 advantage。'
       }
     >
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="GRPO weight as a function of the pass rate, for growing group size">
@@ -238,8 +238,8 @@ export const TakeoffPlot: React.FC<{ lang: Lang }> = ({ lang }) => {
     <Frame
       caption={
         lang === 'en'
-          ? `Exploit share h(t) on one prompt where only exploits pass, from dh/dt = 2w(h)h²(1 − h)², as the starting share h₀ shrinks from 0.1 to 0.001 (GRPO with G = ${G_TAKEOFF}). Both curves sit near zero, then rise abruptly; the take-off arrives on the time scale 1/(2w(0)h₀), marked by the dotted lines, about √(G − 1) times sooner under GRPO.`
-          : `在只有 exploit 能通过的单个 prompt 上，由 dh/dt = 2w(h)h²(1 − h)² 得到的 exploit 占比 h(t)；初始占比 h₀ 从 0.1 缩小到 0.001（GRPO 取 G = ${G_TAKEOFF}）。两条曲线都先在零附近徘徊，然后陡然上升；take-off 发生在时间尺度 1/(2w(0)h₀) 上（虚线），GRPO 大约早 √(G − 1) 倍。`
+          ? `Exploit share h(t) on one prompt where only exploits pass, from dh/dt = 2w(h)h²(1 − h)², as the starting share h₀ shrinks from 0.1 to 0.001 (GRPO with G = ${G_TAKEOFF}). Both curves sit near zero, then rise abruptly; the take-off arrives on the time scale 1/(2w(0)h₀), marked by the dotted lines, about √(G − 1) times sooner under GRPO in gradient-flow time, a factor that comes from standardizing the advantages.`
+          : `在只有 exploit 能通过的单个 prompt 上，由 dh/dt = 2w(h)h²(1 − h)² 得到的 exploit 占比 h(t)；初始占比 h₀ 从 0.1 缩小到 0.001（GRPO 取 G = ${G_TAKEOFF}）。两条曲线都先在零附近徘徊，然后陡然上升；take-off 发生在时间尺度 1/(2w(0)h₀) 上（虚线），按梯度流时间计，GRPO 大约早 √(G − 1) 倍，这个因子来自 advantage 的标准化。`
       }
     >
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Exploit share over time on one prompt, for shrinking initial share">
@@ -305,8 +305,8 @@ export const DampingPlot: React.FC<{ lang: Lang }> = ({ lang }) => {
     <Frame
       caption={
         lang === 'en'
-          ? 'Damping the effect of lone exploits on other prompts by a factor ε, in du/dt = εa·u² + b·u³ for the shared propensity u (a = b = 1, u₀ = 0.01). Left: the exploit share over time as ε falls from 1 to 10⁻⁴. Right: the take-off time, which first grows like 1/ε and then saturates. Damping delays the take-off; it does not stop it. The constants are arbitrary, so only the shapes carry meaning.'
-          : '把孤立 exploit 对其他 prompt 的影响压到 ε 倍，共享倾向 u 满足 du/dt = εa·u² + b·u³（a = b = 1，u₀ = 0.01）。左：ε 从 1 降到 10⁻⁴ 时 exploit 占比随时间的变化。右：take-off 时间先按 1/ε 增长，随后饱和。压制只能推迟 take-off，不能阻止它。常数是随意取的，只有曲线形状有意义。'
+          ? 'Damping the effect of lone exploits on other prompts by a factor ε, in du/dt = εa·u² + b·u³ for the shared propensity u (a = b = 1, u₀ = 0.01). Left: the exploit share over time as ε falls from 1 to 10⁻⁴. Right: the take-off time, which first grows like 1/ε and then saturates. In this model, damping delays the take-off but does not stop it. The polynomial approximation holds only while exploits are rare, so the curves past that point are illustrative. The constants are arbitrary, so only the shapes carry meaning.'
+          : '把孤立 exploit 对其他 prompt 的影响压到 ε 倍，共享倾向 u 满足 du/dt = εa·u² + b·u³（a = b = 1，u₀ = 0.01）。左：ε 从 1 降到 10⁻⁴ 时 exploit 占比随时间的变化。右：take-off 时间先按 1/ε 增长，随后饱和。在这个模型里，压制只能推迟 take-off，不能阻止它。多项式近似只在 exploit 还很少时成立，超出这一阶段的曲线只是示意。常数是随意取的，只有曲线形状有意义。'
       }
     >
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Exploit share over time and take-off time, as the damping factor shrinks">

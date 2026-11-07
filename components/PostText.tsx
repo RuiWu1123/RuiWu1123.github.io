@@ -10,6 +10,7 @@ import { M, MD } from './Math';
  *   **Run-in.** text      a paragraph opening with a bold run-in heading
  *   > **Label.** text     a boxed callout; it may contain $$ ... $$ display math
  *   ::name                the figure passed in as figures[name]
+ *   - item                a bulleted list, one "- " line per item
  *   anything else         a paragraph
  *
  * Inside a paragraph: $...$ is inline math, `...` is code, **...** is bold, and
@@ -59,15 +60,25 @@ export const PostText: React.FC<{
   links?: Record<string, string>;
   figures?: Record<string, React.ReactNode>;
 }> = ({ source, links = {}, figures = {} }) => {
-  const blocks = source
-    .trim()
-    .split(/\n\s*\n/)
-    .map((b) => b.replace(/\s*\n\s*/g, ' ').trim())
-    .filter(Boolean);
+  const join = (b: string) => b.replace(/\s*\n\s*/g, ' ').trim();
+  const raw = source.trim().split(/\n\s*\n/);
 
   return (
     <>
-      {blocks.map((block, i) => {
+      {raw.map((rawBlock, i) => {
+        if (rawBlock.startsWith('- '))
+          return (
+            <ul key={i} className="list-disc space-y-1.5 pl-5">
+              {rawBlock
+                .slice(2)
+                .split(/\n- /)
+                .map((item, j) => (
+                  <li key={j}>{renderInline(join(item), links)}</li>
+                ))}
+            </ul>
+          );
+        const block = join(rawBlock);
+        if (!block) return null;
         if (block.startsWith('::')) return <React.Fragment key={i}>{figures[block.slice(2)]}</React.Fragment>;
         if (block.startsWith('## ')) return <SectionHeading key={i}>{renderInline(block.slice(3), links)}</SectionHeading>;
         if (block.startsWith('$$') && block.endsWith('$$')) return <MD key={i}>{block.slice(2, -2).trim()}</MD>;

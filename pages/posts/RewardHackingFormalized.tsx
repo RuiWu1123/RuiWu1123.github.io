@@ -65,16 +65,23 @@ const TITLE: Record<Lang, string> = {
 const EN = r`
 ## TL;DR
 
-This post first reviews how reward hacking shows up in classical RL, in RLHF and in RL with verifiable rewards, and how
-it was defined. It then goes through how work before language models represented reward hacking mathematically. Next it
-sets up a model of reward hacking in language-model RL and derives what follows from it: group-based updates cannot tell an
-exploit from an honest answer with the same reward; hacking splits into selection along the proxy, the main way reward
-models are hacked, and amplification within a reward level, the only way verifiers are hacked; under a verifier the
-objective is indifferent to the share of hacks, so the outcome is decided by the learning dynamics; and exploits spread
-through shared parameters, start as lone successes that their group cannot distinguish from honest ones, and accelerate
-once started. It closes with the threat model this implies and two ways forward: finding a signal that
-separates the proxy from the intended reward, and shaping the training dynamics so that hacked samples move the policy
-less.
+This post reviews what reward hacking looks like in classical RL, in RLHF and in RL with verifiable rewards, and how it
+was formalized before language models. It then builds a simple model of reward hacking in language-model RL, which
+says:
+
+- The training update sees only rewards, so it raises a hacked answer and a genuine one with the same reward by exactly
+the same amount.
+- A policy can hack in two ways: by drifting toward answers the reward overrates, which is how learned reward models get
+hacked, or, among answers with the same reward, by favoring the hacked ones, which is the only way a pass/fail verifier
+gets hacked.
+- Under a pass/fail verifier the training objective is equally satisfied by a policy that solves problems honestly and
+one that always hacks. Which one training ends up with is decided by how learning proceeds, not by the objective.
+- Hacking typically starts on a hard problem the model cannot solve, when a single sampled answer passes by exploiting the
+grader. Training cannot tell it from a genuine solution and gives it the largest update it can give. Because every
+problem shares one network, this carries the hack to other problems, and the further it spreads the faster it spreads,
+which is why hacking tends to appear abruptly.
+- Two ways forward follow: find signals beyond the reward that tell hacked answers from genuine ones, and shape training
+so that no single sample, hacked or not, can move the model too far. The two work best together.
 
 ## What reward hacking looks like
 
@@ -396,7 +403,13 @@ of it describes expected updates.
 const ZH = r`
 ## TL;DR
 
-本文先回顾 reward hacking 在经典 RL、RLHF 和 RLVR 中的典型案例与定义，再梳理语言模型出现之前的工作如何用数学刻画它。接着为语言模型 RL 中的 reward hacking 建立一个理论模型，并由此推出：group-based 的更新无法区分 reward 相同的 exploit 和真正的解答；hacking 可以分解为沿 proxy 的 selection 和同一 reward level 内的 amplification，前者是 reward model 被 hack 的主要方式，后者是 verifier 被 hack 的唯一方式；在 verifier 下，目标函数对 hack 所占比例毫无偏好，最终结果取决于学习动力学；exploit 通过共享参数扩散，起点是组内无法与真正成功区分开的孤立成功，而且一旦开始就会自我加速。最后总结由此得到的威胁模型，并提出两个方向：找到能区分 proxy 和真实 reward 的信号，以及通过塑造训练动力学，减小被 hack 的样本对 policy 的影响。
+本文先回顾 reward hacking 在经典 RL、RLHF 和 RLVR 中的典型案例，以及语言模型出现之前人们如何形式化它；然后为语言模型 RL 中的 reward hacking 建立一个简单的理论模型，得到以下结论：
+
+- 训练更新只看得到 reward，所以对 reward 相同的 hack 回答和真正的解答，它推高的幅度完全一样。
+- Policy 有两种 hack 的方式：一是整体偏向被 reward 高估的回答，learned reward model 主要就是这样被 hack 的；二是在 reward 相同的回答里越来越偏向 hack 的那些，这是 binary verifier（只判通过或不通过）被 hack 的唯一方式。
+- 在 binary verifier 下，训练目标对老老实实解题的 policy 和全靠 hack 通过的 policy 一视同仁；最终学成哪一种，不由训练目标决定，而由训练过程本身的动力学决定。
+- Hacking 通常这样开始：在一道模型解不出的难题上，恰好有一个采样回答靠钻评分漏洞通过了。训练无法把它和真正的解答区分开，反而给它最大的更新幅度；由于所有题目共享同一个网络，这会把 hack 带到别的题目上，而且传得越广、传得越快，所以 hacking 往往是突然出现的。
+- 由此提出两个方向：一是在 reward 之外找到能区分 hack 和真正解答的信号；二是不去区分，而是让任何单个样本，不论是不是 hack，都无法把模型推得太远。两者结合效果最好。
 
 ## Reward hacking 长什么样
 

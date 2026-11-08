@@ -76,8 +76,8 @@ learning dynamics.
 in total and a larger share of errors among passing answers are not the same thing.
 - On one specific KL-optimal path that can be analyzed exactly, true quality falls only when the error depends on
 quality in a particular way; a reward that has errors is not by itself an explanation.
-- Shared parameters let an update on one prompt change the mix of exploits and genuine answers on others, and under a
-coarse proxy they can make it impossible to raise the proxy without some of that change.
+- Shared parameters let an update on one prompt change the mix of exploits and genuine answers on others, and under a coarse proxy they can make it impossible to raise the proxy without changing the
+distribution of equally rewarded answers.
 - Without identifying exploits one can still limit how far they are amplified, but the guarantee depends on the
 reference model's risk, on training coverage and on accumulated drift, and the same conservatism limits useful learning.
 - Two ways forward follow: add information about true correctness, and limit the distribution changes unknown errors
@@ -369,9 +369,10 @@ equally rewarded answers. If some direction in the kernel of $C_R$ improves the 
 without any such reshuffling; if none does, every improvement reshuffles, and the drift is then a cost of what the
 model class can express rather than only a sign of imperfect optimization. This is a conceptual, local criterion, and
 two limits keep it from being a diagnostic. It says nothing about a reward model that scores nearly every response
-differently: each level is then a single response, $C_R = 0$, and every direction is free. And in a large model, where
-responses vastly outnumber parameters, $C_R$ is typically of full rank, so a free direction typically does not exist and
-only the size of the cost matters; that size depends on $C_R$, which cannot be estimated at that scale. Reshuffling
+differently: each level is then a single response, $C_R = 0$, and every direction is free. And in a high-dimensional shared model, whether an exactly free direction exists may say little
+about the actual trade-off; what matters more is how much drift a given gain requires. Estimating that cost reliably
+faces high dimension, sampling coverage and numerical conditioning, and no diagnostic usable in actual training is
+established here. Reshuffling
 equally rewarded answers is also not harmful in itself, since it can favor the better ones.
 
 +++ Technical note: the local cost of an improvement
@@ -397,7 +398,7 @@ conditional drift, not a lower bound on the probability of errors; beneficial re
 > **Takeaway 4 · Identity and local proposition.** The reward does not distinguish equally rewarded answers, but the
 gradient geometry of shared parameters does: an update on one prompt can change the ratio of exploits to genuine
 solutions on others. Under a coarse proxy such as a verifier, the model may also have no direction that raises the
-proxy while keeping that ratio fixed, so drift within a level can be a cost of what the model can express rather than
+proxy while keeping the distribution within every reward level unchanged, so drift within a level can be a cost of what the model can express rather than
 only of imperfect optimization. This is a local, conceptual criterion, not a diagnostic for large-model training, and
 drift by itself is not cheating.
 
@@ -573,7 +574,7 @@ const ZH = r`
 - Reward 相同的真正解答和 exploit，对只看 reward 的更新而言，没有按正确性区分它们的依据；最终偏向谁，取决于模型约束和学习动力学。
 - Hacking 的增长可以拆成跨 reward level 的 selection 和同一 level 内的重排；被接受的错误总量增加，和通过的回答中错误占比增加，不是同一件事。
 - 在一条可以精确分析的 KL 最优路径上，真实质量下降需要误差以特定方式依赖于质量；reward 有误差，本身并不构成解释。
-- 共享参数让一个 prompt 上的更新改变其他 prompt 上 exploit 与真正解答的比例，而在粗粒度的 proxy 下，提高 proxy 时可能无法完全避免这种改变。
+- 共享参数让一个 prompt 上的更新改变其他 prompt 上 exploit 与真正解答的比例，而在粗粒度的 proxy 下，提高 proxy 时可能无法保持得分相同的回答之间的分布不变。
 - 不识别 exploit，也能限制它被放大多少，但保证取决于 reference model 的风险、训练覆盖和累计漂移，同样的保守性也会限制有益的学习。
 - 由此提出两个方向：增加关于真实正确性的信息，以及限制未知错误可以利用的分布变化。两者有望互补。
 
@@ -673,7 +674,7 @@ $$\frac{d}{dt}\log\frac{h(x')}{s(x')} = \mathbb{E}_x\Big[w(p(x))\Big(s(x)\,[K_{\
 
 $$C_R = \sum_{x,v} \omega(x)\,\pi_R(v \mid x)\,\mathrm{Cov}\big(g_x \mid x, v\big)$$
 
-为 reward level 内部的 score 协方差，按权重 $\omega(x)$ 对 prompt、并对各 level 取平均。参数走一小步 $u$，各 level 内的条件分布（以当前 policy 为参照）在 KL 意义下变化 $\tfrac12 u^\top C_R u + o(\|u\|^2)$，所以 $C_R$ 度量的是一步更新把得分相同的回答之间的相对概率打乱了多少。如果 $C_R$ 的零空间里有某个方向能提高 proxy，proxy 就可以在一阶意义上上升而不打乱这些相对概率；如果没有，任何改进都会造成这种打乱，这时条件漂移就是模型类表达能力带来的代价，而不只是优化没做好的迹象。这是一个概念性的局部判据，有两个限制使它不能用作诊断工具。第一，对几乎给每个回答不同分数的 reward model，它不提供任何信息：每个 level 只含一个回答，$C_R = 0$，任何方向都不打乱。第二，在大模型里，回答的数量远多于参数，$C_R$ 一般是满秩的，所以零代价方向一般并不存在，真正要紧的是代价有多大，而这个大小取决于 $C_R$，在这种规模上无法估计。打乱得分相同的回答本身也不一定有害，因为它可能偏向更好的那些。
+为 reward level 内部的 score 协方差，按权重 $\omega(x)$ 对 prompt、并对各 level 取平均。参数走一小步 $u$，各 level 内的条件分布（以当前 policy 为参照）在 KL 意义下变化 $\tfrac12 u^\top C_R u + o(\|u\|^2)$，所以 $C_R$ 度量的是一步更新把得分相同的回答之间的相对概率打乱了多少。如果 $C_R$ 的零空间里有某个方向能提高 proxy，proxy 就可以在一阶意义上上升而不打乱这些相对概率；如果没有，任何改进都会造成这种打乱，这时条件漂移就是模型类表达能力带来的代价，而不只是优化没做好的迹象。这是一个概念性的局部判据，有两个限制使它不能用作诊断工具。第一，对几乎给每个回答不同分数的 reward model，它不提供任何信息：每个 level 只含一个回答，$C_R = 0$，任何方向都不打乱。第二，在高维的共享模型里，仅判断是否存在精确的零代价方向，可能不足以描述实际的权衡；更重要的是获得给定收益需要多大的漂移。可靠地估计这一代价面临高维、采样覆盖和数值条件等困难，本文并没有建立可用于实际训练的诊断方法。打乱得分相同的回答本身也不一定有害，因为它可能偏向更好的那些。
 
 +++ 技术展开：一次改进的局部代价
 一步 $u$ 让 level 内的对数概率变化 $(g_x - b_{xv})^\top u$，即中心化的 score，其中 $b_{xv} = \mathbb{E}[g_x \mid x, v] = \nabla\log\pi_R(v \mid x)$；一个分布与邻近分布之间的 KL，一阶导数为零，二阶导数等于这个 score 的二阶矩，由此得到上面的二次型。等价地，$u^\top C_R u = \tfrac12 \sum_{x,v} \omega(x)\,\pi_R(v\mid x)\,\mathbb{E}_{y,y' \sim \mu_{xv}}\big[\big((g_x(y) - g_x(y'))^\top u\big)^2\big]$，其中 $y, y'$ 独立地取自 policy 在该 level 内的分布 $\mu_{xv}$，这说明它度量的是一步更新让两个得分相同的回答之间的相对对数概率改变了多少。
@@ -685,7 +686,7 @@ $$\min_{u:\, g^\top u = \gamma} u^\top C_R u = \frac{\gamma^2}{g^\top C_R^\dagge
 其中 $C_R^\dagger$ 是伪逆，最小值在 $u^* = \gamma C_R^\dagger g / (g^\top C_R^\dagger g)$ 处取到。证明是在 $C_R$ 的像空间上用 Cauchy–Schwarz：$(g^\top u)^2 \le (g^\top C_R^\dagger g)(u^\top C_R u)$。这是条件漂移的局部代价，不是错误概率的下界；有益的重排也计入其中。
 +++
 
-> **要点 4 · 恒等式与局部命题**　Reward 不区分得分相同的回答，但共享参数的梯度几何会：一个 prompt 上的更新，可以改变其他 prompt 上 exploit 与真正解答的比例。在 verifier 这类粗粒度的 proxy 下，模型还可能不存在既提高 proxy、又保持这一比例的方向，所以 level 内的漂移可以是模型表达能力带来的代价，而不只是优化不完善造成的。这是一个局部、概念性的判据，不是诊断大模型训练的工具；漂移本身也不等于作弊。
+> **要点 4 · 恒等式与局部命题**　Reward 不区分得分相同的回答，但共享参数的梯度几何会：一个 prompt 上的更新，可以改变其他 prompt 上 exploit 与真正解答的比例。在 verifier 这类粗粒度的 proxy 下，模型还可能不存在既提高 proxy、又保持各 reward level 内条件分布不变的方向，所以 level 内的漂移可以是模型表达能力带来的代价，而不只是优化不完善造成的。这是一个局部、概念性的判据，不是诊断大模型训练的工具；漂移本身也不等于作弊。
 
 **不识别 exploit，能限制什么．**　如果对 exploit 可能出现在哪里毫无限制，就什么也保证不了：对手可以把某个 level 的每个回答都当作 exploit。假设改为：在每个 level 里，对手用一个标签 $a_v(y) \in [0,1]$ 标记错误，可以随机化，且它在 reference 下的比例至多为 $\alpha_v$（$0 < \alpha_v < 1$）。固定 reward 的边际分布 $\pi_R$ 时，任何 policy 能做到的最小最坏情况错误质量是
 

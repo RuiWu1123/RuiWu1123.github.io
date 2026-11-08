@@ -11,6 +11,8 @@ import { M, MD } from './Math';
  *   > **Label.** text     a boxed callout; it may contain $$ ... $$ display math
  *   ::name                the figure passed in as figures[name]
  *   - item                a bulleted list, one "- " line per item
+ *   +++ Title             a collapsed "technical note", closed by a line "+++";
+ *                         its body is itself post markup
  *   anything else         a paragraph
  *
  * Inside a paragraph: $...$ is inline math, `...` is code, **...** is bold, and
@@ -60,6 +62,26 @@ export const PostText: React.FC<{
   links?: Record<string, string>;
   figures?: Record<string, React.ReactNode>;
 }> = ({ source, links = {}, figures = {} }) => {
+  // Collapsed notes are cut out first, so that their blank lines do not split them.
+  const parts = source.trim().split(/^\+\+\+ (.+)\n([\s\S]*?)\n\+\+\+$/m);
+  if (parts.length > 1) {
+    const out: React.ReactNode[] = [];
+    for (let k = 0; k < parts.length; k += 3) {
+      if (parts[k].trim()) out.push(<PostText key={`t${k}`} source={parts[k]} links={links} figures={figures} />);
+      if (k + 2 < parts.length)
+        out.push(
+          <details key={`d${k}`} className="border-l border-anthropic-text/30 pl-4">
+            <summary className="cursor-pointer text-[13px] text-anthropic-gray/80 hover:text-anthropic-text">
+              {renderInline(parts[k + 1], links)}
+            </summary>
+            <div className="mt-3 space-y-4 text-[13px]">
+              <PostText source={parts[k + 2]} links={links} figures={figures} />
+            </div>
+          </details>,
+        );
+    }
+    return <>{out}</>;
+  }
   const join = (b: string) => b.replace(/\s*\n\s*/g, ' ').trim();
   const raw = source.trim().split(/\n\s*\n/);
 

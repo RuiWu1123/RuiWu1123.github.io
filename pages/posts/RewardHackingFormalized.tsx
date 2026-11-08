@@ -79,12 +79,11 @@ answers can grow.
 solves problems honestly and one that always hacks. Which one training ends up with is decided by how learning
 proceeds, not by the objective.
 - A plausible way for hacking to start is on a hard problem the model rarely solves, when a single sampled answer passes
-by exploiting the grader. The reward cannot tell it from a genuine solution, and the update gives it the largest
-advantage it can give. Because every problem shares one network, this can carry the hack to other problems, and while
+by exploiting the grader. The reward cannot tell it from a genuine solution, and GRPO gives it the largest advantage it can give. Because every problem shares one network, this can carry the hack to other problems, and while
 hacks are still rare the further it spreads the faster it spreads, which is consistent with hacking often appearing
 abruptly.
 - Two ways forward follow: find signals beyond the reward that tell hacked answers from genuine ones, and shape training
-so that no single sample, hacked or not, can move the model too far. The two work best together.
+so that no single sample, hacked or not, can move the model too far. The two are likely to complement each other.
 
 ## What reward hacking looks like
 
@@ -319,11 +318,14 @@ descent generally does not realize the tilt exactly.
 the same expected reward, whatever its hack share. Over the space of all policies and without regularization, every policy with $p = 1$ is optimal, from uniform
 amplification of the reference passes ($q = \bar q$) to a policy that only hacks ($q = 1$); a softmax network may reach
 $p = 1$ only in the limit, and a shared network may not be able to set $p$ and $q$ independently on each prompt.
-Regularization can choose: with a KL penalty toward $\pi_{\mathrm{ref}}$ the optimum has the form
-$\pi_{\mathrm{ref}} \cdot f(r)$ and keeps $q = \bar q$ (Takeaway 2), so any departure from $\bar q$ then comes from the
-optimization path rather than from the objective. [[moya2026|Moya et al. (2026)]] make a
-related observation for exact gradient flow, where reward rises while correctness falls whenever $p\dot q > (1 - q)\dot p$ (correctness being $p(1 - q)$ when no correct answer is rejected). Because the objective does not choose, the same holds for the group-based estimators used in
-practice and for any number of reward levels.
+Regularization can choose: over the space of all policies, the optimum with a KL penalty toward $\pi_{\mathrm{ref}}$
+has the form $\pi_{\mathrm{ref}} \cdot f(r)$ and keeps $q = \bar q$ (Takeaway 2). In a restricted shared network, a
+departure from $\bar q$ can also come from the best compromise the model class allows, so it cannot all be attributed
+to an optimization path that has not converged. [[moya2026|Moya et al. (2026)]] make a
+related observation for exact gradient flow, where reward rises while correctness falls whenever $p\dot q > (1 - q)\dot p$ (correctness being $p(1 - q)$ when no correct answer is rejected). The criterion is just the derivative of $p(1-q)$, so
+it holds whatever algorithm drives $p$ and $q$, including the group-based estimators used in practice. With more than
+two reward levels it has no direct counterpart; what carries over is that, within each level, the reward does not see
+which responses are correct.
 
 > **Takeaway 4 · Proposition.** Under a pass/fail verifier with no regularization, the objective does not determine the
 hack share. For a given model class and training setup, which optimal policy training ends up at is decided by the
@@ -364,9 +366,10 @@ Pinsker’s inequality and Cauchy–Schwarz turn this into a bound on the averag
 prompts, with each prompt weighted by its training weight $\omega(x)$ and its pass rate $p(x)$, since the passing level
 enters $D_R$ with weight $p(x)$; prompts with small weight or small pass rate are barely constrained. With stochastic
 updates and finite step sizes $F$ need not increase monotonically, so the bound holds for the expected flow rather than
-for every training run. The usual KL penalty adds the between-level divergence on top. Against a reward model this is
-the term that matters; against a verifier it limits how far the pass rate $p$, and with it the accepted-error mass
-$pq$, can move, but it does not constrain the share $q$.
+for every training run. The usual KL penalty adds the between-level divergence
+$\mathrm{KL}(\pi_R\|\pi_{\mathrm{ref},R})$ on top. Against a reward model this between-level term is the one that
+matters; against a verifier it limits how far the pass rate $p$, and with it the accepted-error mass $pq$, can move,
+but it does not constrain the share $q$, which only the within-level term does.
 
 **How exploits spread.** With shared parameters, a rewarded exploit on prompt $x$ moves every other prompt $x'$. For a
 pass/fail verifier,
@@ -395,10 +398,13 @@ level, such as their agreement or a contrast between them, is unavailable. More 
 information about $r^*$ beyond $r$ cannot identify which accepted responses are wrong
 ([[moya2026|Moya et al., 2026]]); a lone success is the case where not even comparisons within the group are left.
 
-> **Takeaway 8 · Proposition.** A rule that uses only the group's rewards treats a lone honest success and a lone
-exploit alike and gives either one the group's largest advantage. Telling them apart needs information about the
-response beyond its reward, such as its content, a monitor or a probe. On a prompt where only exploits pass and each
-response is one with probability $h$, a lone pass occurs with probability $Gh(1-h)^{G-1} \approx Gh$ when $Gh \ll 1$.
+> **Takeaway 8 · Proposition.** A rule that uses only the group's rewards and is symmetric under permuting the
+samples cannot treat a lone honest success and a lone exploit differently according to true correctness, since their
+reward configurations are the same. Under the standard binary GRPO analyzed here, the lone success receives the
+advantage $\sqrt{G-1}$, the largest the group can give; other rules can lower the weight on both at once. Telling them
+apart needs information about the response beyond its reward, such as its content, a monitor or a probe. On a prompt
+where only exploits pass and each response is one with probability $h$, a lone pass occurs with probability
+$Gh(1-h)^{G-1} \approx Gh$ when $Gh \ll 1$.
 
 **How it takes off.** On a single prompt where only exploits pass, take a model with two free logits, one for the
 exploits and one for everything else, trained by plain gradient flow on the group-averaged objective. It gives
@@ -407,25 +413,31 @@ perfect verifier and with their large-group normalization $1/\sigma(h)$ replaced
 $w_G(h)$, which tends to $1/\sqrt{h(1-h)}$ as $G \to \infty$. Time here is gradient-flow time; GRPO's extra factor
 $\sqrt{G-1}$ comes from standardizing the advantages and acts like a larger step size, so comparing algorithms needs a
 common budget of steps, samples or tokens. Across prompts, let all of them share an exploit propensity with log-odds
-$z$ and write $u = e^z$. While exploits are rare, lone exploits arrive at a rate proportional to $u$ and groups with
-several exploits at a rate proportional to $u^2$; if each raises $z$ on average, $\dot u \approx a u^2 + b u^3$ with
-$a, b > 0$, an approximation that stops being valid once exploits are common. Damping the effect of lone exploits on
-other prompts to a fraction $\epsilon$ replaces $a$ by $\epsilon a$. At the start, $u \approx h_0$, the damped term
-dominates while $\epsilon a > b h_0$. Groups with one exploit and with several occur with probabilities about $Gh_0$ and
-$(Gh_0)^2/2$, so if the two kinds of group move $z$ by comparable amounts per occurrence, $b/a$ is of order $G$ and the
-crossover sits at $\epsilon$ of order $Gh_0$; the model assumes this rather than derives it.
+$z$ and write $u = e^z$. While exploits are rare, lone exploits arrive at a rate proportional to $u$, which gives the leading term
+$\dot u \approx a u^2$. The coefficient of $u^3$ collects several pieces with different signs: groups with several
+exploits, and the second-order correction to the rate of lone exploits, since
+$P(K = 1) = Gu/(1+u)^G = Gu - G^2u^2 + O(u^3)$. Their sum need not be positive. Under GRPO with $G = 2$, a group in
+which both responses pass gets zero advantage; and in the two-logit model above with every prompt sharing the
+propensity, $\dot u = 2w(h)\,u^2/(1+u)^2$, whose cubic coefficient $2w'(0) - 4w(0)$ is negative because $w_G$ does not
+increase near $0$. We therefore make an additional assumption: that the effective drift is approximated by
+$\dot u \approx a u^2 + b u^3$ with $a, b > 0$, valid only while exploits are rare. This positive-coefficient model
+illustrates one possible mechanism for acceleration and for suppression that saturates; it does not follow from how
+often lone and multiple successes occur. Damping the effect of lone exploits on other prompts to a fraction $\epsilon$
+replaces $a$ by $\epsilon a$. At the start, $u \approx h_0$, and the damped term dominates while $\epsilon a > b h_0$;
+if, within this model, $b/a$ is of order $G$, the crossover sits at $\epsilon$ of order $Gh_0$.
 
 > **Takeaway 9 · Toy model.** In the two-logit model, for fixed $G$, the time for the exploit share to reach any fixed
 threshold is about $1/(2w(0)h_0)$ when $h_0$ is small: about $1/(2h_0)$ for REINFORCE and $1/(2\sqrt{G-1}\,h_0)$ for
-GRPO, in gradient-flow time. Across prompts, while exploits are rare, the approximation grows faster than
-exponentially, so the time to reach a given risk level is dominated by the early phase. Damping lone exploits by
-$\epsilon$ delays this like $1/\epsilon$ while $\epsilon \gg Gh_0$ and then saturates, at most about $1/(Gh_0)$ times
-later, provided groups with one and with several exploits move the propensity by comparable amounts. Within this
-model, and as long as the undamped drifts stay positive, slowing the first carriers delays the take-off without
-stopping it, much as in an epidemic. Stopping it takes a force that pulls the propensity back while it is small and
-outweighs the drift there, such as a strong enough KL penalty toward the reference model (the within-level KL alone
-does not penalize moving probability into the passing level as a whole) or negative transfer, where learning to solve
-the solvable prompts lowers the exploit propensity.
+GRPO, in gradient-flow time. Across prompts, while exploits are rare, the leading term grows faster than
+exponentially, so the time to reach a given risk level is dominated by the early phase. The rest holds only in the
+additional positive-coefficient model: there, damping lone exploits by $\epsilon$ delays the take-off like
+$1/\epsilon$ while $\epsilon \gg Gh_0$ and then saturates, at most about $1/(Gh_0)$ times later if $b/a$ is of order
+$G$, so slowing the first carriers delays the take-off without stopping it, much as in an epidemic. With the exact
+two-logit coefficients the cubic term is negative and this saturation does not follow. In either case, stopping the
+take-off takes a force that pulls the propensity back while it is small and outweighs the drift there, such as a
+strong enough KL penalty toward the reference model (the within-level KL alone does not penalize moving probability
+into the passing level as a whole) or negative transfer, where learning to solve the solvable prompts lowers the
+exploit propensity.
 
 
 ::takeoff
@@ -439,8 +451,8 @@ $r$, and the update sees only rewards: an exploit and an honest answer in the sa
 (Takeaway 1), so inside a level the reward gives the update no information about which is which. Under a binary
 verifier, within-level amplification is the only way the hack share can grow (Takeaway 2), and without regularization
 the objective does not choose between the two (Takeaway 4). A plausible worst case starts on a prompt the model rarely
-solves: a lone exploit receives the group’s largest advantage, and its reward alone cannot tell it from a lone honest
-success (Takeaway 8); through shared parameters its update can raise exploits on other prompts whose gradients align
+solves: under GRPO a lone exploit receives the group’s largest advantage, and its reward alone cannot tell it from a lone
+honest success (Takeaway 8); through shared parameters its update can raise exploits on other prompts whose gradients align
 with it (Takeaway 7), and while hacks are rare the process accelerates (Takeaway 9). Two directions follow, each
 addressing one half of the problem.
 
@@ -455,13 +467,16 @@ learn to evade it ([[baker2025|Baker et al., 2025]]).
 **Limit how much any sample moves the policy, hack or not.** The second direction does not try to tell hacks apart
 at all. Since the update cannot distinguish an exploit from a solution with the same reward, it can instead be built so
 that no sample, whichever it is, moves the policy too far, and the learning dynamics, which decide the outcome under a
-verifier (Takeaway 4), then limit the damage wherever the exploits happen to be. The model shows where this leverage
+verifier (Takeaway 4), may then limit the cumulative damage wherever the exploits happen to be. This is a hypothesis
+about methods, and it needs a budget on the accumulated drift as well: a small influence per step does not by itself
+keep the total drift small. The model shows where this leverage
 lies: the maximal advantage a lone success receives (Takeaway 8), the transfer that carries a rewarded response from one
 prompt to the others (Takeaway 7), and the within-level divergence, which a penalty ties to the reward gained, for every network and prompt mix but weighted by training weight and pass rate (Takeaway 6). The price is that honest lone successes are slowed as well. In the model, damping alone only delays the take-off; stopping it takes a force that pulls the propensity back while
 it is still small and outweighs the drift there, such as a strong enough KL pull toward the reference model or negative
 transfer from prompts that can be solved (Takeaway 9).
 
-The two directions work best together, because each covers the other’s weakness. A signal is rarely complete and can
+The two directions are likely to complement each other, since each covers a weakness of the other, though nothing
+here shows that combining them is optimal. A signal is rarely complete and can
 be evaded once optimized against, and limits on how far any sample moves the policy catch what it misses; those limits in turn slow honest
 lone successes along with exploits, and a signal, where it exists, shows where they can be relaxed.
 
@@ -478,8 +493,8 @@ const ZH = r`
 - 训练更新只看得到 reward，所以对 reward 相同的 hack 回答和真正的解答，它给的权重完全一样；各自的概率实际怎么变，取决于网络本身。
 - Policy 有两种 hack 的方式：一是整体偏向被 reward 高估的回答，二是在 reward 相同的回答里越来越偏向 hack 的那些。对几乎给每个回答不同分数的 learned reward model，几乎所有变化都算作第一种；在 binary verifier（只判通过或不通过）下，第二种是通过回答中 hack 占比增长的唯一途径。
 - 在没有正则项的 binary verifier 下，训练目标对老老实实解题的 policy 和全靠 hack 通过的 policy 一视同仁；最终学成哪一种，不由训练目标决定，而由训练过程本身的动力学决定。
-- Hacking 一种可能的起点是：在一道模型很少能解出的难题上，恰好有一个采样回答靠钻评分漏洞通过了。Reward 无法把它和真正的解答区分开，更新反而给它最大的 advantage；由于所有题目共享同一个网络，这可能把 hack 带到别的题目上，而且在 hack 还很少时传得越广就传得越快，这与 hacking 常常突然出现的现象一致。
-- 由此提出两个方向：一是在 reward 之外找到能区分 hack 和真正解答的信号；二是不去区分，而是让任何单个样本，不论是不是 hack，都无法把模型推得太远。两者结合效果最好。
+- Hacking 一种可能的起点是：在一道模型很少能解出的难题上，恰好有一个采样回答靠钻评分漏洞通过了。Reward 无法把它和真正的解答区分开，GRPO 反而给它最大的 advantage；由于所有题目共享同一个网络，这可能把 hack 带到别的题目上，而且在 hack 还很少时传得越广就传得越快，这与 hacking 常常突然出现的现象一致。
+- 由此提出两个方向：一是在 reward 之外找到能区分 hack 和真正解答的信号；二是不去区分，而是让任何单个样本，不论是不是 hack，都无法把模型推得太远。两者有望互补。
 
 ## Reward hacking 长什么样
 
@@ -563,7 +578,7 @@ $$\frac{d}{d\eta}\mathbb{E}_{\pi_\eta}[r^*] = \mathrm{Var}_{\pi_\eta}(r) - \math
 
 独立性和尾部性质是两个不同的条件。Tilt 要求 $\mathbb{E}_{\pi_{\mathrm{ref}}}[e^{\eta r}] < \infty$；误差与真实质量独立时，这意味着误差的矩母函数有限，从而排除了 [[kwa2024|Kwa et al. (2024)]] 意义下的重尾误差，这里的独立情形对应于他们误差独立且轻尾的设定在 tilt 路径上的版本。既然独立排除了下降，像 [[gao2023|Gao et al. (2023)]] 观测到的那种下降就意味着：要么误差在 reference model 下依赖于质量（例如 reward model 偏爱更长或更讨好、实际却更差的回答），要么训练并没有走这条路径——best-of-$n$ 是另一种重新加权，在它之下重尾误差会起作用 ([[kwa2024|Kwa et al., 2024]]; [[elmhamdi2024|El-Mhamdi and Hoang, 2024]])，而用梯度下降训练的有限网络一般也无法精确实现这条 tilt 路径。
 
-**Binary verifier 下，目标函数不做选择．**　对 binary verifier，通过率相同的 policy 期望 reward 都一样，不论其中 hack 占多少。在全体 policy 构成的空间里且没有正则项时，所有 $p = 1$ 的 policy 都是最优的，从均匀放大 reference model 通过的回答（$q = \bar q$），到只会 hack 的 policy（$q = 1$）；softmax 网络可能只能在极限意义下达到 $p = 1$，共享网络也未必能在每个 prompt 上独立设定 $p$ 和 $q$。正则项则可以做选择：加上朝 $\pi_{\mathrm{ref}}$ 的 KL 惩罚后，最优解形如 $\pi_{\mathrm{ref}} \cdot f(r)$，保持 $q = \bar q$（要点 2），此时任何偏离 $\bar q$ 的情况都来自优化路径，而不是目标函数。[[moya2026|Moya et al. (2026)]] 对精确梯度流有一个相关的观察：只要 $p\dot q > (1 - q)\dot p$（不拒绝正确回答时，正确率为 $p(1-q)$），reward 上升的同时正确率就在下降；而目标函数不做选择这一点，把这一结论推广到了实践中的 group-based 估计量和任意多个 reward level。
+**Binary verifier 下，目标函数不做选择．**　对 binary verifier，通过率相同的 policy 期望 reward 都一样，不论其中 hack 占多少。在全体 policy 构成的空间里且没有正则项时，所有 $p = 1$ 的 policy 都是最优的，从均匀放大 reference model 通过的回答（$q = \bar q$），到只会 hack 的 policy（$q = 1$）；softmax 网络可能只能在极限意义下达到 $p = 1$，共享网络也未必能在每个 prompt 上独立设定 $p$ 和 $q$。正则项则可以做选择：在全体 policy 构成的空间里，加上朝 $\pi_{\mathrm{ref}}$ 的 KL 惩罚后，最优解形如 $\pi_{\mathrm{ref}} \cdot f(r)$，保持 $q = \bar q$（要点 2）。在受限的共享网络里，偏离 $\bar q$ 还可能来自模型类约束下的最优折中，不能全部归因于尚未收敛的优化路径。[[moya2026|Moya et al. (2026)]] 对精确梯度流有一个相关的观察：只要 $p\dot q > (1 - q)\dot p$（不拒绝正确回答时，正确率为 $p(1-q)$），reward 上升的同时正确率就在下降。这个判据只是对 $p(1-q)$ 求导，所以无论用什么算法驱动 $p$ 和 $q$ 都成立，包括实践中的 group-based 估计量。有两个以上 reward level 时它没有直接的对应；能推广过去的是：在每个 level 内部，reward 都看不出哪些回答是正确的。
 
 > **要点 4 · 命题**　在没有正则项的 binary verifier 下，目标函数不决定 hack 的占比。给定模型类和训练设置，训练最终落到哪个最优 policy 上，由学习动力学决定：梯度下降把哪些通过的回答放大得更快，以及一个 prompt 上的更新如何牵动其他 prompt。在这个意义上，verifier 下的 reward hacking 是一个 implicit bias 问题。
 
@@ -575,7 +590,7 @@ $$\frac{d}{d\eta}\mathbb{E}_{\pi_\eta}[r^*] = \mathrm{Var}_{\pi_\eta}(r) - \math
 
 > **要点 6 · 命题**　在精确梯度流下，对任何网络、任何 prompt 配比， $$\lambda \sum_x \omega(x)\, D_R(x, t) \;\le\; J(t) - J(0).$$ 这个预算覆盖训练配比中的 prompt，按 $\omega(x)$ 加权。模型解不出的 prompt 本身得不到保证，但它们的 exploit 对其他训练 prompt 的 level 内分布造成的影响，都要从同一个预算里支付。训练配比之外的 prompt 不在覆盖范围内。
 
-再用 Pinsker 不等式和 Cauchy–Schwarz，就能把它变成一组 prompt 上平均超额 exploit 占比的界，其中每个 prompt 按训练权重 $\omega(x)$ 和通过率 $p(x)$ 加权，因为通过 level 在 $D_R$ 中的权重就是 $p(x)$；权重小或通过率低的 prompt 几乎不受约束。用随机梯度和有限步长训练时，$F$ 不一定单调上升，所以这个界针对的是期望意义下的梯度流，而不是每一次训练。常用的 KL 惩罚在此之上还加了 level 之间的散度。对 reward model，这正是起作用的那一项；对 verifier，它限制通过率 $p$ 能走多远，也就限制了被接受的错误总量 $pq$，但不约束占比 $q$。
+再用 Pinsker 不等式和 Cauchy–Schwarz，就能把它变成一组 prompt 上平均超额 exploit 占比的界，其中每个 prompt 按训练权重 $\omega(x)$ 和通过率 $p(x)$ 加权，因为通过 level 在 $D_R$ 中的权重就是 $p(x)$；权重小或通过率低的 prompt 几乎不受约束。用随机梯度和有限步长训练时，$F$ 不一定单调上升，所以这个界针对的是期望意义下的梯度流，而不是每一次训练。常用的 KL 惩罚在此之上还加了 level 之间的散度 $\mathrm{KL}(\pi_R\|\pi_{\mathrm{ref},R})$。对 reward model，起作用的正是这一项；对 verifier，这一项限制通过率 $p$ 能走多远，也就限制了被接受的错误总量 $pq$，但不约束占比 $q$，约束 $q$ 的只有 level 内那一项。
 
 **Exploit 如何扩散．**　参数共享时，prompt $x$ 上一个得到奖励的 exploit 会牵动所有其他 prompt $x'$。对 binary verifier，
 
@@ -587,11 +602,11 @@ $$\frac{d}{dt}\log\frac{h(x')}{s(x')} = \mathbb{E}_x\Big[w(p(x))\Big(s(x)\,[K_{\
 
 **从哪里开始．**　第一个得到奖励的 exploit，一种可能的情形是某个模型很少能解出的 prompt 上的孤立成功；模型并没有证明 hacking 通常就是这样开始的。当组里恰好只有一个回答拿到最高 reward 时，仅凭 reward 无法判断它是真正的解答还是 exploit，而任何需要比较最高 level 里两个成员的统计量（比如它们是否一致、彼此之间的对比）都无从计算。更一般地，如果观测在 $r$ 之外不携带关于 $r^*$ 的信息，就无法识别哪些被接受的回答是错的 ([[moya2026|Moya et al., 2026]])；孤立成功是连组内比较都不剩的情形。
 
-> **要点 8 · 命题**　只用组内 reward 的规则，必须同等对待孤立的真正成功和孤立的 exploit，并给两者同样的组内最大 advantage。要区分它们，需要 reward 之外关于回答本身的信息，比如回答内容、monitor 或 probe。在一个只有 exploit 能通过、每个回答通过的概率为 $h$ 的 prompt 上，恰好一个通过的概率为 $Gh(1-h)^{G-1}$，在 $Gh \ll 1$ 时约为 $Gh$。
+> **要点 8 · 命题**　只用组内 reward、且对样本置换对称的规则，在 reward 配置相同时，无法依据真实正确性区别对待孤立的真正成功和孤立的 exploit。在本文分析的标准 binary GRPO 下，孤立成功的 advantage 为 $\sqrt{G-1}$，是这个组能给出的最大值；其他规则可以同时压低两者的权重。要区分它们，需要 reward 之外关于回答本身的信息，比如回答内容、monitor 或 probe。在一个只有 exploit 能通过、每个回答通过的概率为 $h$ 的 prompt 上，恰好一个通过的概率为 $Gh(1-h)^{G-1}$，在 $Gh \ll 1$ 时约为 $Gh$。
 
-**如何 take-off．**　在一个只有 exploit 能通过的 prompt 上，取一个有两个自由 logit 的模型，一个对应 exploit，一个对应其余所有回答，对组内平均的目标做普通梯度流。它给出 exploit 概率 $h$ 满足 $\dot h = 2w(h)h^2(1-h)^2$，与 [[rad2026|Rad et al. (2026)]] 对带噪声 verifier 的 GRPO 推出的动力学形式相同：取完美 verifier，并把他们大组极限下的归一化 $1/\sigma(h)$ 换成有限组的 $w_G(h)$ 即可，$G \to \infty$ 时 $w_G(h) \to 1/\sqrt{h(1-h)}$。这里的时间是梯度流时间；GRPO 多出的 $\sqrt{G-1}$ 因子来自 advantage 的标准化，作用相当于更大的步长，所以比较不同算法需要统一按步数、样本数或 token 数计算的预算。放到跨 prompt 来看，设所有 prompt 共享一个 exploit 倾向，其 log-odds 为 $z$，记 $u = e^z$。在 exploit 还很少时，孤立 exploit 出现的速率正比于 $u$，含多个 exploit 的组出现的速率正比于 $u^2$；如果每次出现平均都会抬高 $z$，就有 $\dot u \approx a u^2 + b u^3$，其中 $a, b > 0$，这个近似在 exploit 变得常见之后不再成立。把孤立 exploit 对其他 prompt 的影响压到原来的 $\epsilon$ 倍，相当于把 $a$ 换成 $\epsilon a$。开始时 $u \approx h_0$，被压制的一项占主导的条件是 $\epsilon a > b h_0$。含一个和含多个 exploit 的组出现的概率分别约为 $Gh_0$ 和 $(Gh_0)^2/2$，所以如果两类组每次出现对 $z$ 的推动相当，$b/a$ 就是 $G$ 的量级，交叉点在 $\epsilon \sim Gh_0$；这一点是模型的假设，不是推导出来的。
+**如何 take-off．**　在一个只有 exploit 能通过的 prompt 上，取一个有两个自由 logit 的模型，一个对应 exploit，一个对应其余所有回答，对组内平均的目标做普通梯度流。它给出 exploit 概率 $h$ 满足 $\dot h = 2w(h)h^2(1-h)^2$，与 [[rad2026|Rad et al. (2026)]] 对带噪声 verifier 的 GRPO 推出的动力学形式相同：取完美 verifier，并把他们大组极限下的归一化 $1/\sigma(h)$ 换成有限组的 $w_G(h)$ 即可，$G \to \infty$ 时 $w_G(h) \to 1/\sqrt{h(1-h)}$。这里的时间是梯度流时间；GRPO 多出的 $\sqrt{G-1}$ 因子来自 advantage 的标准化，作用相当于更大的步长，所以比较不同算法需要统一按步数、样本数或 token 数计算的预算。放到跨 prompt 来看，设所有 prompt 共享一个 exploit 倾向，其 log-odds 为 $z$，记 $u = e^z$。在 exploit 还很少时，孤立 exploit 出现的速率正比于 $u$，由此得到主导项 $\dot u \approx a u^2$。$u^3$ 的系数则由几部分组成，符号各不相同：含多个 exploit 的组，以及孤立 exploit 出现速率本身的二阶修正，因为 $P(K = 1) = Gu/(1+u)^G = Gu - G^2u^2 + O(u^3)$。它们的和不一定为正。在 $G = 2$ 的 GRPO 下，两个回答都通过的组 advantage 为零；而在上面的两 logit 模型里，若所有 prompt 共享同一个倾向，则 $\dot u = 2w(h)\,u^2/(1+u)^2$，其三次项系数 $2w'(0) - 4w(0)$ 为负，因为 $w_G$ 在 $0$ 附近不增。因此我们额外假设：有效漂移可以用 $\dot u \approx a u^2 + b u^3$ 近似，其中 $a, b > 0$，且只在 exploit 还很少时成立。这个正系数模型用来展示一种可能的加速机制，以及压制效果会饱和的机制；它不能单凭孤立成功和多重成功出现的频率推出。把孤立 exploit 对其他 prompt 的影响压到原来的 $\epsilon$ 倍，相当于把 $a$ 换成 $\epsilon a$。开始时 $u \approx h_0$，被压制的一项占主导的条件是 $\epsilon a > b h_0$；在这个模型里，如果 $b/a$ 是 $G$ 的量级，交叉点就在 $\epsilon \sim Gh_0$。
 
-> **要点 9 · toy model**　在两 logit 模型中，固定 $G$、$h_0$ 很小时，exploit 占比到达任一固定阈值的时间约为 $1/(2w(0)h_0)$：按梯度流时间计，REINFORCE 约为 $1/(2h_0)$，GRPO 约为 $1/(2\sqrt{G-1}\,h_0)$。跨 prompt 时，在 exploit 还很少的阶段，这个近似的增长比指数还快，所以到达给定风险水平的时间主要由早期阶段决定。把孤立 exploit 的影响压到 $\epsilon$ 倍，在 $\epsilon \gg Gh_0$ 时这段时间按 $1/\epsilon$ 推迟，之后趋于饱和，最多推迟到原来的约 $1/(Gh_0)$ 倍，前提是含一个和含多个 exploit 的组对倾向的推动相当。在这个模型里，只要未被压制的漂移保持为正，减慢最早的“携带者”就只能推迟 take-off，不能阻止它，和传染病类似。要阻止它，需要一个在倾向还小时就把它拉回来、并且强到足以抵消那里漂移的力，比如足够强的朝 reference model 的 KL 惩罚（单独的 level 内 KL 不惩罚把概率整体移入通过 level），或者负迁移，即学会解可解的 prompt 反过来压低 exploit 倾向。
+> **要点 9 · toy model**　在两 logit 模型中，固定 $G$、$h_0$ 很小时，exploit 占比到达任一固定阈值的时间约为 $1/(2w(0)h_0)$：按梯度流时间计，REINFORCE 约为 $1/(2h_0)$，GRPO 约为 $1/(2\sqrt{G-1}\,h_0)$。跨 prompt 时，在 exploit 还很少的阶段，主导项的增长比指数还快，所以到达给定风险水平的时间主要由早期阶段决定。以下结论只在额外的正系数模型里成立：把孤立 exploit 的影响压到 $\epsilon$ 倍，在 $\epsilon \gg Gh_0$ 时 take-off 按 $1/\epsilon$ 推迟，之后趋于饱和；若 $b/a$ 是 $G$ 的量级，最多推迟到原来的约 $1/(Gh_0)$ 倍，所以减慢最早的“携带者”只能推迟 take-off，不能阻止它，和传染病类似。用精确的两 logit 系数时三次项为负，推不出这种饱和。无论哪种情况，要阻止 take-off，都需要一个在倾向还小时就把它拉回来、并且强到足以抵消那里漂移的力，比如足够强的朝 reference model 的 KL 惩罚（单独的 level 内 KL 不惩罚把概率整体移入通过 level），或者负迁移，即学会解可解的 prompt 反过来压低 exploit 倾向。
 
 ::takeoff
 
@@ -599,13 +614,13 @@ $$\frac{d}{dt}\log\frac{h(x')}{s(x')} = \mathbb{E}_x\Big[w(p(x))\Big(s(x)\,[K_{\
 
 ## 威胁模型与两个方向
 
-把上面的结论放在一起，就得到语言模型 RL 中 reward hacking 的一个威胁模型。训练者只看得到 proxy $r$，更新也只看得到 reward：同一 reward level 内的 exploit 和真正的解答得到相同的权重（要点 1），所以在一个 level 内部，reward 不给更新任何区分两者的信息。在 binary verifier 下，level 内的 amplification 是 hack 占比增长的唯一途径（要点 2），而在没有正则项时目标函数在两者之间不做选择（要点 4）。一种可能的最坏情况始于一个模型很少能解出的 prompt：孤立的 exploit 拿到组里最大的 advantage，仅凭 reward 无法把它和孤立的真正成功区分开（要点 8）；通过共享参数，它的更新可能抬高其他 prompt 上与它梯度对齐的 exploit（要点 7），而且在 hack 还很少时这个过程会自我加速（要点 9）。由此引出两个方向，分别针对问题的一半。
+把上面的结论放在一起，就得到语言模型 RL 中 reward hacking 的一个威胁模型。训练者只看得到 proxy $r$，更新也只看得到 reward：同一 reward level 内的 exploit 和真正的解答得到相同的权重（要点 1），所以在一个 level 内部，reward 不给更新任何区分两者的信息。在 binary verifier 下，level 内的 amplification 是 hack 占比增长的唯一途径（要点 2），而在没有正则项时目标函数在两者之间不做选择（要点 4）。一种可能的最坏情况始于一个模型很少能解出的 prompt：在 GRPO 下，孤立的 exploit 拿到组里最大的 advantage，仅凭 reward 无法把它和孤立的真正成功区分开（要点 8）；通过共享参数，它的更新可能抬高其他 prompt 上与它梯度对齐的 exploit（要点 7），而且在 hack 还很少时这个过程会自我加速（要点 9）。由此引出两个方向，分别针对问题的一半。
 
 **找到能区分 $r$ 和 $r^*$ 的信号．**　最坏的情况是零信息的情况：在一个 reward level 内部，reward 里没有任何东西能把 exploit 和真正的解答分开，剩下的保证只是对该 level 被放大得有多不均匀的界（要点 5）。任何在 $r$ 之外还携带 $r^*$ 信息的信号，比如 held-out 测试、第二个 verifier、CoT monitor 或者对激活做的 probe，都能打破这种对称，因为它让更新可以区别对待 reward 相同的回答。[[moya2026|Moya et al. (2026)]] 分析了其中一种信号，即对正确性的 audit 反馈，并证明在当前 policy 处，只要它压过 verifier 把概率推向错误回答的压力，就能降低被接受的错误、同时提高正确率。不过这样的信号要谨慎使用：一旦把它当作优化目标，policy 就可能学会规避它 ([[baker2025|Baker et al., 2025]])。
 
-**不管是不是 hack，都限制单个样本对 policy 的影响．**　第二个方向完全不去辨别哪些样本是 hack。既然更新本来就分不清 reward 相同的 exploit 和真正的解答，不如把更新设计成：无论某个样本是哪一种，它都不能把 policy 推得太远。在 verifier 下，结果本来就由学习动力学决定（要点 4），这样一来，不管 exploit 藏在哪里，它造成的损害都会受到限制。模型也指出了着力点：孤立成功拿到的最大 advantage（要点 8），把得到奖励的回答从一个 prompt 带到其他 prompt 的迁移（要点 7），以及 level 内散度，惩罚项会把它和获得的 reward 绑在一起，对任何网络、任何 prompt 配比都成立，但按训练权重和通过率加权（要点 6）。代价是真正的孤立成功也会被放慢。而且在模型里，只做压制只能推迟 take-off；要阻止它，需要一个在倾向还小时就把它拉回来、并强到足以抵消那里漂移的力，比如足够强的朝 reference model 的 KL 拉力，或者来自可解 prompt 的负迁移（要点 9）。
+**不管是不是 hack，都限制单个样本对 policy 的影响．**　第二个方向完全不去辨别哪些样本是 hack。既然更新本来就分不清 reward 相同的 exploit 和真正的解答，不如把更新设计成：无论某个样本是哪一种，它都不能把 policy 推得太远。在 verifier 下，结果本来就由学习动力学决定（要点 4），这样一来，不管 exploit 藏在哪里，它造成的累计损害都可能受到限制。这是一个关于方法的假说，而且还需要配合对累计漂移的预算：每一步影响小，本身并不能保证总漂移小。模型也指出了着力点：孤立成功拿到的最大 advantage（要点 8），把得到奖励的回答从一个 prompt 带到其他 prompt 的迁移（要点 7），以及 level 内散度，惩罚项会把它和获得的 reward 绑在一起，对任何网络、任何 prompt 配比都成立，但按训练权重和通过率加权（要点 6）。代价是真正的孤立成功也会被放慢。而且在模型里，只做压制只能推迟 take-off；要阻止它，需要一个在倾向还小时就把它拉回来、并强到足以抵消那里漂移的力，比如足够强的朝 reference model 的 KL 拉力，或者来自可解 prompt 的负迁移（要点 9）。
 
-两个方向结合起来效果最好，因为它们正好弥补彼此的短板。信号很少是完整的，一旦被优化还可能被规避，限制单个样本对 policy 影响的做法可以兜住它漏掉的部分；反过来，这些限制会把真正的孤立成功和 exploit 一起放慢，而有信号的地方，就可以据此放松限制。
+两个方向有望互补，因为它们各自弥补对方的一个短板，不过本文并没有证明结合起来就是最优的。信号很少是完整的，一旦被优化还可能被规避，限制单个样本对 policy 影响的做法可以兜住它漏掉的部分；反过来，这些限制会把真正的孤立成功和 exploit 一起放慢，而有信号的地方，就可以据此放松限制。
 
 这些结论都没有回答学会 hack 会对模型的其余部分产生什么影响 ([[macdiarmid2025|MacDiarmid et al., 2025]])，而且描述的都是一个理想化估计量在期望意义下的更新。
 `;

@@ -42,15 +42,22 @@ const takeoff = (h0: number, w: (h: number) => number) => {
   return pts;
 };
 
-/** Shared propensity u = e^z with du/dt = eps*a*u^2 + b*u^3, integrated in log u. */
+/**
+ * Shared propensity u = e^z under the post's extra positive-coefficient model
+ * du/dt = eps*a*u^2 + b*u^3, integrated in log u while exploits are still rare.
+ * T is the time for the exploit share u/(1+u) to reach SHARE_T.
+ */
 const A = 1;
 const B = 1;
 const U0 = 0.01;
+const SHARE_T = 0.1;
+const SHARE_MAX = 0.2;
 const blowup = (eps: number) => {
   const pts: [number, number][] = [];
   let t = 0;
+  let T = 0;
   const steps = 400;
-  const [l0, l1] = [Math.log(U0), Math.log(1e4)];
+  const [l0, l1] = [Math.log(U0), Math.log(SHARE_MAX / (1 - SHARE_MAX))];
   const dtdl = (l: number) => {
     const u = Math.exp(l);
     return 1 / (eps * A * u + B * u * u);
@@ -59,9 +66,10 @@ const blowup = (eps: number) => {
     const l = l0 + ((l1 - l0) * i) / steps;
     if (i > 0) t += (((l1 - l0) / steps) * (dtdl(l - (l1 - l0) / steps) + dtdl(l))) / 2;
     const u = Math.exp(l);
+    if (!T && u / (1 + u) >= SHARE_T) T = t;
     pts.push([t, u / (1 + u)]);
   }
-  return { pts, T: t };
+  return { pts, T };
 };
 
 // ---------------------------------------------------------------- drawing
@@ -287,17 +295,18 @@ export const DampingPlot: React.FC<{ lang: Lang }> = ({ lang }) => {
   const runs = React.useMemo(() => EPS_VALUES.map((eps) => blowup(eps)), []);
   const i = useSweep(EPS_VALUES.length, 20);
   const eps = EPS_VALUES[i];
-  const Tmax = Math.max(...runs.map((r) => r.T));
+  const Tmax = Math.max(...runs.map((r) => r.T)) * 1.6;
 
   // left: share over time; right: onset time against eps
   const split = 214;
   const [ly0, ly1] = [H - PAD.b, PAD.t];
-  const lx = scale(0, Tmax * 1.05, PAD.l, split - 18);
-  const ly = scale(0, 1, ly0, ly1);
+  const lx = scale(0, Tmax, PAD.l, split - 18);
+  const ly = scale(0, SHARE_MAX, ly0, ly1);
+  const clipped = runs[i].pts.filter(([t]) => t <= Tmax);
   const rx0 = split + 34;
   const rxl = scale(-4, 0, rx0, W - PAD.r);
   const lTmin = Math.log10(Math.min(...runs.map((r) => r.T)));
-  const lTmax = Math.log10(Tmax);
+  const lTmax = Math.log10(Math.max(...runs.map((r) => r.T)));
   const ryl = scale(lTmin - 0.1, lTmax + 0.15, ly0, ly1);
   const onsetCurve: [number, number][] = runs.map((r, k) => [Math.log10(EPS_VALUES[k]), Math.log10(r.T)]);
 
@@ -305,8 +314,8 @@ export const DampingPlot: React.FC<{ lang: Lang }> = ({ lang }) => {
     <Frame
       caption={
         lang === 'en'
-          ? 'Damping the effect of lone exploits on other prompts by a factor ε, in du/dt = εa·u² + b·u³ for the shared propensity u (a = b = 1, u₀ = 0.01). Left: the exploit share over time as ε falls from 1 to 10⁻⁴. Right: the take-off time, which first grows like 1/ε and then saturates. In this model, damping delays the take-off but does not stop it. The polynomial approximation holds only while exploits are rare, so the curves past that point are illustrative. The constants are arbitrary, so only the shapes carry meaning.'
-          : '把孤立 exploit 对其他 prompt 的影响压到 ε 倍，共享倾向 u 满足 du/dt = εa·u² + b·u³（a = b = 1，u₀ = 0.01）。左：ε 从 1 降到 10⁻⁴ 时 exploit 占比随时间的变化。右：take-off 时间先按 1/ε 增长，随后饱和。在这个模型里，压制只能推迟 take-off，不能阻止它。多项式近似只在 exploit 还很少时成立，超出这一阶段的曲线只是示意。常数是随意取的，只有曲线形状有意义。'
+          ? 'Damping the effect of lone exploits on other prompts by a factor ε, in the additional positive-coefficient model du/dt = εa·u² + b·u³ for the shared propensity u (a = b = 1, u₀ = 0.01); with the exact two-logit GRPO coefficients the cubic term is negative, so these curves come from the assumption, not from GRPO. Left: the exploit share while exploits are still rare, as ε falls from 1 to 10⁻⁴; the dashed line marks the threshold 0.1. Right: the time to reach that threshold, which first grows like 1/ε and then saturates. In this model damping delays the take-off but does not stop it. The constants are arbitrary, so only the shapes carry meaning.'
+          : '把孤立 exploit 对其他 prompt 的影响压到 ε 倍，采用额外的正系数模型：共享倾向 u 满足 du/dt = εa·u² + b·u³（a = b = 1，u₀ = 0.01）；用精确的两 logit GRPO 系数时三次项为负，所以这些曲线来自这个假设，而不是 GRPO 本身。左：exploit 还很少时，ε 从 1 降到 10⁻⁴ 的过程中 exploit 占比随时间的变化，虚线是阈值 0.1。右：到达这个阈值的时间，先按 1/ε 增长，随后饱和。在这个模型里，压制只能推迟 take-off，不能阻止它。常数是随意取的，只有曲线形状有意义。'
       }
     >
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Exploit share over time and take-off time, as the damping factor shrinks">
@@ -318,10 +327,11 @@ export const DampingPlot: React.FC<{ lang: Lang }> = ({ lang }) => {
           xLabel={lang === 'en' ? 'training time' : '训练时间'}
           yLabel={lang === 'en' ? 'exploit share' : 'exploit 占比'}
         />
-        {[0, 0.5, 1].map((v) => (
+        {[0, 0.1, 0.2].map((v) => (
           <Tick key={v} x={PAD.l} y={ly(v)} label={String(v)} axis="y" />
         ))}
-        <path d={path(runs[i].pts, lx, ly)} fill="none" stroke={INK} strokeWidth={1.6} />
+        <path d={`M${PAD.l} ${ly(SHARE_T)} L${split - 18} ${ly(SHARE_T)}`} stroke={INK} strokeOpacity={0.3} strokeDasharray="3 3" />
+        <path d={path(clipped, lx, ly)} fill="none" stroke={INK} strokeWidth={1.6} />
         <path d={`M${lx(runs[i].T)} ${ly0} L${lx(runs[i].T)} ${ly1}`} stroke={INK} strokeOpacity={0.3} strokeDasharray="1.5 2.5" />
         <Txt x={split - 18} y={ly1 + 4} anchor="end" size={11}>
           ε = {eps < 0.01 ? eps.toExponential(0) : eps.toFixed(2)}
@@ -333,7 +343,7 @@ export const DampingPlot: React.FC<{ lang: Lang }> = ({ lang }) => {
           y0={ly0}
           y1={ly1}
           xLabel={lang === 'en' ? 'damping ε (log)' : '压制系数 ε（对数）'}
-          yLabel={lang === 'en' ? 'take-off time (log)' : 'take-off 时间（对数）'}
+          yLabel={lang === 'en' ? 'time to share 0.1 (log)' : '到达 0.1 的时间（对数）'}
         />
         {[-4, -2, 0].map((v) => (
           <Tick key={v} x={rxl(v)} y={ly0} label={v === 0 ? '1' : `10${v === -2 ? '⁻²' : '⁻⁴'}`} axis="x" />

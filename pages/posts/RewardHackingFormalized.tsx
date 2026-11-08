@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { PostText } from '../../components/PostText';
 import { ClassicExamples, LanguageModelExamples } from './RewardHackingFigures';
 import { DampingPlot, GrpoWeightPlot, TakeoffPlot } from './RewardHackingPlots';
@@ -770,8 +771,13 @@ const RewardHackingFormalized: React.FC = () => {
             damping: <DampingPlot lang={lang} />,
           }}
         />
-
       </div>
+
+      <p className="mt-12 text-[13px] text-anthropic-gray">
+        <Link to="/thoughts" className={switchClass}>
+          {lang === 'en' ? '← All posts' : '← 全部文章'}
+        </Link>
+      </p>
     </article>
   );
 };

@@ -204,9 +204,10 @@ and $d(\alpha - \beta \log d)$ for RL, with $d = \sqrt{\mathrm{KL}}$, and [[huan
 KL regularization is too weak and $\chi^2$ regularization is the right tool. For verifiers,
 [[mroueh2025|Mroueh (2025)]] shows that GRPO amplifies whatever a binary reward accepts, [[rad2026|Rad et al. (2026)]]
 analyze GRPO with randomly noisy verifiers, and [[moya2026|Moya et al. (2026)]] study gradient flow with a binary
-verifier that accepts some incorrect answers. A recent survey finds that the structure of verifier errors matters more than their rate, and that exploitable false
-positives can stall or collapse training even when they start rare ([[gupta2026|Gupta and Joshi, 2026]]). The model
-below is aimed at such exploitable errors under group-relative updates, and covers learned reward models as well. It is a model of reward hacking, not of language-model RL
+verifier that accepts some incorrect answers. A recent survey names the largest gap as theoretical: the mean-field analysis of random verifier errors has no
+counterpart for response-dependent, exploitable errors under group-relative gradients
+([[gupta2026|Gupta and Joshi, 2026]]). The model below is aimed at such exploitable errors, and covers learned reward
+models as well. It is a model of reward hacking, not of language-model RL
 as a whole: it keeps what hacking depends on (one network shared across prompts, a reference model, and updates that
 see only rewards) and abstracts away the rest, and its statements concern the expected update of an idealized estimator: on-policy, sequence-level, with no
 token-length normalization, clipping or reuse of samples across epochs. Each takeaway below is tagged with its type: an
@@ -401,8 +402,9 @@ response is one with probability $h$, a lone pass occurs with probability $Gh(1-
 
 **How it takes off.** On a single prompt where only exploits pass, take a model with two free logits, one for the
 exploits and one for everything else, trained by plain gradient flow on the group-averaged objective. It gives
-$\dot h = 2w(h)h^2(1-h)^2$ for the exploit probability $h$, a dynamic comparable to the replicator-style flow
-[[rad2026|Rad et al. (2026)]] derive for noisy verifiers. Time here is gradient-flow time; GRPO's extra factor
+$\dot h = 2w(h)h^2(1-h)^2$ for the exploit probability $h$, the same form as the flow [[rad2026|Rad et al. (2026)]] derive for GRPO with a noisy verifier, taken with a
+perfect verifier and with their large-group normalization $1/\sigma(h)$ replaced by its finite-group counterpart
+$w_G(h)$, which tends to $1/\sqrt{h(1-h)}$ as $G \to \infty$. Time here is gradient-flow time; GRPO's extra factor
 $\sqrt{G-1}$ comes from standardizing the advantages and acts like a larger step size, so comparing algorithms needs a
 common budget of steps, samples or tokens. Across prompts, let all of them share an exploit propensity with log-odds
 $z$ and write $u = e^z$. While exploits are rare, lone exploits arrive at a rate proportional to $u$ and groups with
@@ -521,7 +523,7 @@ $$\exists\, \pi, \pi' \in \Pi:\quad J_R(\pi) < J_R(\pi') \ \text{且}\ J_{R^*}(\
 
 ## 语言模型 RL 中 reward hacking 的理论模型
 
-对 learned reward model，[[gao2023|Gao et al. (2023)]] 把 gold reward 拟合为 best-of-$n$ 下的 $d(\alpha - \beta d)$ 和 RL 下的 $d(\alpha - \beta \log d)$，其中 $d = \sqrt{\mathrm{KL}}$；[[huang2025|Huang et al. (2025)]] 认为 KL 正则太弱，$\chi^2$ 正则才是合适的工具。对 verifier，[[mroueh2025|Mroueh (2025)]] 证明 GRPO 会放大 binary reward 所接受的任何东西，[[rad2026|Rad et al. (2026)]] 分析了 verifier 带随机噪声时的 GRPO，[[moya2026|Moya et al. (2026)]] 研究了一个会接受部分错误答案的 binary verifier 下的梯度流。一篇近期综述发现，verifier 误差的结构比误差率更重要，可利用的 false positive 即使一开始很少，也可能让训练停滞或崩溃 ([[gupta2026|Gupta and Joshi, 2026]])。下面的模型针对的就是 group-relative 更新下这类可利用的误差，同时也覆盖 learned reward model。它是 reward hacking 的模型，而不是整个语言模型 RL 的模型：它保留了 hacking 所依赖的要素（所有 prompt 共享同一个网络、一个 reference model、只看得到 reward 的更新），把其余部分抽象掉，所有结论针对的都是一个理想化估计量的期望更新：on-policy、按整条序列计算，不做 token 长度归一化、clipping，也不跨 epoch 重复使用样本。下面每条要点都标了类型：恒等式在设定下精确成立；命题在随附的条件下成立；最坏情况界针对一个对手成立；toy model 结论只在刻意简化的模型里成立，它指出一种机制，但没有证明真实训练就是如此。标为假说的说法不是推导出来的。
+对 learned reward model，[[gao2023|Gao et al. (2023)]] 把 gold reward 拟合为 best-of-$n$ 下的 $d(\alpha - \beta d)$ 和 RL 下的 $d(\alpha - \beta \log d)$，其中 $d = \sqrt{\mathrm{KL}}$；[[huang2025|Huang et al. (2025)]] 认为 KL 正则太弱，$\chi^2$ 正则才是合适的工具。对 verifier，[[mroueh2025|Mroueh (2025)]] 证明 GRPO 会放大 binary reward 所接受的任何东西，[[rad2026|Rad et al. (2026)]] 分析了 verifier 带随机噪声时的 GRPO，[[moya2026|Moya et al. (2026)]] 研究了一个会接受部分错误答案的 binary verifier 下的梯度流。一篇近期综述指出，最大的空白在理论上：针对随机 verifier 误差的 mean-field 分析，在 group-relative 梯度下依赖于回答、可被利用的误差上还没有对应的理论 ([[gupta2026|Gupta and Joshi, 2026]])。下面的模型针对的就是这类可利用的误差，同时也覆盖 learned reward model。它是 reward hacking 的模型，而不是整个语言模型 RL 的模型：它保留了 hacking 所依赖的要素（所有 prompt 共享同一个网络、一个 reference model、只看得到 reward 的更新），把其余部分抽象掉，所有结论针对的都是一个理想化估计量的期望更新：on-policy、按整条序列计算，不做 token 长度归一化、clipping，也不跨 epoch 重复使用样本。下面每条要点都标了类型：恒等式在设定下精确成立；命题在随附的条件下成立；最坏情况界针对一个对手成立；toy model 结论只在刻意简化的模型里成立，它指出一种机制，但没有证明真实训练就是如此。标为假说的说法不是推导出来的。
 
 **设定．**　一个网络 $\pi_\theta(y \mid x)$ 回答所有 prompt $x$，训练从 reference model $\pi_{\mathrm{ref}}$ 出发。训练者看得到 proxy reward $r(x, y)$（reward model 的打分，或者回答执行之后才得出的 verifier 判定，所以改测试也算回答的一部分），看不到真正想要的 reward $r^*(x, y)$；两者之差 $e = r - r^*$ 就是误差。按 reward 值把回答分成若干 reward level $L_v = \{y : r(x, y) = v\}$，记 $\pi_R(v)$ 为 policy 落在 level $v$ 上的概率，$\nu_v = \pi_{\mathrm{ref}}(\cdot \mid L_v)$ 为 reference model 在该 level 内部的分布，$\bar e(v) = \mathbb{E}_{\nu_v}[e]$ 为 reference model 在该 level 上的平均误差。Hacking 的量，就是 proxy 增益中不真实的那部分，
 
@@ -587,7 +589,7 @@ $$\frac{d}{dt}\log\frac{h(x')}{s(x')} = \mathbb{E}_x\Big[w(p(x))\Big(s(x)\,[K_{\
 
 > **要点 8 · 命题**　只用组内 reward 的规则，必须同等对待孤立的真正成功和孤立的 exploit，并给两者同样的组内最大 advantage。要区分它们，需要 reward 之外关于回答本身的信息，比如回答内容、monitor 或 probe。在一个只有 exploit 能通过、每个回答通过的概率为 $h$ 的 prompt 上，恰好一个通过的概率为 $Gh(1-h)^{G-1}$，在 $Gh \ll 1$ 时约为 $Gh$。
 
-**如何 take-off．**　在一个只有 exploit 能通过的 prompt 上，取一个有两个自由 logit 的模型，一个对应 exploit，一个对应其余所有回答，对组内平均的目标做普通梯度流。它给出 exploit 概率 $h$ 满足 $\dot h = 2w(h)h^2(1-h)^2$，可以与 [[rad2026|Rad et al. (2026)]] 对噪声 verifier 推出的 replicator 式动力学相对照。这里的时间是梯度流时间；GRPO 多出的 $\sqrt{G-1}$ 因子来自 advantage 的标准化，作用相当于更大的步长，所以比较不同算法需要统一按步数、样本数或 token 数计算的预算。放到跨 prompt 来看，设所有 prompt 共享一个 exploit 倾向，其 log-odds 为 $z$，记 $u = e^z$。在 exploit 还很少时，孤立 exploit 出现的速率正比于 $u$，含多个 exploit 的组出现的速率正比于 $u^2$；如果每次出现平均都会抬高 $z$，就有 $\dot u \approx a u^2 + b u^3$，其中 $a, b > 0$，这个近似在 exploit 变得常见之后不再成立。把孤立 exploit 对其他 prompt 的影响压到原来的 $\epsilon$ 倍，相当于把 $a$ 换成 $\epsilon a$。开始时 $u \approx h_0$，被压制的一项占主导的条件是 $\epsilon a > b h_0$。含一个和含多个 exploit 的组出现的概率分别约为 $Gh_0$ 和 $(Gh_0)^2/2$，所以如果两类组每次出现对 $z$ 的推动相当，$b/a$ 就是 $G$ 的量级，交叉点在 $\epsilon \sim Gh_0$；这一点是模型的假设，不是推导出来的。
+**如何 take-off．**　在一个只有 exploit 能通过的 prompt 上，取一个有两个自由 logit 的模型，一个对应 exploit，一个对应其余所有回答，对组内平均的目标做普通梯度流。它给出 exploit 概率 $h$ 满足 $\dot h = 2w(h)h^2(1-h)^2$，与 [[rad2026|Rad et al. (2026)]] 对带噪声 verifier 的 GRPO 推出的动力学形式相同：取完美 verifier，并把他们大组极限下的归一化 $1/\sigma(h)$ 换成有限组的 $w_G(h)$ 即可，$G \to \infty$ 时 $w_G(h) \to 1/\sqrt{h(1-h)}$。这里的时间是梯度流时间；GRPO 多出的 $\sqrt{G-1}$ 因子来自 advantage 的标准化，作用相当于更大的步长，所以比较不同算法需要统一按步数、样本数或 token 数计算的预算。放到跨 prompt 来看，设所有 prompt 共享一个 exploit 倾向，其 log-odds 为 $z$，记 $u = e^z$。在 exploit 还很少时，孤立 exploit 出现的速率正比于 $u$，含多个 exploit 的组出现的速率正比于 $u^2$；如果每次出现平均都会抬高 $z$，就有 $\dot u \approx a u^2 + b u^3$，其中 $a, b > 0$，这个近似在 exploit 变得常见之后不再成立。把孤立 exploit 对其他 prompt 的影响压到原来的 $\epsilon$ 倍，相当于把 $a$ 换成 $\epsilon a$。开始时 $u \approx h_0$，被压制的一项占主导的条件是 $\epsilon a > b h_0$。含一个和含多个 exploit 的组出现的概率分别约为 $Gh_0$ 和 $(Gh_0)^2/2$，所以如果两类组每次出现对 $z$ 的推动相当，$b/a$ 就是 $G$ 的量级，交叉点在 $\epsilon \sim Gh_0$；这一点是模型的假设，不是推导出来的。
 
 > **要点 9 · toy model**　在两 logit 模型中，固定 $G$、$h_0$ 很小时，exploit 占比到达任一固定阈值的时间约为 $1/(2w(0)h_0)$：按梯度流时间计，REINFORCE 约为 $1/(2h_0)$，GRPO 约为 $1/(2\sqrt{G-1}\,h_0)$。跨 prompt 时，在 exploit 还很少的阶段，这个近似的增长比指数还快，所以到达给定风险水平的时间主要由早期阶段决定。把孤立 exploit 的影响压到 $\epsilon$ 倍，在 $\epsilon \gg Gh_0$ 时这段时间按 $1/\epsilon$ 推迟，之后趋于饱和，最多推迟到原来的约 $1/(Gh_0)$ 倍，前提是含一个和含多个 exploit 的组对倾向的推动相当。在这个模型里，只要未被压制的漂移保持为正，减慢最早的“携带者”就只能推迟 take-off，不能阻止它，和传染病类似。要阻止它，需要一个在倾向还小时就把它拉回来、并且强到足以抵消那里漂移的力，比如足够强的朝 reference model 的 KL 惩罚（单独的 level 内 KL 不惩罚把概率整体移入通过 level），或者负迁移，即学会解可解的 prompt 反过来压低 exploit 倾向。
 

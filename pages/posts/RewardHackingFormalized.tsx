@@ -559,9 +559,6 @@ shows that combining them is optimal or offers a validated empirical method. A s
 evaded once optimized against, and limits on how far the distributions within levels move catch what it misses; those
 limits in turn slow honest lone successes along with exploits, and a signal, where it exists, shows where reshuffling is
 worth allowing.
-
-None of this says what learning to hack does to the rest of a model ([[macdiarmid2025|MacDiarmid et al., 2025]]), and
-where it concerns updates, it describes expected updates of an idealized estimator.
 `;
 
 // Chinese paragraphs are kept on one line each: PostText joins wrapped lines with a space.
@@ -735,8 +732,6 @@ $$\sum_x \omega(x)\, p(x)\,\big(q(x) - \bar q(x)\big)_+ \;\le\; \sqrt{\frac{P\,\
 **限制未知错误可以利用的分布变化，不管是不是 hack．**　第二个方向完全不去辨别哪些样本是 hack。既然更新分不清 reward 相同的 exploit 和真正的解答，不如限制 reward level 内条件分布能移动多少，不管 exploit 藏在哪里。要点 4 指出了共享几何中的着力点，包括孤立成功拿到的 advantage 和 prompt 之间的迁移；要点 5 说明了这类限制的代价和保证：保证按训练权重和通过率加权，需要配合对累计漂移的预算，因为每一步小本身不能让总漂移变小，而且真正的孤立成功也会被一起放慢。这是一个关于方法的假说，不承诺没有代价；在机制示例里，只做压制只能推迟 take-off，要阻止它，需要一个在倾向还小时就把它拉回来的力，比如足够强的朝 reference model 的 KL 拉力，或者来自可解 prompt 的负迁移。
 
 两个方向有望互补，因为它们各自弥补对方的一个短板，不过本文并没有证明结合起来就是最优的，也没有给出经过验证的实证方法。信号很少是完整的，一旦被优化还可能被规避，限制 level 内分布移动的做法可以兜住它漏掉的部分；反过来，这些限制会把真正的孤立成功和 exploit 一起放慢，而有信号的地方，可以指明哪些重排值得放开。
-
-这些结论都没有回答学会 hack 会对模型的其余部分产生什么影响 ([[macdiarmid2025|MacDiarmid et al., 2025]])；涉及更新的部分，描述的都是一个理想化估计量在期望意义下的更新。
 `;
 
 const switchClass =

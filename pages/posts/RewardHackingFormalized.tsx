@@ -570,11 +570,12 @@ const ZH = r`
 
 本文先回顾 reward hacking 在经典 RL、RLHF 和 RLVR 中的典型案例，以及语言模型出现之前人们如何形式化它；然后为语言模型 RL 中的 reward hacking 建立一个简单的理论模型，得到以下结论：
 
-- 训练更新只看得到 reward，所以对 reward 相同的 hack 回答和真正的解答，它给的权重完全一样；各自的概率实际怎么变，取决于网络本身。
-- Policy 有两种 hack 的方式：一是整体偏向被 reward 高估的回答，二是在 reward 相同的回答里越来越偏向 hack 的那些。对几乎给每个回答不同分数的 learned reward model，几乎所有变化都算作第一种；在 binary verifier（只判通过或不通过）下，第二种是通过回答中 hack 占比增长的唯一途径。
-- 在没有正则项的 binary verifier 下，训练目标对老老实实解题的 policy 和全靠 hack 通过的 policy 一视同仁；最终学成哪一种，不由训练目标决定，而由训练过程本身的动力学决定。
-- Hacking 一种可能的起点是：在一道模型很少能解出的难题上，恰好有一个采样回答靠钻评分漏洞通过了。Reward 无法把它和真正的解答区分开，GRPO 反而给它最大的 advantage；由于所有题目共享同一个网络，这可能把 hack 带到别的题目上，而且在 hack 还很少时传得越广就传得越快，这与 hacking 常常突然出现的现象一致。
-- 由此提出两个方向：一是在 reward 之外找到能区分 hack 和真正解答的信号；二是不去区分，而是让任何单个样本，不论是不是 hack，都无法把模型推得太远。两者有望互补。
+- Reward 相同的真正解答和 exploit，对只看 reward 的更新而言，没有按正确性区分它们的依据；最终偏向谁，取决于模型约束和学习动力学。
+- Hacking 的增长可以拆成跨 reward level 的 selection 和同一 level 内的重排；被接受的错误总量增加，和通过的回答中错误占比增加，不是同一件事。
+- 在一条可以精确分析的 KL 最优路径上，真实质量下降需要误差以特定方式依赖于质量；reward 有误差，本身并不构成解释。
+- 共享参数让一个 prompt 上的更新改变其他 prompt 上 exploit 与真正解答的比例，而在粗粒度的 proxy 下，提高 proxy 时可能无法完全避免这种改变。
+- 不识别 exploit，也能限制它被放大多少，但保证取决于 reference model 的风险、训练覆盖和累计漂移，同样的保守性也会限制有益的学习。
+- 由此提出两个方向：增加关于真实正确性的信息，以及限制未知错误可以利用的分布变化。两者有望互补。
 
 ## Reward hacking 长什么样
 
@@ -618,91 +619,123 @@ $$\exists\, \pi, \pi' \in \Pi:\quad J_R(\pi) < J_R(\pi') \ \text{且}\ J_{R^*}(\
 
 ## 语言模型 RL 中 reward hacking 的理论模型
 
-对 learned reward model，[[gao2023|Gao et al. (2023)]] 把 gold reward 拟合为 best-of-$n$ 下的 $d(\alpha - \beta d)$ 和 RL 下的 $d(\alpha - \beta \log d)$，其中 $d = \sqrt{\mathrm{KL}}$；[[huang2025|Huang et al. (2025)]] 认为 KL 正则太弱，$\chi^2$ 正则才是合适的工具。对 verifier，[[mroueh2025|Mroueh (2025)]] 证明 GRPO 会放大 binary reward 所接受的任何东西，[[rad2026|Rad et al. (2026)]] 分析了 verifier 带随机噪声时的 GRPO，[[moya2026|Moya et al. (2026)]] 研究了一个会接受部分错误答案的 binary verifier 下的梯度流。一篇近期综述指出，最大的空白在理论上：针对随机 verifier 误差的 mean-field 分析，在 group-relative 梯度下依赖于回答、可被利用的误差上还没有对应的理论 ([[gupta2026|Gupta and Joshi, 2026]])。下面的模型针对的就是这类可利用的误差，同时也覆盖 learned reward model。它是 reward hacking 的模型，而不是整个语言模型 RL 的模型：它保留了 hacking 所依赖的要素（所有 prompt 共享同一个网络、一个 reference model、只看得到 reward 的更新），把其余部分抽象掉，所有结论针对的都是一个理想化估计量的期望更新：on-policy、按整条序列计算，不做 token 长度归一化、clipping，也不跨 epoch 重复使用样本。下面每条要点都标了类型：恒等式在设定下精确成立；命题在随附的条件下成立；最坏情况界针对一个对手成立；toy model 结论只在刻意简化的模型里成立，它指出一种机制，但没有证明真实训练就是如此。标为假说的说法不是推导出来的。
+对 learned reward model，[[gao2023|Gao et al. (2023)]] 把 gold reward 拟合为 best-of-$n$ 下的 $d(\alpha - \beta d)$ 和 RL 下的 $d(\alpha - \beta \log d)$，其中 $d = \sqrt{\mathrm{KL}}$；[[huang2025|Huang et al. (2025)]] 认为 KL 正则太弱，$\chi^2$ 正则才是合适的工具。对 verifier，[[mroueh2025|Mroueh (2025)]] 证明 GRPO 会放大 binary reward 所接受的任何东西，[[rad2026|Rad et al. (2026)]] 分析了 verifier 带随机噪声时的 GRPO，[[moya2026|Moya et al. (2026)]] 研究了一个会接受部分错误答案的 binary verifier 下的梯度流。一篇近期综述指出，最大的空白在理论上：针对随机 verifier 误差的 mean-field 分析，在 group-relative 梯度下依赖于回答、可被利用的误差上还没有对应的理论 ([[gupta2026|Gupta and Joshi, 2026]])。下面的模型针对的就是这类可利用的误差，同时也覆盖 learned reward model。它是 reward hacking 的模型，而不是整个语言模型 RL 的模型：它保留了 hacking 所依赖的要素（所有 prompt 共享同一个网络、一个 reference model、只看得到 reward 的更新），把其余部分抽象掉。凡是涉及更新规则的结论，针对的都是一个理想化估计量的期望更新：on-policy、按整条序列计算，不做 token 长度归一化、clipping，也不跨 epoch 重复使用样本。分析围绕五个问题展开，每个问题由一条要点回答，最后是一个不编号的机制示例。每条要点都标了类型：恒等式在设定下精确成立；命题在随附的条件下成立；最坏情况界针对一个对手成立；机制示例是 toy model，它指出一种机制，但没有证明真实训练就是如此。标为假说的说法不是推导出来的，较长的证明放在可折叠的技术展开里。
 
 **设定．**　一个网络 $\pi_\theta(y \mid x)$ 回答所有 prompt $x$，训练从 reference model $\pi_{\mathrm{ref}}$ 出发。训练者看得到 proxy reward $r(x, y)$（reward model 的打分，或者回答执行之后才得出的 verifier 判定，所以改测试也算回答的一部分），看不到真正想要的 reward $r^*(x, y)$；两者之差 $e = r - r^*$ 就是误差。按 reward 值把回答分成若干 reward level $L_v = \{y : r(x, y) = v\}$，记 $\pi_R(v)$ 为 policy 落在 level $v$ 上的概率，$\nu_v = \pi_{\mathrm{ref}}(\cdot \mid L_v)$ 为 reference model 在该 level 内部的分布，$\bar e(v) = \mathbb{E}_{\nu_v}[e]$ 为 reference model 在该 level 上的平均误差。Hacking 的量，就是 proxy 增益中不真实的那部分，
 
 $$\mathrm{Hack}(\pi) = \mathbb{E}_\pi[e] - \mathbb{E}_{\pi_{\mathrm{ref}}}[e].$$
 
-对 binary verifier，另记 $p$ 为通过率，$q$ 为通过的回答中 hack 所占的比例，$\bar q$ 为 $\pi_{\mathrm{ref}}$ 下的这一比例。当我们问“在不知道 exploit 藏在哪里的前提下能保证什么”时，我们就设想一个对手，在 policy 确定之后再放置 exploit，只受可观测量的约束。全文假设 reward 函数和 prompt 分布在训练中固定：改测试算作单个回答的一部分，但改变之后回答如何被评分的持久性篡改不在模型范围内；如果 verifier 有随机性，就把随机性并入回答。$\nu_v$ 这样的条件分布要求 reference model 在该 level 上的概率为正。对 binary verifier，另外假设 verifier 从不拒绝正确的回答。“模型解不出的 prompt”指采样找不到真正的解答，而不是解答的概率严格为零。最后，$\mathrm{Hack}$ 是一个操作性的量：它度量 proxy 增益中没有真实增益对应的部分，可以为负，也不涉及任何意图。
+对 binary verifier，另记 $p$ 为通过率，$q$ 为通过的回答中 hack 所占的比例，$\bar q$ 为 $\pi_{\mathrm{ref}}$ 下的这一比例；被接受的错误总量就是 $pq$。全文假设 reward 函数和 prompt 分布在训练中固定：改测试算作单个回答的一部分，但改变之后回答如何被评分的持久性篡改不在模型范围内；如果 verifier 有随机性，就把随机性并入回答。$\nu_v$ 这样的条件分布要求 reference model 在该 level 上的概率为正。对 binary verifier，另外假设 verifier 从不拒绝正确的回答。“模型解不出的 prompt”指采样找不到真正的解答，而不是解答的概率严格为零。最后，$\mathrm{Hack}$ 是一个操作性的量：它度量 proxy 增益中没有真实增益对应的部分，可以为负，也不涉及任何意图。
 
-**更新无法区分两者．**　实践中常用的算法（带 baseline 的 REINFORCE、RLOO、GRPO、Dr. GRPO）对每个 prompt 采样一组 $G$ 个回答，用组内 reward 的某个函数给每个回答的梯度加权。给定某个样本所在的 reward level，它的权重只取决于组内其他样本，而这些样本与它独立，所以
+**同样的 reward，不提供按正确性选择的依据．**　模型明明因为回答而得到了奖励，为什么学到的不是我们想要的能力？实践中常用的算法（带 baseline 的 REINFORCE、RLOO、GRPO、Dr. GRPO）对每个 prompt 采样一组 $G$ 个回答，用组内 reward 的某个函数给每个回答的梯度加权。给定某个样本所在的 reward level，它的权重只取决于组内其他样本，而这些样本与它独立，所以
 
 $$\mathbb{E}[\Delta\theta \mid x] = \sum_v a_v\, \nabla \pi(L_v),$$
 
-其中标量 $a_v$ 只通过 $\pi_R$ 依赖于 policy。对 binary verifier，更新为 $w(p)\nabla p$，GRPO 的权重为
+其中标量 $a_v$ 只通过 $\pi_R$ 依赖于 policy。同一 level 内的任何一组回答，单位概率上得到的系数都相同；各回答的概率实际怎么变，取决于参数化、梯度几何以及更新中的其他项，得到奖励的回答甚至可能概率下降。对 binary verifier，更新为 $w(p)\nabla p$，GRPO 的权重为
 
 $$w_G(p) = \mathbb{E}_m\Big[\sqrt{\tfrac{G-1-m}{1+m}}\Big] + \mathbb{E}_m\Big[\sqrt{\tfrac{m}{G-m}}\Big], \qquad m \sim \mathrm{Bin}(G-1, p),$$
 
 它关于 $p = 1/2$ 对称，$p \to 0$ 时趋于 $\sqrt{G-1}$；$G \ge 4$ 时在 $p = 1/2$ 处取最小值，而 $G = 2$ 和 $G = 3$ 时它是常数（分别为 $1$ 和 $\sqrt 2$）。这里采用组内平均的梯度、分母为 $G$ 的标准差，并令 reward 全部相同的组 advantage 为零。
 
-> **要点 1 · 恒等式**　同一 reward level 内的任何一组回答，单位概率上得到的系数都相同，所以 reward 信号本身区分不了 reward 相同的 exploit 和真正的解答。各回答的概率实际怎么变，取决于参数化、梯度几何以及更新中的其他项；得到奖励的回答甚至可能概率下降。在 binary verifier 下，组里唯一成功的回答拿到这个组能给出的最大 advantage（GRPO 下为 $\sqrt{G-1}$）；这是 advantage 的大小，不是参数更新的大小。
-
 ::wg
 
-**Hack 的两种途径．**　把 policy 拆成它在各 level 之间的分布和每个 level 内部的分布，得到
+目标函数也不替我们做选择。对 binary verifier，通过率相同的 policy 期望 reward 都一样，不论其中 hack 占多少。在全体 policy 构成的空间里且没有正则项时，所有 $p = 1$ 的 policy 都是最优的，从均匀放大 reference model 通过的回答（$q = \bar q$），到只会 hack 的 policy（$q = 1$）；softmax 网络可能只能在极限意义下达到 $p = 1$，共享网络也未必能在每个 prompt 上独立设定 $p$ 和 $q$。正则项则可以做选择：在全体 policy 构成的空间里，加上朝 $\pi_{\mathrm{ref}}$ 的 KL 惩罚后，最优解形如 $\pi_{\mathrm{ref}} \cdot f(r)$，保持 $q = \bar q$。在受限的共享网络里，偏离 $\bar q$ 还可能来自模型类约束下的最优折中，不能全部归因于尚未收敛的优化路径。[[moya2026|Moya et al. (2026)]] 对精确梯度流有一个相关的观察：只要 $p\dot q > (1 - q)\dot p$，正确率 $p(1-q)$ 就在下降；若同时 $\dot p > 0$，proxy 也在上升。这个判据只是对 $p(1-q)$ 求导，所以无论用什么算法驱动 $p$ 和 $q$ 都成立；有两个以上 reward level 时它没有直接的对应，能推广过去的是：在每个 level 内部，reward 都看不出哪些回答是正确的。
+
+最尖锐的情形是孤立成功。第一个得到奖励的 exploit，一种可能的情形是某个模型很少能解出的 prompt 上恰好有一个回答通过；模型并没有证明 hacking 通常就是这样开始的。当组里恰好只有一个回答拿到最高 reward 时，只用组内 reward、且对样本置换对称的规则，在 reward 配置相同时无法依据真实正确性区别对待孤立的真正成功和孤立的 exploit，任何需要比较最高 level 里两个成员的统计量也都无从计算。在本文分析的标准 binary GRPO 下，孤立成功的 advantage 为 $\sqrt{G-1}$，是这个组能给出的最大值；其他规则可以同时压低两者的权重。在一个只有 exploit 能通过、每个回答通过的概率为 $h$ 的 prompt 上，恰好一个通过的概率为 $Gh(1-h)^{G-1}$，在 $Gh \ll 1$ 时约为 $Gh$。更一般地，如果观测在 $r$ 之外不携带关于 $r^*$ 的信息，就无法识别哪些被接受的回答是错的 ([[moya2026|Moya et al., 2026]])。
+
+> **要点 1 · 命题**　真正的解答和 exploit 得到相同 reward 时，只依赖 reward 的更新无法依据真实正确性区别对待它们，纯 proxy 目标也可以同样接受两者。最终偏向谁，还取决于模型约束、优化几何和额外的信息。相同的 reward 权重并不意味着相同的概率增长。
+
+**Hacking 的增长有两种不同来源．**　把 policy 拆成它在各 level 之间的分布和每个 level 内部的分布，得到
 
 $$\mathrm{Hack}(\pi) = \underbrace{\sum_v \big(\pi_R(v) - \pi_{\mathrm{ref},R}(v)\big)\,\bar e(v)}_{\text{沿 proxy 的 selection}} + \underbrace{\sum_v \pi_R(v)\big(\mathbb{E}_{\pi(\cdot\mid L_v)}[e] - \bar e(v)\big)}_{\text{level 内的 amplification}},$$
 
-KL 散度也可以同样拆开，$\mathrm{KL}(\pi\|\pi_{\mathrm{ref}}) = \mathrm{KL}(\pi_R\|\pi_{\mathrm{ref},R}) + \sum_v \pi_R(v)\,\mathrm{KL}(\pi(\cdot\mid L_v)\|\nu_v)$。第一项是经典的 Goodhart 效应：向更常出错的 reward level 移动。第二项是在同一 level 内放大错误的回答，由 Cauchy–Schwarz，它在每个 level 上不超过 $\sqrt{\chi^2(\pi(\cdot\mid L_v)\|\nu_v)\,\mathrm{Var}_{\nu_v}(e)}$。Reward model 几乎给每个回答一个不同的分数，而 binary verifier 只有一个通过的 level。若真实 reward 也是二值的，且 verifier 从不拒绝正确回答，则 $\mathrm{Hack} = (p - p_{\mathrm{ref}})\bar q + p\,(q - \bar q)$；若 verifier 也会拒绝正确回答，记 $c$ 为正确回答被拒的概率，还要加上 $-(c - c_{\mathrm{ref}})$ 一项。一次变化如何在两项之间分配，取决于 proxy 把回答区分得有多细：如果每个回答的分数都不同，每个 level 只含一个回答，level 内这一项按定义为零。
+这是一个恒等式，两项都可以为负。KL 散度也可以同样拆开，$\mathrm{KL}(\pi\|\pi_{\mathrm{ref}}) = \mathrm{KL}(\pi_R\|\pi_{\mathrm{ref},R}) + \sum_v \pi_R(v)\,\mathrm{KL}(\pi(\cdot\mid L_v)\|\nu_v)$，要点 5 会用到它。第一项是经典的 Goodhart 效应：向更常出错的 reward level 移动。第二项是在同一 level 内放大错误的回答；它对任何可能的误差都为零，当且仅当 $\pi = \pi_{\mathrm{ref}} \cdot f(r)$ 对某个函数 $f$ 成立，这一族包括 KL 正则下的最优解、平局打破与回答无关的 best-of-$n$，以及 quantilizer。若真实 reward 也是二值的，且 verifier 从不拒绝正确回答，则 $\mathrm{Hack} = (p - p_{\mathrm{ref}})\bar q + p\,(q - \bar q)$：即使 $q$ 不变，通过率上升也会增加被接受的错误，而 $q$ 本身只能靠通过 level 内的 amplification 偏离 $\bar q$。若 verifier 也会拒绝正确回答，记 $c$ 为正确回答被拒的概率，还要加上 $-(c - c_{\mathrm{ref}})$ 一项。一次变化如何在两项之间分配，取决于 proxy 把回答区分得有多细：如果每个回答的分数都不同，每个 level 只含一个回答，level 内这一项按定义为零，所以 reward model 和 verifier 被归入不同类别，部分反映的是 proxy 能看到什么，而不是训练机制不同。
 
-> **要点 2 · 恒等式**　Hacking 等于沿 proxy 的 selection 加上 reward level 内的 amplification。Level 内这一项对任何可能的误差都为零，当且仅当 $\pi = \pi_{\mathrm{ref}} \cdot f(r)$ 对某个函数 $f$ 成立，这一族包括 KL 正则下的最优解、平局打破与回答无关的 best-of-$n$，以及 quantilizer。对几乎给每个回答不同分数的 reward model，几乎所有变化都算作 selection；这反映的是 proxy 能看到什么，而不是训练机制不同。在 binary verifier 下，提高通过率会按比例放大 hacking 的量，却不改变它的占比，而占比 $q$ 只能靠通过 level 内的 amplification 偏离 $\bar q$。
+> **要点 2 · 恒等式**　错误的增长，既可能来自模型转向被 proxy 高估的 reward level，也可能来自它在同一 level 内越来越偏向错误的回答。通过率上升、被接受的错误总量增加、通过的回答中错误占比增加，是三种不同的变化；诊断和干预都需要先把它们分开。
 
-**Reward model 下真实 reward 何时下降．**　随着 KL 预算增大，在全体 policy 上求得的 KL 正则最优解沿着 exponential tilting 族 $\pi_\eta \propto \pi_{\mathrm{ref}} e^{\eta r}$ 移动，也就是把 reference policy 按 $e^{\eta r}$ 重新加权。沿着这条路径，对任意 $f$ 有 $\frac{d}{d\eta}\mathbb{E}_{\pi_\eta}[f] = \mathrm{Cov}_{\pi_\eta}(f, r)$，因此
+**Reward 有误差，不足以解释为什么越优化越差．**　随着 KL 预算增大，在全体 policy 上求得的 KL 正则最优解沿着 exponential tilting 族 $\pi_\eta \propto \pi_{\mathrm{ref}} e^{\eta r}$ 移动，也就是把 reference policy 按 $e^{\eta r}$ 重新加权。沿着这条路径，对任意 $f$ 有 $\frac{d}{d\eta}\mathbb{E}_{\pi_\eta}[f] = \mathrm{Cov}_{\pi_\eta}(f, r)$，因此
 
-$$\frac{d}{d\eta}\mathbb{E}_{\pi_\eta}[r^*] = \mathrm{Var}_{\pi_\eta}(r) - \mathrm{Cov}_{\pi_\eta}(e, r).$$
+$$\frac{d}{d\eta}\mathbb{E}_{\pi_\eta}[r^*] = \mathrm{Var}_{\pi_\eta}(r) - \mathrm{Cov}_{\pi_\eta}(e, r),$$
 
-如果在 $\pi_{\mathrm{ref}}$ 下误差与真实质量独立，按 $e^{\eta r}$ 重新加权后，这种独立性沿整条路径都会保持。以上都假设这条 tilt 路径可以归一化，即 $\mathbb{E}_{\pi_{\mathrm{ref}}}[e^{\eta r}] < \infty$，并且 $\mathrm{Var}_{\pi_\eta}(r) > 0$。独立时 $\frac{d}{d\eta}\mathbb{E}_{\pi_\eta}[r^*] = \mathrm{Var}_{\pi_\eta}(r^*) \ge 0$。
+所以真实 reward 恰好在误差对 proxy 的回归斜率超过 1 时下降。如果在 $\pi_{\mathrm{ref}}$ 下误差与真实质量独立，按 $e^{\eta r}$ 重新加权后，这种独立性沿整条路径都会保持，于是 $\frac{d}{d\eta}\mathbb{E}_{\pi_\eta}[r^*] = \mathrm{Var}_{\pi_\eta}(r^*) \ge 0$：此时每单位 proxy 增益带来 $\mathrm{Var}_{\pi_\eta}(r^*)/\big(\mathrm{Var}_{\pi_\eta}(r^*)+\mathrm{Var}_{\pi_\eta}(e)\big)$ 单位的真实增益，这个比例不超过 1，但不一定随训练变小。以上都假设这条 tilt 路径可以归一化，即 $\mathbb{E}_{\pi_{\mathrm{ref}}}[e^{\eta r}] < \infty$，并且 $\mathrm{Var}_{\pi_\eta}(r) > 0$。
 
-> **要点 3 · 命题**　沿 KL 正则最优解的路径，真实 reward 恰好在误差对 proxy 的回归斜率超过 1 时下降。如果在 $\pi_{\mathrm{ref}}$ 下误差与真实质量独立，真实 reward 沿这条路径永远不会下降；此时每单位 proxy 增益带来 $\mathrm{Var}_{\pi_\eta}(r^*)/\big(\mathrm{Var}_{\pi_\eta}(r^*)+\mathrm{Var}_{\pi_\eta}(e)\big)$ 单位的真实增益，这个比例不超过 1，但不一定随训练变小。
+独立性和尾部性质是两个不同的条件。误差与真实质量独立时，可归一化意味着误差的矩母函数有限，从而排除了 [[kwa2024|Kwa et al. (2024)]] 意义下的重尾误差，这里的独立情形对应于他们误差独立且轻尾的设定在 tilt 路径上的版本。既然独立排除了下降，像 [[gao2023|Gao et al. (2023)]] 观测到的那种下降就意味着：要么误差在 reference model 下依赖于质量（例如 reward model 偏爱更长或更讨好、实际却更差的回答），要么训练并没有走这条路径——best-of-$n$ 是另一种重新加权，在它之下重尾误差会起作用 ([[kwa2024|Kwa et al., 2024]]; [[elmhamdi2024|El-Mhamdi and Hoang, 2024]])，而用梯度下降训练的有限网络一般也无法精确实现这条 tilt 路径。
 
-独立性和尾部性质是两个不同的条件。Tilt 要求 $\mathbb{E}_{\pi_{\mathrm{ref}}}[e^{\eta r}] < \infty$；误差与真实质量独立时，这意味着误差的矩母函数有限，从而排除了 [[kwa2024|Kwa et al. (2024)]] 意义下的重尾误差，这里的独立情形对应于他们误差独立且轻尾的设定在 tilt 路径上的版本。既然独立排除了下降，像 [[gao2023|Gao et al. (2023)]] 观测到的那种下降就意味着：要么误差在 reference model 下依赖于质量（例如 reward model 偏爱更长或更讨好、实际却更差的回答），要么训练并没有走这条路径——best-of-$n$ 是另一种重新加权，在它之下重尾误差会起作用 ([[kwa2024|Kwa et al., 2024]]; [[elmhamdi2024|El-Mhamdi and Hoang, 2024]])，而用梯度下降训练的有限网络一般也无法精确实现这条 tilt 路径。
+> **要点 3 · 命题**　在可归一化的 KL 最优 tilt 路径上，真实质量下降有一个精确的协方差判据；若在 reference model 下误差与真实质量独立，真实质量不会下降。因此，解释 overoptimization 需要检查误差的结构和训练实际走的路径，而不只是指出 reward 有误差。
 
-**Binary verifier 下，目标函数不做选择．**　对 binary verifier，通过率相同的 policy 期望 reward 都一样，不论其中 hack 占多少。在全体 policy 构成的空间里且没有正则项时，所有 $p = 1$ 的 policy 都是最优的，从均匀放大 reference model 通过的回答（$q = \bar q$），到只会 hack 的 policy（$q = 1$）；softmax 网络可能只能在极限意义下达到 $p = 1$，共享网络也未必能在每个 prompt 上独立设定 $p$ 和 $q$。正则项则可以做选择：在全体 policy 构成的空间里，加上朝 $\pi_{\mathrm{ref}}$ 的 KL 惩罚后，最优解形如 $\pi_{\mathrm{ref}} \cdot f(r)$，保持 $q = \bar q$（要点 2）。在受限的共享网络里，偏离 $\bar q$ 还可能来自模型类约束下的最优折中，不能全部归因于尚未收敛的优化路径。[[moya2026|Moya et al. (2026)]] 对精确梯度流有一个相关的观察：只要 $p\dot q > (1 - q)\dot p$（不拒绝正确回答时，正确率为 $p(1-q)$），reward 上升的同时正确率就在下降。这个判据只是对 $p(1-q)$ 求导，所以无论用什么算法驱动 $p$ 和 $q$ 都成立，包括实践中的 group-based 估计量。有两个以上 reward level 时它没有直接的对应；能推广过去的是：在每个 level 内部，reward 都看不出哪些回答是正确的。
-
-> **要点 4 · 命题**　在没有正则项的 binary verifier 下，目标函数不决定 hack 的占比。给定模型类和训练设置，训练最终落到哪个最优 policy 上，由学习动力学决定：梯度下降把哪些通过的回答放大得更快，以及一个 prompt 上的更新如何牵动其他 prompt。在这个意义上，verifier 下的 reward hacking 是一个 implicit bias 问题。
-
-**能保证什么．**　如果对 exploit 可能出现在哪里毫无限制，就什么也保证不了：对手可以把某个 level 的每个回答都当作 exploit。假设我们只知道在 $\pi_{\mathrm{ref}}$ 下 level $v$ 中至多有比例 $\bar q_v$（$0 < \bar q_v < 1$）是 exploit。记 $\rho = \pi(\cdot \mid L_v)/\nu_v$，则该 level 内最坏情况下的 exploit 占比，就是 $\pi$ 下那些 $\rho$ 最大的回答的概率：从 $\rho$ 最大的回答取起，直到它们在 reference 下的概率加起来等于 $\bar q_v$。这是一个分数背包问题。这里允许对手切分概率质量：要么标签可以随机化，要么没有哪个单独的回答有可观的概率，对语言模型来说这是很好的近似。如果标签是确定的、且 level 里只有少数几个概率很大的回答，分数背包只给出上界：比如一个 level 只有两个各占 $1/2$ 的回答而 $\bar q_v = 0.1$，就没有任何 exploit 集合能放进预算。对手是在看到 $\pi$ 之后才做选择的，所以这些是稳健的界，而不是对 exploit 实际如何产生的描述。由此得到的界，是 [[everitt2017|Everitt et al. (2017)]] 的 no-free-lunch 定理和 [[taylor2016|Taylor (2016)]] 的代价界在单个 level 上的对应物。
-
-> **要点 5 · 最坏情况界**　在对手可以切分概率质量时，一个 level 内最坏情况下的 exploit 占比至少是 $\bar q_v$，当且仅当该 level 的每个回答都被放大同样的倍数时取等。若 $\rho \le M$，占比至多 $\min(1, M\bar q_v)$；无论如何，占比至多 $\min\big(1, \bar q_v + \sqrt{\mathrm{KL}(\pi(\cdot\mid L_v)\|\nu_v)/2}\big)$。
-
-**共享参数下依然成立的预算．**　单个 level 的分析假设每个 prompt 上的 policy 可以随意设定，也没有处理 reference model 解不出的 prompt。下面的结论两者都不需要。取一个期望更新是梯度的算法，$\mathbb{E}[\Delta\theta] = \nabla J$，$J = \sum_x \omega(x) J_x$（对 REINFORCE 和 RLOO 是期望 reward，对 binary GRPO 是 $W(p) = \int_0^p w$），对 level 内散度 $D_R(x) = \sum_v \pi_R(v \mid x)\,\mathrm{KL}(\pi(\cdot \mid x, L_v)\|\nu_v)$ 加一个惩罚 $\lambda D_R$，并从 $\pi_{\mathrm{ref}}$ 出发运行任意 preconditioned 梯度流 $\dot\theta = M\nabla F$，$M \succeq 0$，目标函数、权重 $\omega$ 和 $\lambda$ 都保持固定。由于 $F$ 只增不减且起点是 $J(0)$，level 内散度只能用获得的 reward 来支付。
-
-> **要点 6 · 命题**　在精确梯度流下，对任何网络、任何 prompt 配比， $$\lambda \sum_x \omega(x)\, D_R(x, t) \;\le\; J(t) - J(0).$$ 这个预算覆盖训练配比中的 prompt，按 $\omega(x)$ 加权。模型解不出的 prompt 本身得不到保证，但它们的 exploit 对其他训练 prompt 的 level 内分布造成的影响，都要从同一个预算里支付。训练配比之外的 prompt 不在覆盖范围内。
-
-再用 Pinsker 不等式和 Cauchy–Schwarz，就能把它变成一组 prompt 上平均超额 exploit 占比的界，其中每个 prompt 按训练权重 $\omega(x)$ 和通过率 $p(x)$ 加权，因为通过 level 在 $D_R$ 中的权重就是 $p(x)$；权重小或通过率低的 prompt 几乎不受约束。用随机梯度和有限步长训练时，$F$ 不一定单调上升，所以这个界针对的是期望意义下的梯度流，而不是每一次训练。常用的 KL 惩罚在此之上还加了 level 之间的散度 $\mathrm{KL}(\pi_R\|\pi_{\mathrm{ref},R})$。对 reward model，起作用的正是这一项；对 verifier，这一项限制通过率 $p$ 能走多远，也就限制了被接受的错误总量 $pq$，但不约束占比 $q$，约束 $q$ 的只有 level 内那一项。
-
-**Exploit 如何扩散．**　参数共享时，prompt $x$ 上一个得到奖励的 exploit 会牵动所有其他 prompt $x'$。对 binary verifier，
+**共享参数会做选择、会传播，甚至会迫使条件分布漂移．**　Reward 不区分得分相同的回答，但网络的共享参数会。对 binary verifier，记 $h(x)$ 和 $s(x)$ 分别为 prompt $x$ 上通过的 exploit 和通过的真正解答的概率。prompt $x$ 上一个得到奖励的 exploit 会牵动所有其他 prompt $x'$：
 
 $$\frac{d}{dt}\log\frac{h(x')}{s(x')} = \mathbb{E}_x\Big[w(p(x))\Big(s(x)\,[K_{\mathcal{HS}} - K_{\mathcal{SS}}](x', x) + h(x)\,[K_{\mathcal{HH}} - K_{\mathcal{SH}}](x', x)\Big)\Big],$$
 
-其中 $K_{AB}(x', x) = g_A(x')^\top g_B(x)$ 是 $\log\pi(A \mid x')$ 与 $\log\pi(B \mid x)$ 梯度的内积（有 preconditioner $M$ 时为 $g_A^\top M g_B$）。把期望拆成 $x = x'$ 和 $x \ne x'$ 两部分，就把一个 prompt 自身造成的损害和它从别处“输入”的损害区分开了。这个 kernel 是在当前参数处计算的，会随训练变化；公式要求 $h, s > 0$，而“自身”与“输入”的拆分针对的是有限的训练 prompt 集合。
+其中 $K_{AB}(x', x) = g_A(x')^\top g_B(x)$ 是 $\log\pi(A \mid x')$ 与 $\log\pi(B \mid x)$ 梯度的内积（有 preconditioner $M$ 时为 $g_A^\top M g_B$）。一个 prompt 上更新中的 exploit 分量，会把另一个 prompt 上 exploit 与解答之比往上推，条件是另一个 prompt 上的 exploit 在梯度空间里比那里的真正解答更对齐这个 exploit（$K_{\mathcal{HH}} > K_{\mathcal{SH}}$）；这个比值实际是否上升，取决于所有分量的总和，包括解答项、其他 prompt 和正则项。梯度对齐由参数化决定，不等于语义相似；对于不依赖具体任务的 exploit 这种情况很常见，只是一个假说。把期望拆成 $x = x'$ 和 $x \ne x'$ 两部分，就把一个 prompt 自身造成的损害和它从别处“输入”的损害区分开了。这个 kernel 是在当前参数处计算的，会随训练变化，公式要求 $h, s > 0$。在模型解不出的 prompt 上，一个不知道 exploit 是什么的方法，就算在这些 prompt 上训练，也无法保证它在那里增加的概率会落到真正的解答上，而不是 exploit；它能控制的，是这些 prompt 向外“输出”了什么。
 
-> **要点 7 · 恒等式**　一个 prompt 上更新中的 exploit 分量，会把另一个 prompt 上 exploit 与解答之比往上推，条件是另一个 prompt 上的 exploit 在梯度空间里比那里的真正解答更对齐这个 exploit（$K_{\mathcal{HH}} > K_{\mathcal{SH}}$）；这个比值实际是否上升，取决于所有分量的总和，包括解答项、其他 prompt 和正则项。梯度对齐由参数化决定，不等于语义相似；对于不依赖具体任务的 exploit 这种情况很常见，只是一个假说。在模型解不出的 prompt 上，一个不知道 exploit 是什么的方法，就算在这些 prompt 上训练，也无法保证它在那里增加的概率会落到真正的解答上，而不是 exploit；它能控制的，是这些 prompt 向外“输出”了什么。
+同一件事也可以不依赖 binary reward、也不指定优化器来表述。记 $g_x(y) = \nabla\log\pi_\theta(y\mid x)$ 为一个回答的 score，并令
 
-**从哪里开始．**　第一个得到奖励的 exploit，一种可能的情形是某个模型很少能解出的 prompt 上的孤立成功；模型并没有证明 hacking 通常就是这样开始的。当组里恰好只有一个回答拿到最高 reward 时，仅凭 reward 无法判断它是真正的解答还是 exploit，而任何需要比较最高 level 里两个成员的统计量（比如它们是否一致、彼此之间的对比）都无从计算。更一般地，如果观测在 $r$ 之外不携带关于 $r^*$ 的信息，就无法识别哪些被接受的回答是错的 ([[moya2026|Moya et al., 2026]])；孤立成功是连组内比较都不剩的情形。
+$$C_R = \sum_{x,v} \omega(x)\,\pi_R(v \mid x)\,\mathrm{Cov}\big(g_x \mid x, v\big)$$
 
-> **要点 8 · 命题**　只用组内 reward、且对样本置换对称的规则，在 reward 配置相同时，无法依据真实正确性区别对待孤立的真正成功和孤立的 exploit。在本文分析的标准 binary GRPO 下，孤立成功的 advantage 为 $\sqrt{G-1}$，是这个组能给出的最大值；其他规则可以同时压低两者的权重。要区分它们，需要 reward 之外关于回答本身的信息，比如回答内容、monitor 或 probe。在一个只有 exploit 能通过、每个回答通过的概率为 $h$ 的 prompt 上，恰好一个通过的概率为 $Gh(1-h)^{G-1}$，在 $Gh \ll 1$ 时约为 $Gh$。
+为 reward level 内部的 score 协方差，按权重 $\omega(x)$ 对 prompt、并对各 level 取平均。参数走一小步 $u$，各 level 内的条件分布（以当前 policy 为参照）在 KL 意义下变化 $\tfrac12 u^\top C_R u + o(\|u\|^2)$，所以 $C_R$ 度量的是一步更新把得分相同的回答之间的相对概率打乱了多少。如果 $C_R$ 的零空间里有某个方向能提高 proxy，proxy 就可以在一阶意义上上升而不打乱这些相对概率；如果没有，任何改进都会造成这种打乱，这时条件漂移就是模型类表达能力带来的代价，而不只是优化没做好的迹象。这是一个概念性的局部判据，有两个限制使它不能用作诊断工具。第一，对几乎给每个回答不同分数的 reward model，它不提供任何信息：每个 level 只含一个回答，$C_R = 0$，任何方向都不打乱。第二，在大模型里，回答的数量远多于参数，$C_R$ 一般是满秩的，所以零代价方向一般并不存在，真正要紧的是代价有多大，而这个大小取决于 $C_R$，在这种规模上无法估计。打乱得分相同的回答本身也不一定有害，因为它可能偏向更好的那些。
 
-**如何 take-off．**　在一个只有 exploit 能通过的 prompt 上，取一个有两个自由 logit 的模型，一个对应 exploit，一个对应其余所有回答，对组内平均的目标做普通梯度流。它给出 exploit 概率 $h$ 满足 $\dot h = 2w(h)h^2(1-h)^2$，与 [[rad2026|Rad et al. (2026)]] 对带噪声 verifier 的 GRPO 推出的动力学形式相同：取完美 verifier，并把他们大组极限下的归一化 $1/\sigma(h)$ 换成有限组的 $w_G(h)$ 即可，$G \to \infty$ 时 $w_G(h) \to 1/\sqrt{h(1-h)}$。这里的时间是梯度流时间；GRPO 多出的 $\sqrt{G-1}$ 因子来自 advantage 的标准化，作用相当于更大的步长，所以比较不同算法需要统一按步数、样本数或 token 数计算的预算。放到跨 prompt 来看，设所有 prompt 共享一个 exploit 倾向，其 log-odds 为 $z$，记 $u = e^z$。在 exploit 还很少时，孤立 exploit 出现的速率正比于 $u$，由此得到主导项 $\dot u \approx a u^2$。$u^3$ 的系数则由几部分组成，符号各不相同：含多个 exploit 的组，以及孤立 exploit 出现速率本身的二阶修正，因为 $P(K = 1) = Gu/(1+u)^G = Gu - G^2u^2 + O(u^3)$。它们的和不一定为正。在 $G = 2$ 的 GRPO 下，两个回答都通过的组 advantage 为零；而在上面的两 logit 模型里，若所有 prompt 共享同一个倾向，则 $\dot u = 2w(h)\,u^2/(1+u)^2$，其三次项系数 $2w'(0) - 4w(0)$ 为负，因为 $w_G$ 在 $0$ 附近不增。因此我们额外假设：有效漂移可以用 $\dot u \approx a u^2 + b u^3$ 近似，其中 $a, b > 0$，且只在 exploit 还很少时成立。这个正系数模型用来展示一种可能的加速机制，以及压制效果会饱和的机制；它不能单凭孤立成功和多重成功出现的频率推出。把孤立 exploit 对其他 prompt 的影响压到原来的 $\epsilon$ 倍，相当于把 $a$ 换成 $\epsilon a$。开始时 $u \approx h_0$，被压制的一项占主导的条件是 $\epsilon a > b h_0$；在这个模型里，如果 $b/a$ 是 $G$ 的量级，交叉点就在 $\epsilon \sim Gh_0$。
++++ 技术展开：一次改进的局部代价
+一步 $u$ 让 level 内的对数概率变化 $(g_x - b_{xv})^\top u$，即中心化的 score，其中 $b_{xv} = \mathbb{E}[g_x \mid x, v] = \nabla\log\pi_R(v \mid x)$；一个分布与邻近分布之间的 KL，一阶导数为零，二阶导数等于这个 score 的二阶矩，由此得到上面的二次型。等价地，$u^\top C_R u = \tfrac12 \sum_{x,v} \omega(x)\,\pi_R(v\mid x)\,\mathbb{E}_{y,y' \sim \mu_{xv}}\big[\big((g_x(y) - g_x(y'))^\top u\big)^2\big]$，其中 $y, y'$ 独立地取自 policy 在该 level 内的分布 $\mu_{xv}$，这说明它度量的是一步更新让两个得分相同的回答之间的相对对数概率改变了多少。
 
-> **要点 9 · toy model**　在两 logit 模型中，固定 $G$、$h_0$ 很小时，exploit 占比到达任一固定阈值的时间约为 $1/(2w(0)h_0)$：按梯度流时间计，REINFORCE 约为 $1/(2h_0)$，GRPO 约为 $1/(2\sqrt{G-1}\,h_0)$。跨 prompt 时，在 exploit 还很少的阶段，主导项的增长比指数还快，所以到达给定风险水平的时间主要由早期阶段决定。以下结论只在额外的正系数模型里成立：把孤立 exploit 的影响压到 $\epsilon$ 倍，在 $\epsilon \gg Gh_0$ 时 take-off 按 $1/\epsilon$ 推迟，之后趋于饱和；若 $b/a$ 是 $G$ 的量级，最多推迟到原来的约 $1/(Gh_0)$ 倍，所以减慢最早的“携带者”只能推迟 take-off，不能阻止它，和传染病类似。用精确的两 logit 系数时三次项为负，推不出这种饱和。无论哪种情况，要阻止 take-off，都需要一个在倾向还小时就把它拉回来、并且强到足以抵消那里漂移的力，比如足够强的朝 reference model 的 KL 惩罚（单独的 level 内 KL 不惩罚把概率整体移入通过 level），或者负迁移，即学会解可解的 prompt 反过来压低 exploit 倾向。
+记 proxy 梯度为 $g = \nabla J \ne 0$。如果 $g$ 在 $C_R$ 零空间上的投影 $P_0 g$ 不为零，方向 $u = \gamma P_0 g / \|P_0 g\|^2$ 就能以零一阶代价获得收益 $\gamma$。反之，如果 $g$ 与零空间正交，则对任意一阶收益 $\gamma > 0$，
+
+$$\min_{u:\, g^\top u = \gamma} u^\top C_R u = \frac{\gamma^2}{g^\top C_R^\dagger g} > 0,$$
+
+其中 $C_R^\dagger$ 是伪逆，最小值在 $u^* = \gamma C_R^\dagger g / (g^\top C_R^\dagger g)$ 处取到。证明是在 $C_R$ 的像空间上用 Cauchy–Schwarz：$(g^\top u)^2 \le (g^\top C_R^\dagger g)(u^\top C_R u)$。这是条件漂移的局部代价，不是错误概率的下界；有益的重排也计入其中。
++++
+
+> **要点 4 · 恒等式与局部命题**　Reward 不区分得分相同的回答，但共享参数的梯度几何会：一个 prompt 上的更新，可以改变其他 prompt 上 exploit 与真正解答的比例。在 verifier 这类粗粒度的 proxy 下，模型还可能不存在既提高 proxy、又保持这一比例的方向，所以 level 内的漂移可以是模型表达能力带来的代价，而不只是优化不完善造成的。这是一个局部、概念性的判据，不是诊断大模型训练的工具；漂移本身也不等于作弊。
+
+**不识别 exploit，能限制什么．**　如果对 exploit 可能出现在哪里毫无限制，就什么也保证不了：对手可以把某个 level 的每个回答都当作 exploit。假设改为：在每个 level 里，对手用一个标签 $a_v(y) \in [0,1]$ 标记错误，可以随机化，且它在 reference 下的比例至多为 $\alpha_v$（$0 < \alpha_v < 1$）。固定 reward 的边际分布 $\pi_R$ 时，任何 policy 能做到的最小最坏情况错误质量是
+
+$$\inf_{\pi:\ \pi_R \text{ fixed}} \ \sum_v \pi_R(v) \sup_{a_v:\ \mathbb{E}_{\nu_v} a_v \le \alpha_v} \mathbb{E}_{\pi(\cdot\mid L_v)}[a_v] \;=\; \sum_v \pi_R(v)\,\alpha_v,$$
+
+在全体 policy 构成的空间里，取到这个值当且仅当每个概率为正的 level 都保持 reference 的条件分布。没有任何额外信息时，level 内的每一次重排都可能偏向某个未知的坏事件；这并不是说 reference 分布最好，而是说除非有别的东西能区分好坏回答，偏离它就要付出稳健性的代价。如果标签是确定的、且 level 里只有少数几个概率很大的回答，这个值只是上界：比如一个 level 只有两个各占 $1/2$ 的回答而 $\alpha_v = 0.1$，就没有任何 exploit 集合能放进预算。对手是在看到 $\pi$ 之后才做选择的，所以这些是稳健的界，而不是对 exploit 实际如何产生的描述；它们是 [[everitt2017|Everitt et al. (2017)]] 的 no-free-lunch 定理和 [[taylor2016|Taylor (2016)]] 的代价界在单个 level 上的对应物。
+
+在共享参数下，一个预算让这一点变得可用。取一个期望更新是梯度的算法，$\mathbb{E}[\Delta\theta] = \nabla J$，$J = \sum_x \omega(x) J_x$（对 REINFORCE 和 RLOO 是期望 reward，对 binary GRPO 是 $W(p) = \int_0^p w$），对 level 内散度 $D_R(x) = \sum_v \pi_R(v \mid x)\,\mathrm{KL}(\pi(\cdot \mid x, L_v)\|\nu_v)$ 加一个惩罚 $\lambda D_R$，并从 $\pi_{\mathrm{ref}}$ 出发运行任意 preconditioned 梯度流 $\dot\theta = M\nabla F$，$M \succeq 0$，目标函数、权重 $\omega$ 和 $\lambda$ 都保持固定。由于 $F$ 只增不减且起点是 $J(0)$，对任何网络、任何 prompt 配比，
+
+$$\lambda \sum_x \omega(x)\, D_R(x, t) \;\le\; J(t) - J(0).$$
+
+对 binary verifier，逐个 prompt 用 Pinsker 不等式、再跨 prompt 用 Cauchy–Schwarz，就能把它变成超额被接受错误质量的界，其中 $P = \sum_x \omega(x) p(x)$：
+
+$$\sum_x \omega(x)\, p(x)\,\big(q(x) - \bar q(x)\big)_+ \;\le\; \sqrt{\frac{P\,\big(J(t) - J(0)\big)}{2\lambda}}.$$
+
+这个预算覆盖训练配比中的 prompt，每个 prompt 按训练权重和通过率加权，所以权重小或通过率低的 prompt 几乎不受约束，训练配比之外的 prompt 不在覆盖范围内；模型解不出的 prompt 本身得不到保证，但它们的 exploit 对其他训练 prompt 造成的影响，都要从同一个预算里支付。用随机梯度和有限步长训练时，$F$ 不一定单调上升，所以这个界针对的是期望意义下的梯度流，而不是每一次训练。常用的 KL 惩罚在此之上还加了 level 之间的散度 $\mathrm{KL}(\pi_R\|\pi_{\mathrm{ref},R})$：对 reward model，起作用的正是这一项；对 verifier，这一项限制 $p$ 能走多远，也就限制了被接受的错误总量 $pq$，但不约束占比 $q$，约束 $q$ 的只有 level 内那一项。最后，每一步都小，本身并不能让总漂移变小：把很多小步的局部 KL 加起来可以趋于零，而最终的错误占比照样变化那么多，因为限制这种变化的是条件分布走过的路径长度，而不是每步散度之和。
+
++++ 技术展开：风险包络、minimax 论证与路径长度
+**风险包络．**　在任一 level 里，对固定事件 $H$，记 $q = \mu(H)$ 为它在 policy 条件分布 $\mu$ 下的概率，$\alpha = \nu(H) \in (0,1)$ 为它在 reference 条件分布下的概率，则 $\mathrm{kl}(q\|\alpha) = q\log\frac{q}{\alpha} + (1-q)\log\frac{1-q}{1-\alpha} \le \mathrm{KL}(\mu\|\nu)$，这由 KL 对 $H$ 及其补集的 chain rule 得到。这个界是可以取到的：在 $H$ 和它的补集内部各自保持 reference 分布，只改变两者的总质量。所以 $q \le U(\alpha, k)$，即满足 $\mathrm{kl}(q\|\alpha) \le k$ 的最大的 $q \ge \alpha$；把 $q$ 推到 1 至少要付出 $\log(1/\alpha)$ 的条件 KL。如果只知道 reference 风险不超过 $\alpha$，这个界依然成立。跨 level 时，$\mathrm{KL}(\pi\|\pi_{\mathrm{ref}}) \ge \mathrm{KL}(\pi_R\|\pi_{\mathrm{ref},R}) + \sum_v \pi_R(v)\,\mathrm{kl}(q_v\|\alpha_v)$，所以同样的总 KL 可以花在风险含义不同的地方。Reference 风险 $\alpha_v$ 无法从 proxy 得知；要给出数值保证，需要 audit 或其他外部信息。
+
+**Minimax．**　常数标签 $a_v \equiv \alpha_v$ 给出下界。如果 $\mu_v \ne \nu_v$，必有某个集合 $A$ 使 $\mu_v(A) > \nu_v(A)$，于是对足够小的 $t > 0$，$a_v = \alpha_v + t\,(1_A - \nu_v(A))$ 仍然可行，却给出严格更大的风险；保持 reference 分布则取到下界。
+
+**路径长度．**　沿一条光滑路径追踪某个 level 的条件分布 $\mu_t$，记 $z_t = \frac{d}{dt}\log\mu_t$，路径长度 $\ell_T = \int_0^T \sqrt{\mathbb{E}_{\mu_t} z_t^2}\,dt$。对任意固定事件 $H$，若 $q_t = \mu_t(H) \in (0,1)$，则 $\big|2\arcsin\sqrt{q_T} - 2\arcsin\sqrt{q_0}\big| \le \ell_T$，因为 $\mathbb{E} z_t = 0$ 给出 $|\dot q_t| = |\mathbb{E}[(1_H - q_t) z_t]| \le \sqrt{q_t(1-q_t)}\sqrt{\mathbb{E} z_t^2}$。速度 $\sqrt{\mathbb{E}z_t^2}$ 正是上一个问题里的条件 Fisher 二次型在实际方向上的平方根。把一条固定的光滑路径切成 $N$ 步，每一步的局部 KL 是 $N^{-2}$ 的量级，加起来趋于零，而最终错误占比的变化保持不变。
+
+**最坏情况的局部暴露．**　在满足 $\mathbb{E}[e \mid x, r] = 0$、$\mathbb{E}[e^2] \le \sigma^2$ 的未知误差中，误差与一步 $u$ 之间最大的一阶协方差是 $\sup_e \mathbb{E}[e\, g_x(y)^\top u] = \sigma\sqrt{u^\top C_R u}$，这由对中心化 score 用 Cauchy–Schwarz 得到。它精确说明了 $C_R$ 在什么意义上度量对未知误差的暴露；但它本身并不证明任何干预有效。
++++
+
+> **要点 5 · 最坏情况界与命题**　没有关于正确性的额外信息时，仍然可以通过限制 reward level 内条件分布的变化，来约束未知错误被放大多少。保证的强弱取决于 reference model 的风险、训练覆盖和累计漂移；每一步小本身不构成长期保证，保守的限制也会妨碍对得分相同的回答做有益的重排。
+
+**一个机制示例：稀有的成功如何被放大．**　这个例子在一个刻意简化的模型里把上面几个问题串起来；它不描述共享网络的一般长期行为。在一个只有 exploit 能通过的 prompt 上，取一个有两个自由 logit 的模型，一个对应 exploit，一个对应其余所有回答，对组内平均的目标做普通梯度流。它给出 exploit 概率 $h$ 满足 $\dot h = 2w(h)h^2(1-h)^2$，与 [[rad2026|Rad et al. (2026)]] 对带噪声 verifier 的 GRPO 推出的动力学形式相同：取完美 verifier，并把他们大组极限下的归一化 $1/\sigma(h)$ 换成有限组的 $w_G(h)$ 即可，$G \to \infty$ 时 $w_G(h) \to 1/\sqrt{h(1-h)}$。这里的时间是梯度流时间；GRPO 多出的 $\sqrt{G-1}$ 因子来自 advantage 的标准化，作用相当于更大的步长，所以比较不同算法需要统一按步数、样本数或 token 数计算的预算。放到跨 prompt 来看，设所有 prompt 共享一个 exploit 倾向，其 log-odds 为 $z$，记 $u = e^z$。在 exploit 还很少时，孤立 exploit 出现的速率正比于 $u$，由此得到主导项 $\dot u \approx a u^2$。$u^3$ 的系数则由几部分组成，符号各不相同：含多个 exploit 的组，以及孤立 exploit 出现速率本身的二阶修正，因为 $P(K = 1) = Gu/(1+u)^G = Gu - G^2u^2 + O(u^3)$。它们的和不一定为正。在 $G = 2$ 的 GRPO 下，两个回答都通过的组 advantage 为零；而在两 logit 模型里，若所有 prompt 共享同一个倾向，则 $\dot u = 2w(h)\,u^2/(1+u)^2$，其三次项系数 $2w'(0) - 4w(0)$ 为负，因为 $w_G$ 在 $0$ 附近不增。因此我们额外假设：有效漂移可以用 $\dot u \approx a u^2 + b u^3$ 近似，其中 $a, b > 0$，且只在 exploit 还很少时成立。这个正系数模型用来展示一种可能的加速机制，以及压制效果会饱和的机制；它不能单凭孤立成功和多重成功出现的频率推出。把孤立 exploit 对其他 prompt 的影响压到原来的 $\epsilon$ 倍，相当于把 $a$ 换成 $\epsilon a$。开始时 $u \approx h_0$，被压制的一项占主导的条件是 $\epsilon a > b h_0$；在这个模型里，如果 $b/a$ 是 $G$ 的量级，交叉点就在 $\epsilon \sim Gh_0$。
+
+> **toy model**　在两 logit 模型中，固定 $G$、$h_0$ 很小时，exploit 占比到达任一固定阈值的时间约为 $1/(2w(0)h_0)$：按梯度流时间计，REINFORCE 约为 $1/(2h_0)$，GRPO 约为 $1/(2\sqrt{G-1}\,h_0)$。跨 prompt 时，在 exploit 还很少的阶段，主导项的增长比指数还快，所以到达给定风险水平的时间主要由早期阶段决定。以下结论只在额外的正系数模型里成立：把孤立 exploit 的影响压到 $\epsilon$ 倍，在 $\epsilon \gg Gh_0$ 时 take-off 按 $1/\epsilon$ 推迟，之后趋于饱和；若 $b/a$ 是 $G$ 的量级，最多推迟到原来的约 $1/(Gh_0)$ 倍，所以减慢最早的“携带者”只能推迟 take-off，不能阻止它，和传染病类似。用精确的两 logit 系数时三次项为负，推不出这种饱和。无论哪种情况，要阻止 take-off，都需要一个在倾向还小时就把它拉回来、并且强到足以抵消那里漂移的力，比如足够强的朝 reference model 的 KL 惩罚（单独的 level 内 KL 不惩罚把概率整体移入通过 level），或者负迁移，即学会解可解的 prompt 反过来压低 exploit 倾向。
 
 ::takeoff
 
 ::damping
 
+读这类曲线时要注意一点。在单个 prompt 上，如果只是用一个依赖于 $p$ 的正因子改变更新的快慢、度量不变，那只是在同一条轨迹上重新参数化了时间；hacking 出现得晚，本身并不意味着在相同通过率下更安全。多个 prompt、额外的正则、有限步长和噪声则不一定保持这一点。
+
 ## 威胁模型与两个方向
 
-把上面的结论放在一起，就得到语言模型 RL 中 reward hacking 的一个威胁模型。训练者只看得到 proxy $r$，更新也只看得到 reward：同一 reward level 内的 exploit 和真正的解答得到相同的权重（要点 1），所以在一个 level 内部，reward 不给更新任何区分两者的信息。在 binary verifier 下，level 内的 amplification 是 hack 占比增长的唯一途径（要点 2），而在没有正则项时目标函数在两者之间不做选择（要点 4）。一种可能的最坏情况始于一个模型很少能解出的 prompt：在 GRPO 下，孤立的 exploit 拿到组里最大的 advantage，仅凭 reward 无法把它和孤立的真正成功区分开（要点 8）；通过共享参数，它的更新可能抬高其他 prompt 上与它梯度对齐的 exploit（要点 7），而且在 hack 还很少时这个过程会自我加速（要点 9）。由此引出两个方向，分别针对问题的一半。
+把上面的结论放在一起，就得到语言模型 RL 中 reward hacking 的一个威胁模型。训练者只看得到 proxy $r$，更新也只看得到 reward：同一 reward level 内的 exploit 和真正的解答得到相同的权重，proxy 目标也同样接受两者（要点 1）。在 binary verifier 下，level 内的 amplification 是 hack 占比增长的唯一途径，而即使占比不变，通过率上升也会增加被接受的错误（要点 2）。共享参数接着决定重排往哪个方向走，并把它带到梯度对齐的其他 prompt 上；在粗粒度的 proxy 下，某些漂移甚至可能无法避免（要点 4）。一种可能的最坏情况始于一个模型很少能解出的 prompt：在 GRPO 下，孤立的 exploit 拿到组里最大的 advantage，仅凭 reward 无法把它和孤立的真正成功区分开（要点 1），而且在 hack 还很少时这个过程可能自我加速，如机制示例所示。由此引出两个方向，分别针对问题的一半。
 
-**找到能区分 $r$ 和 $r^*$ 的信号．**　最坏的情况是零信息的情况：在一个 reward level 内部，reward 里没有任何东西能把 exploit 和真正的解答分开，剩下的保证只是对该 level 被放大得有多不均匀的界（要点 5）。任何在 $r$ 之外还携带 $r^*$ 信息的信号，比如 held-out 测试、第二个 verifier、CoT monitor 或者对激活做的 probe，都能打破这种对称，因为它让更新可以区别对待 reward 相同的回答。[[moya2026|Moya et al. (2026)]] 分析了其中一种信号，即对正确性的 audit 反馈，并证明在当前 policy 处，只要它压过 verifier 把概率推向错误回答的压力，就能降低被接受的错误、同时提高正确率。不过这样的信号要谨慎使用：一旦把它当作优化目标，policy 就可能学会规避它 ([[baker2025|Baker et al., 2025]])。
+**找到能区分 $r$ 和 $r^*$ 的信号．**　这个方向改变的是要点 1 的信息限制，也打破了要点 5 里完全没有信息的对手设定：在一个 reward level 内部，reward 里没有任何东西能把 exploit 和真正的解答分开。任何在 $r$ 之外还携带 $r^*$ 信息的信号，比如 held-out 测试、第二个 verifier、audit、CoT monitor 或者对激活做的 probe，都能让更新区别对待 reward 相同的回答。[[moya2026|Moya et al. (2026)]] 分析了其中一种信号，即对正确性的 audit 反馈，并证明在当前 policy 处，只要它压过 verifier 把概率推向错误回答的压力，就能降低被接受的错误、同时提高正确率。不过这样的信号要谨慎使用：一旦把它当作优化目标，policy 就可能学会规避它 ([[baker2025|Baker et al., 2025]])。
 
-**不管是不是 hack，都限制单个样本对 policy 的影响．**　第二个方向完全不去辨别哪些样本是 hack。既然更新本来就分不清 reward 相同的 exploit 和真正的解答，不如把更新设计成：无论某个样本是哪一种，它都不能把 policy 推得太远。在 verifier 下，结果本来就由学习动力学决定（要点 4），这样一来，不管 exploit 藏在哪里，它造成的累计损害都可能受到限制。这是一个关于方法的假说，而且还需要配合对累计漂移的预算：每一步影响小，本身并不能保证总漂移小。模型也指出了着力点：孤立成功拿到的最大 advantage（要点 8），把得到奖励的回答从一个 prompt 带到其他 prompt 的迁移（要点 7），以及 level 内散度，惩罚项会把它和获得的 reward 绑在一起，对任何网络、任何 prompt 配比都成立，但按训练权重和通过率加权（要点 6）。代价是真正的孤立成功也会被放慢。而且在模型里，只做压制只能推迟 take-off；要阻止它，需要一个在倾向还小时就把它拉回来、并强到足以抵消那里漂移的力，比如足够强的朝 reference model 的 KL 拉力，或者来自可解 prompt 的负迁移（要点 9）。
+**限制未知错误可以利用的分布变化，不管是不是 hack．**　第二个方向完全不去辨别哪些样本是 hack。既然更新分不清 reward 相同的 exploit 和真正的解答，不如限制 reward level 内条件分布能移动多少，不管 exploit 藏在哪里。要点 4 指出了共享几何中的着力点，包括孤立成功拿到的 advantage 和 prompt 之间的迁移；要点 5 说明了这类限制的代价和保证：保证按训练权重和通过率加权，需要配合对累计漂移的预算，因为每一步小本身不能让总漂移变小，而且真正的孤立成功也会被一起放慢。这是一个关于方法的假说，不承诺没有代价；在机制示例里，只做压制只能推迟 take-off，要阻止它，需要一个在倾向还小时就把它拉回来的力，比如足够强的朝 reference model 的 KL 拉力，或者来自可解 prompt 的负迁移。
 
-两个方向有望互补，因为它们各自弥补对方的一个短板，不过本文并没有证明结合起来就是最优的。信号很少是完整的，一旦被优化还可能被规避，限制单个样本对 policy 影响的做法可以兜住它漏掉的部分；反过来，这些限制会把真正的孤立成功和 exploit 一起放慢，而有信号的地方，就可以据此放松限制。
+两个方向有望互补，因为它们各自弥补对方的一个短板，不过本文并没有证明结合起来就是最优的，也没有给出经过验证的实证方法。信号很少是完整的，一旦被优化还可能被规避，限制 level 内分布移动的做法可以兜住它漏掉的部分；反过来，这些限制会把真正的孤立成功和 exploit 一起放慢，而有信号的地方，可以指明哪些重排值得放开。
 
-这些结论都没有回答学会 hack 会对模型的其余部分产生什么影响 ([[macdiarmid2025|MacDiarmid et al., 2025]])，而且描述的都是一个理想化估计量在期望意义下的更新。
+这些结论都没有回答学会 hack 会对模型的其余部分产生什么影响 ([[macdiarmid2025|MacDiarmid et al., 2025]])；涉及更新的部分，描述的都是一个理想化估计量在期望意义下的更新。
 `;
 
 const switchClass =

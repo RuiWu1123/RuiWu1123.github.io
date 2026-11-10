@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { NEWS_ITEMS, SOCIAL_LINKS, PUBLICATIONS } from '../constants';
+import { SOCIAL_LINKS, PUBLICATIONS } from '../constants';
 
 const contactClass =
   'underline underline-offset-2 decoration-anthropic-text/30 hover:text-anthropic-text hover:decoration-anthropic-text transition-colors';
@@ -19,46 +19,6 @@ const Home: React.FC = () => {
   const copyEmail = () => {
     navigator.clipboard.writeText('rw761@scarletmail.rutgers.edu');
     alert('Email "rw761@scarletmail.rutgers.edu" copied to clipboard.');
-  };
-
-  // Helper to render content with links specifically on quoted text or full text
-  const renderNewsContent = (content: string, link?: string) => {
-    // Check for quoted text to link specifically
-    const parts = content.split('"');
-    
-    // If we found a quoted part (e.g., My paper "Title" is...) and have a link
-    if (parts.length >= 3 && link) {
-        return (
-            <>
-                {parts[0]}"
-                <a 
-                    href={link} 
-                    target="_blank" 
-                    rel="noreferrer" 
-                    className="text-anthropic-text underline decoration-anthropic-accent/50 hover:decoration-anthropic-accent hover:text-anthropic-accent transition-colors font-medium"
-                >
-                    {parts[1]}
-                </a>
-                "{parts[2]}
-            </>
-        );
-    }
-
-    // Fallback: link the whole text when a news item has a link
-    if (link) {
-         return (
-          <a 
-            href={link} 
-            className={link.startsWith('#') ? "hover:text-anthropic-accent transition-colors" : "hover:text-anthropic-accent transition-colors underline decoration-anthropic-text/30"} 
-            target={link.startsWith('#') ? "_self" : "_blank"} 
-            rel={link.startsWith('#') ? "" : "noreferrer"}
-          >
-            {content}
-          </a>
-        );
-    }
-
-    return <>{content}</>;
   };
 
   return (
@@ -116,28 +76,6 @@ const Home: React.FC = () => {
           </Link>
           .
         </p>
-      </section>
-
-       {/* News Section */}
-      <section className="mb-8">
-        <div className="mb-4 border-b-[1.5px] border-anthropic-text pb-2.5 text-center">
-          <h2 className="text-lg font-serif text-anthropic-text">News</h2>
-        </div>
-        
-        <div>
-          <div className="space-y-1.5">
-            {NEWS_ITEMS.map((news, index) => (
-              <div key={index} className="flex gap-4 group">
-                <span className="text-anthropic-gray/70 text-[12px] whitespace-nowrap pt-[2px] w-[4.5rem] flex-shrink-0">
-                  {news.date}
-                </span>
-                <p className="text-anthropic-gray text-[12.5px] leading-[1.5] group-hover:text-anthropic-text transition-colors">
-                  {renderNewsContent(news.content, news.link)}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
       </section>
 
       {/* Publications */}

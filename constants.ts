@@ -1,5 +1,5 @@
 
-import { ResearchInterest, Publication, NewsItem, AlignmentNewsItem, ThoughtPost } from './types';
+import { ResearchInterest, Publication, NewsItem, AlignmentNewsItem } from './types';
 
 export const RESEARCH_INTERESTS: ResearchInterest[] = [
   {
@@ -219,13 +219,3 @@ export const SOCIAL_LINKS = {
   scholar: "https://scholar.google.com/citations?user=M1FovLwAAAAJ&hl=en",
   linkedin: "https://www.linkedin.com/in/rui-wu-6aba08324/"
 };
-
-// Write-ups of short sprint projects, newest first.
-export const THOUGHTS: ThoughtPost[] = [
-  {
-    date: "11.6.2026",
-    title: "Reward Hacking, Formalized: From Classical RL to Language Models",
-    tldr: "Reviews how reward hacking was defined and formalized before language models, then sets up a formalization for language-model RL: hacking splits into selection along the proxy and amplification within a reward level, and under a verifier the outcome is decided by the learning dynamics.",
-    link: "/thoughts/reward-hacking-formalized"
-  }
-];

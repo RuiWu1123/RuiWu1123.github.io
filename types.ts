@@ -36,9 +36,3 @@ export interface AlignmentNewsItem {
   links: AlignmentLink[];
 }
 
-export interface ThoughtPost {
-  date: string;        // M.D.YYYY, as in the news list
-  title: string;
-  tldr: string;
-  link?: string;       // route of the post, e.g. /thoughts/my-post
-}

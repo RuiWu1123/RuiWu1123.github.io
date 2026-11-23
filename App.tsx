@@ -1,12 +1,9 @@
-import React, { Component, ErrorInfo, ReactNode, Suspense } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Alignment from './pages/Alignment';
-// Loaded on demand, so the math renderer they bring stays out of the home page.
-const Thoughts = React.lazy(() => import('./pages/Thoughts'));
-const RewardHackingFormalized = React.lazy(() => import('./pages/posts/RewardHackingFormalized'));
 
 // Scroll to top on route change
 const ScrollToTop = () => {
@@ -75,16 +72,12 @@ const App: React.FC = () => {
       <HashRouter>
         <ScrollToTop />
         <Layout>
-          <Suspense fallback={null}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/alignment" element={<Alignment />} />
-              <Route path="/thoughts" element={<Thoughts />} />
-              <Route path="/thoughts/reward-hacking-formalized" element={<RewardHackingFormalized />} />
-              {/* Any other address, including the retired /blog, lands on home. */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/alignment" element={<Alignment />} />
+            {/* Any other address, including the retired blog pages, lands on home. */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </Layout>
       </HashRouter>
     </ErrorBoundary>

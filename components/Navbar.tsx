@@ -6,13 +6,11 @@ const linkClass =
 
 /**
  * The home page carries its own name in the introduction, so no header is drawn
- * there. Sub-pages get a link back home, and blog posts also one to the post list,
- * since there is no page menu.
+ * there. Sub-pages get a link back home, since there is no page menu.
  */
 const Navbar: React.FC = () => {
   const { pathname } = useLocation();
   if (pathname === '/') return null;
-  const inPost = pathname.startsWith('/thoughts/');
 
   return (
     <nav className="w-full">
@@ -20,14 +18,6 @@ const Navbar: React.FC = () => {
         <NavLink to="/" className={linkClass}>
           Kris (Rui) Wu
         </NavLink>
-        {inPost && (
-          <>
-            <span className="mx-2 text-anthropic-gray/50">/</span>
-            <NavLink to="/thoughts" className={linkClass}>
-              Thoughts &amp; Blog Posts
-            </NavLink>
-          </>
-        )}
       </div>
     </nav>
   );

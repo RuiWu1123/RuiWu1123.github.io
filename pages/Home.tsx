@@ -68,14 +68,6 @@ const Home: React.FC = () => {
           </Link>
           .
         </p>
-
-        <p className="mt-4 text-base font-sans text-anthropic-gray leading-relaxed">
-          I try to write some valuable blogs, see{' '}
-          <Link to="/thoughts" className={inlineLinkClass}>
-            here
-          </Link>
-          .
-        </p>
       </section>
 
       {/* Publications */}
